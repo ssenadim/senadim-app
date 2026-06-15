@@ -15,6 +15,7 @@ import { UrlEncoderDecoderToolPage } from "../pages/DeveloperTools/UrlEncoderDec
 import { UuidToolPage } from "../pages/DeveloperTools/Uuid/UuidToolPage";
 import { HomePage } from "../pages/Home/HomePage";
 import { NotFoundPage } from "../pages/NotFound/NotFoundPage";
+import { OpenShiftCalculatorPage } from "../pages/PlatformEngineering/OpenShiftCalculator/OpenShiftCalculatorPage";
 import { routePaths } from "../utils/routes";
 
 export const appRouter = createBrowserRouter(
@@ -41,6 +42,10 @@ export const appRouter = createBrowserRouter(
         {
           path: routePaths.architectureNotes,
           element: <ArchitectureNotesPage />,
+        },
+        {
+          path: routePaths.platformEngineering,
+          element: <OpenShiftCalculatorPage />,
         },
         { path: "*", element: <NotFoundPage /> },
       ],
