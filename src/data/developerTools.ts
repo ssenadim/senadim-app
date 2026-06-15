@@ -13,7 +13,8 @@ export const developerTools: DeveloperTool[] = [
     title: "JWT Decoder",
     description: "Inspect JWT headers and payloads without sending sensitive data away.",
     category: "Security",
-    status: "coming-soon",
+    path: routePaths.jwtDecoderTool,
+    status: "available",
   },
   {
     title: "JSON & XML Formatter",
