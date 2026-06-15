@@ -107,17 +107,6 @@ export function ToolResultArea({ children }: { children: ReactNode }) {
   return <ToolSection title="Tool Outputs">{children}</ToolSection>;
 }
 
-export function ToolActions({ children }: { children: ReactNode }) {
-  return (
-    <ToolSection
-      title="Tool Actions"
-      description="Run the operation, manage the result, or reset the tool state."
-    >
-      {children}
-    </ToolSection>
-  );
-}
-
 export function ToolExamples({
   examples,
   isVisible,

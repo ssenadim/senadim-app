@@ -136,7 +136,7 @@ export function Base64ToolPage() {
         </div>
       }
       inputs={
-        <div>
+        <div className="space-y-5">
           <div className="mb-2 flex items-center gap-2">
             <label
               htmlFor="base64-input"
@@ -165,6 +165,24 @@ export function Base64ToolPage() {
               {errorMessage}
             </Alert>
           ) : null}
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <Button color="blue" onClick={handleEncode}>
+              Encode
+            </Button>
+            <Button color="green" onClick={handleDecode}>
+              Decode
+            </Button>
+            <Button color="light" onClick={handleCopy}>
+              Copy Result
+            </Button>
+            <Button color="light" onClick={handleSwap}>
+              Swap
+            </Button>
+            <Button color="gray" onClick={handleClear}>
+              Clear
+            </Button>
+          </div>
         </div>
       }
       outputs={
@@ -185,31 +203,12 @@ export function Base64ToolPage() {
           </div>
           <Textarea
             id="base64-output"
-            rows={12}
+            rows={10}
             value={outputText}
             readOnly
             placeholder="Result will appear here..."
             className="font-mono"
           />
-        </div>
-      }
-      actions={
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-          <Button color="blue" onClick={handleEncode}>
-            Encode
-          </Button>
-          <Button color="green" onClick={handleDecode}>
-            Decode
-          </Button>
-          <Button color="light" onClick={handleCopy}>
-            Copy Result
-          </Button>
-          <Button color="light" onClick={handleSwap}>
-            Swap
-          </Button>
-          <Button color="gray" onClick={handleClear}>
-            Clear
-          </Button>
         </div>
       }
       examples={examples}

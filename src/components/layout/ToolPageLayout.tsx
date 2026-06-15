@@ -1,7 +1,6 @@
 import { useState } from "react";
 import type { ToolPageLayoutProps } from "../../types/toolPage";
 import {
-  ToolActions,
   ToolDescription,
   ToolExamples,
   ToolHeader,
@@ -18,7 +17,6 @@ export function ToolPageLayout({
   overview,
   inputs,
   outputs,
-  actions,
   examples,
   notes,
   notesCollapsible,
@@ -35,9 +33,8 @@ export function ToolPageLayout({
         breadcrumbs={breadcrumbs}
       />
       <ToolDescription title={overviewTitle}>{overview}</ToolDescription>
-      <ToolInputArea>{inputs}</ToolInputArea>
-      <ToolActions>{actions}</ToolActions>
-      <ToolResultArea>{outputs}</ToolResultArea>
+      {inputs ? <ToolInputArea>{inputs}</ToolInputArea> : null}
+      {outputs ? <ToolResultArea>{outputs}</ToolResultArea> : null}
 
       <ToolExamples
         examples={examples}

@@ -131,102 +131,103 @@ export function UuidToolPage() {
         </div>
       }
       inputs={
-        <div className="max-w-sm">
-          <div className="mb-2 flex items-center gap-2">
-            <label
-              htmlFor="uuid-quantity"
-              className="text-sm font-semibold text-gray-900 dark:text-white"
+        <div className="space-y-5">
+          <div className="max-w-sm">
+            <div className="mb-2 flex items-center gap-2">
+              <label
+                htmlFor="uuid-quantity"
+                className="text-sm font-semibold text-gray-900 dark:text-white"
+              >
+                Quantity
+              </label>
+              <HelpTooltip
+                title="Quantity"
+                description="Select how many UUID values should be generated."
+                exampleInput="5"
+                exampleOutput="5 UUID v4 values"
+              />
+            </div>
+            <Select
+              id="uuid-quantity"
+              value={quantity}
+              onChange={(event) => setQuantity(parseQuantity(event.target.value))}
             >
-              Quantity
-            </label>
-            <HelpTooltip
-              title="Quantity"
-              description="Select how many UUID values should be generated."
-              exampleInput="5"
-              exampleOutput="5 UUID v4 values"
-            />
+              {uuidQuantityOptions.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </Select>
+            <p className="mt-3 text-sm leading-6 text-gray-600 dark:text-gray-300">
+              UUID v4 values are generated in your browser using the Web Crypto
+              API.
+            </p>
           </div>
-          <Select
-            id="uuid-quantity"
-            value={quantity}
-            onChange={(event) => setQuantity(parseQuantity(event.target.value))}
-          >
-            {uuidQuantityOptions.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </Select>
-          <p className="mt-3 text-sm leading-6 text-gray-600 dark:text-gray-300">
-            UUID v4 values are generated in your browser using the Web Crypto
-            API.
-          </p>
-        </div>
-      }
-      actions={
-        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-          <Button color="blue" onClick={handleGenerate}>
-            Generate
-          </Button>
-          <Button color="light" onClick={handleCopyAll}>
-            Copy Result
-          </Button>
-          <Button color="gray" onClick={handleClear}>
-            Clear
-          </Button>
-        </div>
-      }
-      outputs={
-        <div>
-          <div className="mb-2 flex items-center gap-2">
-            <label
-              htmlFor="uuid-result"
-              className="text-sm font-semibold text-gray-900 dark:text-white"
-            >
-              Result
-            </label>
-            <HelpTooltip
-              title="Result"
-              description="Generated UUID values. These identifiers are suitable for most application and API scenarios."
-              exampleInput="Generate 1"
-              exampleOutput="550e8400-e29b-41d4-a716-446655440000"
-            />
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <Button color="blue" onClick={handleGenerate}>
+              Generate
+            </Button>
+            <Button color="light" onClick={handleCopyAll}>
+              Copy Result
+            </Button>
+            <Button color="gray" onClick={handleClear}>
+              Clear
+            </Button>
           </div>
-          <Textarea
-            id="uuid-result"
-            rows={Math.min(Math.max(uuids.length, 6), 14)}
-            value={resultText}
-            readOnly
-            placeholder="Generated UUID values will appear here..."
-            className="font-mono"
-          />
+
           {errorMessage ? (
             <Alert color="failure" className="mt-5">
               <span className="font-semibold">UUID generation failed.</span>{" "}
               {errorMessage}
             </Alert>
           ) : null}
-          {uuids.length > 0 ? (
-            <div className="mt-5 grid gap-3">
-              {uuids.map((uuid) => (
-                <div
-                  key={uuid}
-                  className="flex flex-col gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-950 sm:flex-row sm:items-center sm:justify-between"
-                >
-                  <code className="break-all text-sm text-gray-800 dark:text-gray-200">
-                    {uuid}
-                  </code>
-                  <Button
-                    color="light"
-                    size="xs"
-                    onClick={() => void copyText(uuid, "UUID copied.")}
-                  >
-                    Copy
-                  </Button>
-                </div>
-              ))}
+
+          <div>
+            <div className="mb-2 flex items-center gap-2">
+              <label
+                htmlFor="uuid-result"
+                className="text-sm font-semibold text-gray-900 dark:text-white"
+              >
+                Result
+              </label>
+              <HelpTooltip
+                title="Result"
+                description="Generated UUID values. These identifiers are suitable for most application and API scenarios."
+                exampleInput="Generate 1"
+                exampleOutput="550e8400-e29b-41d4-a716-446655440000"
+              />
             </div>
-          ) : null}
+            <Textarea
+              id="uuid-result"
+              rows={Math.min(Math.max(uuids.length, 5), 12)}
+              value={resultText}
+              readOnly
+              placeholder="Generated UUID values will appear here..."
+              className="font-mono"
+            />
+            {uuids.length > 0 ? (
+              <div className="mt-4 grid gap-2">
+                {uuids.map((uuid) => (
+                  <div
+                    key={uuid}
+                    className="flex flex-col gap-2 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-950 sm:flex-row sm:items-center sm:justify-between"
+                  >
+                    <code className="break-all text-sm text-gray-800 dark:text-gray-200">
+                      {uuid}
+                    </code>
+                    <Button
+                      color="light"
+                      size="xs"
+                      onClick={() => void copyText(uuid, "UUID copied.")}
+                    >
+                      Copy
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+          </div>
         </div>
       }
       examples={examples}
