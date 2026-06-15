@@ -67,4 +67,11 @@ export const developerTools: DeveloperTool[] = [
     path: routePaths.urlEncoderDecoderTool,
     status: "available",
   },
+  {
+    title: "PKCE Generator",
+    description: "Generate OAuth2 PKCE code verifiers and code challenges.",
+    category: "Security",
+    path: routePaths.pkceGeneratorTool,
+    status: "available",
+  },
 ];

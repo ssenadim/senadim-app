@@ -11,5 +11,6 @@ export const routePaths = {
   hashGeneratorTool: "/developer-tools/hash-generator",
   regexTesterTool: "/developer-tools/regex-tester",
   urlEncoderDecoderTool: "/developer-tools/url-encoder-decoder",
+  pkceGeneratorTool: "/developer-tools/pkce-generator",
   architectureNotes: "/architecture-notes",
 } as const;

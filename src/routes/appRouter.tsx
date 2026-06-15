@@ -8,6 +8,7 @@ import { DeveloperToolsPage } from "../pages/DeveloperTools/DeveloperToolsPage";
 import { FormatterToolPage } from "../pages/DeveloperTools/Formatter/FormatterToolPage";
 import { HashGeneratorToolPage } from "../pages/DeveloperTools/HashGenerator/HashGeneratorToolPage";
 import { JwtDecoderToolPage } from "../pages/DeveloperTools/JwtDecoder/JwtDecoderToolPage";
+import { PkceGeneratorToolPage } from "../pages/DeveloperTools/PkceGenerator/PkceGeneratorToolPage";
 import { RegexTesterToolPage } from "../pages/DeveloperTools/RegexTester/RegexTesterToolPage";
 import { TimestampToolPage } from "../pages/DeveloperTools/Timestamp/TimestampToolPage";
 import { UrlEncoderDecoderToolPage } from "../pages/DeveloperTools/UrlEncoderDecoder/UrlEncoderDecoderToolPage";
@@ -36,6 +37,7 @@ export const appRouter = createBrowserRouter(
           path: routePaths.urlEncoderDecoderTool,
           element: <UrlEncoderDecoderToolPage />,
         },
+        { path: routePaths.pkceGeneratorTool, element: <PkceGeneratorToolPage /> },
         {
           path: routePaths.architectureNotes,
           element: <ArchitectureNotesPage />,
