@@ -34,6 +34,16 @@ const podResourceExamples: ToolExample[] = [
   },
 ];
 
+const hpaExamples: ToolExample[] = [
+  {
+    title: "Scale Out Example",
+    inputLabel: "Inputs",
+    input: "Current CPU: 85%\nTarget CPU: 60%",
+    outputLabel: "Recommendation",
+    output: "Scale out.",
+  },
+];
+
 export function OpenShiftCalculatorPage() {
   usePageTitle("OpenShift Calculator Suite");
 
@@ -45,6 +55,10 @@ export function OpenShiftCalculatorPage() {
   const [bufferPercent, setBufferPercent] = useState(20);
   const [applicationType, setApplicationType] = useState<ApplicationType>("Java");
   const [expectedLoad, setExpectedLoad] = useState<ExpectedLoad>("Medium");
+  const [currentCpu, setCurrentCpu] = useState(70);
+  const [targetCpu, setTargetCpu] = useState(60);
+  const [minReplicas, setMinReplicas] = useState(2);
+  const [maxReplicas, setMaxReplicas] = useState(10);
   const [toast, setToast] = useState<ToastMessage | null>(null);
 
   const calculation = useMemo(() => {
@@ -77,6 +91,7 @@ export function OpenShiftCalculatorPage() {
     return { environment, json, properties, yaml };
   }, [calculation.total, heap]);
   const isPodResources = activeTab === "Pod Resources";
+  const isHpa = activeTab === "HPA";
 
   const podResources = useMemo(
     () => calculatePodResources(applicationType, expectedLoad),
@@ -88,6 +103,24 @@ export function OpenShiftCalculatorPage() {
 
     return { json, yaml };
   }, [podResources]);
+  const hpaRecommendation = useMemo(
+    () => getHpaRecommendation(currentCpu, targetCpu),
+    [currentCpu, targetCpu],
+  );
+  const hpaOutputs = useMemo(() => {
+    const json = JSON.stringify(
+      {
+        minReplicas,
+        maxReplicas,
+        targetCpuUtilization: targetCpu,
+      },
+      null,
+      2,
+    );
+    const yaml = `apiVersion: autoscaling/v2\nkind: HorizontalPodAutoscaler\nspec:\n  minReplicas: ${minReplicas}\n  maxReplicas: ${maxReplicas}\n  metrics:\n    - type: Resource\n      resource:\n        name: cpu\n        target:\n          type: Utilization\n          averageUtilization: ${targetCpu}`;
+
+    return { json, yaml };
+  }, [maxReplicas, minReplicas, targetCpu]);
 
   async function copyText(value: string, label: string) {
     try {
@@ -128,6 +161,18 @@ export function OpenShiftCalculatorPage() {
     void copyText(value, "All pod resource outputs");
   }
 
+  function copyAllHpaOutputs() {
+    const value = [
+      "# OpenShift/Kubernetes YAML",
+      hpaOutputs.yaml,
+      "",
+      "# JSON",
+      hpaOutputs.json,
+    ].join("\n");
+
+    void copyText(value, "All HPA outputs");
+  }
+
   return (
     <ToolPageLayout
       title="OpenShift Calculator Suite"
@@ -140,10 +185,20 @@ export function OpenShiftCalculatorPage() {
         { label: "OpenShift Calculator Suite" },
       ]}
       overviewTitle={
-        isPodResources ? "Why Pod Resources Matter" : "Why Container Memory Matters"
+        isHpa
+          ? "What is HPA?"
+          : isPodResources
+            ? "Why Pod Resources Matter"
+            : "Why Container Memory Matters"
       }
       overview={
-        isPodResources ? (
+        isHpa ? (
+          <div className="space-y-3">
+            <p>HPA automatically adjusts pod count.</p>
+            <p>Scaling decisions are based on resource metrics.</p>
+            <p>Proper thresholds improve cost and performance balance.</p>
+          </div>
+        ) : isPodResources ? (
           <div className="space-y-3">
             <p>Requests reserve resources for scheduled workloads.</p>
             <p>Limits define maximum usage for containers.</p>
@@ -239,6 +294,37 @@ export function OpenShiftCalculatorPage() {
                 onChange={(value) => setExpectedLoad(value as ExpectedLoad)}
               />
             </div>
+          ) : activeTab === "HPA" ? (
+            <div className="grid gap-4 md:grid-cols-2">
+              <NumberField
+                id="current-cpu"
+                label="Current Average CPU Utilization (%)"
+                value={currentCpu}
+                onChange={setCurrentCpu}
+                tooltip="Observed average CPU utilization."
+              />
+              <NumberField
+                id="target-cpu"
+                label="Target CPU Utilization (%)"
+                value={targetCpu}
+                onChange={setTargetCpu}
+                tooltip="Desired CPU utilization threshold."
+              />
+              <NumberField
+                id="min-replicas"
+                label="Minimum Replicas"
+                value={minReplicas}
+                onChange={setMinReplicas}
+                tooltip="Minimum number of pods."
+              />
+              <NumberField
+                id="max-replicas"
+                label="Maximum Replicas"
+                value={maxReplicas}
+                onChange={setMaxReplicas}
+                tooltip="Maximum number of pods."
+              />
+            </div>
           ) : (
             <div className="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center dark:border-gray-700 dark:bg-gray-950">
               <Badge color="warning" className="mx-auto w-fit">
@@ -252,7 +338,35 @@ export function OpenShiftCalculatorPage() {
         </div>
       }
       outputs={
-        activeTab === "Pod Resources" ? (
+        activeTab === "HPA" ? (
+          <div className="space-y-6">
+            <div className="grid gap-4 md:grid-cols-4">
+              <MetricBox label="Target CPU" value={`${targetCpu}%`} />
+              <MetricBox label="Min Replicas" value={minReplicas.toString()} />
+              <MetricBox label="Max Replicas" value={maxReplicas.toString()} />
+              <MetricBox label="Recommendation" value={hpaRecommendation.title} />
+            </div>
+            <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+              <p className="text-sm text-gray-700 dark:text-gray-200">
+                {hpaRecommendation.description}
+              </p>
+            </div>
+            <section>
+              <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <h2 className="text-lg font-semibold text-gray-950 dark:text-white">
+                  Copy-ready Configuration Outputs
+                </h2>
+                <Button color="light" size="sm" onClick={copyAllHpaOutputs}>
+                  Copy All Outputs
+                </Button>
+              </div>
+              <div className="grid gap-4 lg:grid-cols-2">
+                <GeneratedOutput title="OpenShift/Kubernetes YAML" value={hpaOutputs.yaml} onCopy={() => void copyText(hpaOutputs.yaml, "YAML")} />
+                <GeneratedOutput title="JSON" value={hpaOutputs.json} onCopy={() => void copyText(hpaOutputs.json, "JSON")} />
+              </div>
+            </section>
+          </div>
+        ) : activeTab === "Pod Resources" ? (
           <div className="space-y-6">
             <div className="grid gap-4 md:grid-cols-4">
               <MetricBox label="CPU Request" value={podResources.cpuRequest} />
@@ -321,10 +435,16 @@ export function OpenShiftCalculatorPage() {
           </div>
         ) : undefined
       }
-      examples={isPodResources ? podResourceExamples : examples}
+      examples={isHpa ? hpaExamples : isPodResources ? podResourceExamples : examples}
       notesCollapsible
       notes={
-        isPodResources ? (
+        isHpa ? (
+          <ul className="list-disc space-y-2 pl-5 text-sm leading-7 text-gray-600 dark:text-gray-300">
+            <li>HPA requires metrics collection.</li>
+            <li>CPU targets should be realistic.</li>
+            <li>Requests must be configured correctly for HPA to behave as expected.</li>
+          </ul>
+        ) : isPodResources ? (
           <ul className="list-disc space-y-2 pl-5 text-sm leading-7 text-gray-600 dark:text-gray-300">
             <li>Values are starting recommendations.</li>
             <li>Monitor production workloads.</li>
@@ -564,4 +684,28 @@ function calculatePodResources(
   };
 
   return table[applicationType][expectedLoad];
+}
+
+function getHpaRecommendation(currentCpu: number, targetCpu: number) {
+  if (currentCpu > targetCpu) {
+    return {
+      title: "Scale out",
+      description:
+        "Current CPU is above target. HPA should add replicas when metrics remain above the configured threshold.",
+    };
+  }
+
+  if (currentCpu < targetCpu * 0.7) {
+    return {
+      title: "Scale down possible",
+      description:
+        "Current CPU is well below target. HPA may reduce replicas while staying above the minimum replica count.",
+    };
+  }
+
+  return {
+    title: "Current replica count is sufficient",
+    description:
+      "Current CPU is below or near the target. The current replica count is likely sufficient.",
+  };
 }
