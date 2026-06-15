@@ -3,6 +3,7 @@ import { AppLayout } from "../components/layout/AppLayout";
 import { AboutPage } from "../pages/About/AboutPage";
 import { ArchitectureNotesPage } from "../pages/ArchitectureNotes/ArchitectureNotesPage";
 import { Base64ToolPage } from "../pages/DeveloperTools/Base64/Base64ToolPage";
+import { DataCompareToolPage } from "../pages/DeveloperTools/DataCompare/DataCompareToolPage";
 import { DeveloperToolsPage } from "../pages/DeveloperTools/DeveloperToolsPage";
 import { FormatterToolPage } from "../pages/DeveloperTools/Formatter/FormatterToolPage";
 import { UuidToolPage } from "../pages/DeveloperTools/Uuid/UuidToolPage";
@@ -21,6 +22,7 @@ export const appRouter = createBrowserRouter(
         { path: routePaths.base64Tool, element: <Base64ToolPage /> },
         { path: routePaths.uuidTool, element: <UuidToolPage /> },
         { path: routePaths.formatterTool, element: <FormatterToolPage /> },
+        { path: routePaths.dataCompareTool, element: <DataCompareToolPage /> },
         {
           path: routePaths.architectureNotes,
           element: <ArchitectureNotesPage />,

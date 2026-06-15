@@ -24,10 +24,11 @@ export const developerTools: DeveloperTool[] = [
     status: "available",
   },
   {
-    title: "JSON Compare",
-    description: "Compare JSON documents and identify structural or value-level differences.",
+    title: "Data Compare",
+    description: "Compare JSON, XML, YAML, Java, C# and plain text content.",
     category: "Data",
-    status: "coming-soon",
+    path: routePaths.dataCompareTool,
+    status: "available",
   },
   {
     title: "UUID Generator",
