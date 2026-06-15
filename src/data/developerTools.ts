@@ -40,9 +40,10 @@ export const developerTools: DeveloperTool[] = [
   },
   {
     title: "Regex Tester",
-    description: "Test regular expressions against sample strings with clear match feedback.",
+    description: "Test regular expressions against sample text and inspect matches.",
     category: "Text",
-    status: "coming-soon",
+    path: routePaths.regexTesterTool,
+    status: "available",
   },
   {
     title: "Timestamp Converter",

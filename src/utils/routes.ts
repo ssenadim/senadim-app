@@ -9,5 +9,6 @@ export const routePaths = {
   timestampTool: "/developer-tools/timestamp",
   jwtDecoderTool: "/developer-tools/jwt-decoder",
   hashGeneratorTool: "/developer-tools/hash-generator",
+  regexTesterTool: "/developer-tools/regex-tester",
   architectureNotes: "/architecture-notes",
 } as const;
