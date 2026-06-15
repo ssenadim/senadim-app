@@ -23,10 +23,4 @@ export const platformTools: DeveloperTool[] = [
     category: "Streaming",
     status: "coming-soon",
   },
-  {
-    title: "Capacity Planning",
-    description: "Model platform capacity and growth scenarios.",
-    category: "Planning",
-    status: "coming-soon",
-  },
 ];
