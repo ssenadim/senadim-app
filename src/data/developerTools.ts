@@ -16,10 +16,12 @@ export const developerTools: DeveloperTool[] = [
     status: "coming-soon",
   },
   {
-    title: "JSON Formatter",
-    description: "Format, validate, and inspect JSON payloads with a readable structure.",
+    title: "JSON & XML Formatter",
+    description:
+      "Format, validate, and minify JSON or XML payloads for APIs, integrations, logs, and debugging.",
     category: "Data",
-    status: "coming-soon",
+    path: routePaths.formatterTool,
+    status: "available",
   },
   {
     title: "JSON Compare",
