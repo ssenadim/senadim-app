@@ -10,5 +10,6 @@ export const routePaths = {
   jwtDecoderTool: "/developer-tools/jwt-decoder",
   hashGeneratorTool: "/developer-tools/hash-generator",
   regexTesterTool: "/developer-tools/regex-tester",
+  urlEncoderDecoderTool: "/developer-tools/url-encoder-decoder",
   architectureNotes: "/architecture-notes",
 } as const;

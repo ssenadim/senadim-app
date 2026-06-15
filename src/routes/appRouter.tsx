@@ -10,6 +10,7 @@ import { HashGeneratorToolPage } from "../pages/DeveloperTools/HashGenerator/Has
 import { JwtDecoderToolPage } from "../pages/DeveloperTools/JwtDecoder/JwtDecoderToolPage";
 import { RegexTesterToolPage } from "../pages/DeveloperTools/RegexTester/RegexTesterToolPage";
 import { TimestampToolPage } from "../pages/DeveloperTools/Timestamp/TimestampToolPage";
+import { UrlEncoderDecoderToolPage } from "../pages/DeveloperTools/UrlEncoderDecoder/UrlEncoderDecoderToolPage";
 import { UuidToolPage } from "../pages/DeveloperTools/Uuid/UuidToolPage";
 import { HomePage } from "../pages/Home/HomePage";
 import { NotFoundPage } from "../pages/NotFound/NotFoundPage";
@@ -31,6 +32,10 @@ export const appRouter = createBrowserRouter(
         { path: routePaths.jwtDecoderTool, element: <JwtDecoderToolPage /> },
         { path: routePaths.hashGeneratorTool, element: <HashGeneratorToolPage /> },
         { path: routePaths.regexTesterTool, element: <RegexTesterToolPage /> },
+        {
+          path: routePaths.urlEncoderDecoderTool,
+          element: <UrlEncoderDecoderToolPage />,
+        },
         {
           path: routePaths.architectureNotes,
           element: <ArchitectureNotesPage />,

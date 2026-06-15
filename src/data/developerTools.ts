@@ -60,4 +60,11 @@ export const developerTools: DeveloperTool[] = [
     path: routePaths.hashGeneratorTool,
     status: "available",
   },
+  {
+    title: "URL Encoder / Decoder",
+    description: "Encode and decode URLs, query parameters and special characters.",
+    category: "Encoding",
+    path: routePaths.urlEncoderDecoderTool,
+    status: "available",
+  },
 ];
