@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Badge, Button, Textarea } from "flowbite-react";
+import { Badge, Button, TextInput, Textarea } from "flowbite-react";
 import { HelpTooltip } from "../../../components/common/HelpTooltip";
 import { ToolToast } from "../../../components/common/ToolToast";
 import { ToolPageLayout } from "../../../components/layout/ToolPageLayout";
@@ -10,11 +10,14 @@ import {
   decodeJwt,
   extractRolesAndScopes,
   formatJwtDate,
+  getClaimEntries,
   getNumericClaim,
+  getSecurityWarnings,
   getStringClaim,
   getTokenStatus,
   isJwtFailure,
   type DecodedJwt,
+  type JwtWarning,
 } from "../../../utils/jwt";
 import { routePaths } from "../../../utils/routes";
 
@@ -28,7 +31,8 @@ const examples: ToolExample[] = [
   },
 ];
 
-const insightClaims = ["alg", "typ", "iss", "sub", "aud", "azp", "jti"];
+const insightClaims = ["iss", "sub", "aud", "azp", "scope", "exp", "iat", "nbf", "jti"];
+const headerClaims = ["alg", "typ"];
 const dateClaims = ["exp", "iat", "nbf"];
 
 export function JwtDecoderToolPage() {
@@ -37,6 +41,7 @@ export function JwtDecoderToolPage() {
   const [token, setToken] = useState("");
   const [decoded, setDecoded] = useState<DecodedJwt | null>(null);
   const [error, setError] = useState("");
+  const [claimSearch, setClaimSearch] = useState("");
   const [toast, setToast] = useState<ToastMessage | null>(null);
 
   useEffect(() => {
@@ -49,6 +54,17 @@ export function JwtDecoderToolPage() {
     () => (decoded ? extractRolesAndScopes(decoded.payload) : []),
     [decoded],
   );
+  const warnings = useMemo(
+    () => (decoded ? getSecurityWarnings(decoded) : []),
+    [decoded],
+  );
+  const matchingClaims = useMemo(() => {
+    if (!decoded) return [];
+    const query = claimSearch.trim().toLowerCase();
+    return getClaimEntries(decoded).filter((entry) =>
+      `${entry.key} ${entry.value}`.toLowerCase().includes(query),
+    );
+  }, [claimSearch, decoded]);
 
   function showToast(tone: ToastTone, text: string) {
     setToast({ id: Date.now(), tone, text });
@@ -92,6 +108,17 @@ export function JwtDecoderToolPage() {
 
   const headerJson = decoded ? JSON.stringify(decoded.header, null, 2) : "";
   const payloadJson = decoded ? JSON.stringify(decoded.payload, null, 2) : "";
+  const decodedTokenJson = decoded
+    ? JSON.stringify(
+        {
+          header: decoded.header,
+          payload: decoded.payload,
+          signature: decoded.signature,
+        },
+        null,
+        2,
+      )
+    : "";
 
   return (
     <ToolPageLayout
@@ -140,6 +167,7 @@ export function JwtDecoderToolPage() {
             <Button color="blue" onClick={handleDecode}>Decode</Button>
             <Button color="light" onClick={() => void copyText(headerJson, "Header copied.")}>Copy Header</Button>
             <Button color="light" onClick={() => void copyText(payloadJson, "Payload copied.")}>Copy Payload</Button>
+            <Button color="light" onClick={() => void copyText(decodedTokenJson, "Decoded token copied.")}>Copy Decoded Token</Button>
             <Button color="gray" onClick={clearAll}>Clear</Button>
           </div>
         </div>
@@ -147,15 +175,18 @@ export function JwtDecoderToolPage() {
       outputs={
         <div className="space-y-6">
           {decoded ? <StatusPanel status={getTokenStatus(decoded.payload)} /> : null}
+          {decoded ? <SecurityWarnings warnings={warnings} /> : null}
           {decoded ? (
             <section className="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
               <h2 className="text-lg font-semibold text-gray-950 dark:text-white">JWT Insights</h2>
               <div className="mt-4 grid gap-3 md:grid-cols-2">
+                {headerClaims.map((claim) => {
+                  const value = getStringClaim(decoded.header, claim);
+                  return value ? <ClaimRow key={claim} label={claim} value={value} highlighted /> : null;
+                })}
                 {insightClaims.map((claim) => {
-                  const value = claim === "alg" || claim === "typ"
-                    ? getStringClaim(decoded.header, claim)
-                    : getStringClaim(decoded.payload, claim);
-                  return value ? <ClaimRow key={claim} label={claim} value={value} /> : null;
+                  const value = getStringClaim(decoded.payload, claim);
+                  return value ? <ClaimRow key={claim} label={claim} value={value} highlighted /> : null;
                 })}
               </div>
               <div className="mt-5 grid gap-3">
@@ -165,13 +196,29 @@ export function JwtDecoderToolPage() {
                 })}
               </div>
               {rolesAndScopes.length > 0 ? (
-                <div className="mt-5">
+                <div className="mt-5 rounded-lg border border-cyan-200 bg-cyan-50 p-4 dark:border-cyan-900 dark:bg-cyan-950/40">
                   <p className="text-sm font-semibold text-gray-900 dark:text-white">Roles & Scopes</p>
                   <div className="mt-2 flex flex-wrap gap-2">
-                    {rolesAndScopes.map((value) => <Badge key={value} color="info">{value}</Badge>)}
+                    {rolesAndScopes.map((value) => <Badge key={value} color="purple">{value}</Badge>)}
                   </div>
                 </div>
               ) : null}
+            </section>
+          ) : null}
+          {decoded ? (
+            <section className="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+              <h2 className="text-lg font-semibold text-gray-950 dark:text-white">Claim Search</h2>
+              <TextInput
+                className="mt-3"
+                value={claimSearch}
+                onChange={(event) => setClaimSearch(event.target.value)}
+                placeholder="Search claims, values, roles, scopes..."
+              />
+              <div className="mt-4 grid gap-2">
+                {matchingClaims.slice(0, 20).map((entry) => (
+                  <ClaimRow key={entry.key} label={entry.key} value={entry.value} />
+                ))}
+              </div>
             </section>
           ) : null}
           <JsonBlock title="Header JSON" value={headerJson} />
@@ -198,8 +245,48 @@ function StatusPanel({ status }: { status: string }) {
   return <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-700"><span className="mr-3 text-sm font-semibold text-gray-900 dark:text-white">Token Status</span><Badge color={color}>{status}</Badge></div>;
 }
 
-function ClaimRow({ label, value }: { label: string; value: string }) {
-  return <div className="rounded-lg bg-gray-50 p-3 dark:bg-gray-950"><p className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">{label}</p><p className="mt-1 break-all font-mono text-sm text-gray-900 dark:text-gray-100">{value}</p></div>;
+function SecurityWarnings({ warnings }: { warnings: JwtWarning[] }) {
+  if (warnings.length === 0) {
+    return (
+      <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900 dark:bg-emerald-950/40">
+        <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-200">
+          No common JWT security warnings detected.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <section className="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-900 dark:bg-amber-950/40">
+      <h2 className="text-sm font-semibold text-amber-900 dark:text-amber-100">
+        Security Warnings
+      </h2>
+      <div className="mt-3 grid gap-2">
+        {warnings.map((warning) => (
+          <div key={warning.title}>
+            <p className="font-semibold text-amber-900 dark:text-amber-100">
+              {warning.title}
+            </p>
+            <p className="text-sm text-amber-800 dark:text-amber-200">
+              {warning.description}
+            </p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function ClaimRow({
+  label,
+  value,
+  highlighted,
+}: {
+  label: string;
+  value: string;
+  highlighted?: boolean;
+}) {
+  return <div className={`rounded-lg p-3 ${highlighted ? "border border-cyan-200 bg-cyan-50 dark:border-cyan-900 dark:bg-cyan-950/40" : "bg-gray-50 dark:bg-gray-950"}`}><p className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">{label}</p><p className="mt-1 break-all font-mono text-sm text-gray-900 dark:text-gray-100">{value}</p></div>;
 }
 
 function DateClaim({ label, seconds }: { label: string; seconds: number }) {

@@ -4,6 +4,16 @@ export interface DecodedJwt {
   signature: string;
 }
 
+export interface JwtWarning {
+  title: string;
+  description: string;
+}
+
+export interface JwtClaimEntry {
+  key: string;
+  value: string;
+}
+
 export interface JwtFailure {
   error: string;
 }
@@ -84,6 +94,40 @@ export function getNumericClaim(payload: Record<string, unknown>, key: string) {
   return null;
 }
 
+export function getSecurityWarnings(decoded: DecodedJwt) {
+  const warnings: JwtWarning[] = [];
+
+  if (decoded.header.alg === "none") {
+    warnings.push({
+      title: "alg=none",
+      description: "This token declares no signing algorithm.",
+    });
+  }
+
+  if (!getNumericClaim(decoded.payload, "exp")) {
+    warnings.push({
+      title: "Missing exp",
+      description: "This token does not declare an expiration time.",
+    });
+  }
+
+  if (!decoded.header.typ) {
+    warnings.push({
+      title: "Missing typ",
+      description: "This token header does not declare a token type.",
+    });
+  }
+
+  return warnings;
+}
+
+export function getClaimEntries(decoded: DecodedJwt) {
+  return [
+    ...flattenClaims("header", decoded.header),
+    ...flattenClaims("payload", decoded.payload),
+  ];
+}
+
 export function formatJwtDate(seconds: number, timeZone?: string) {
   return new Intl.DateTimeFormat("en-CA", {
     year: "numeric",
@@ -139,6 +183,21 @@ function collectResourceRoles(target: string[], value: unknown) {
     if (resource && typeof resource === "object" && "roles" in resource) {
       collectValue(target, resource.roles);
     }
+  });
+}
+
+function flattenClaims(
+  prefix: string,
+  source: Record<string, unknown>,
+): JwtClaimEntry[] {
+  return Object.entries(source).flatMap(([key, value]) => {
+    const path = `${prefix}.${key}`;
+
+    if (value && typeof value === "object" && !Array.isArray(value)) {
+      return flattenClaims(path, value as Record<string, unknown>);
+    }
+
+    return [{ key: path, value: Array.isArray(value) ? value.join(", ") : String(value) }];
   });
 }
 
