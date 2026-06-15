@@ -31,7 +31,8 @@ export const developerTools: DeveloperTool[] = [
     title: "UUID Generator",
     description: "Generate identifiers for tests, fixtures, migrations, and mock data.",
     category: "Utilities",
-    status: "coming-soon",
+    path: routePaths.uuidTool,
+    status: "available",
   },
   {
     title: "Regex Tester",

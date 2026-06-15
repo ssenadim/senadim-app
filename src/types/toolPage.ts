@@ -24,5 +24,6 @@ export interface ToolPageLayoutProps {
   actions: ReactNode;
   examples: ToolExample[];
   notes?: ReactNode;
+  notesCollapsible?: boolean;
   toast?: ReactNode;
 }

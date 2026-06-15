@@ -1,23 +1,17 @@
 import { useEffect, useState } from "react";
-import { Alert, Button, Textarea, Toast } from "flowbite-react";
+import { Alert, Button, Textarea } from "flowbite-react";
 import { HelpTooltip } from "../../../components/common/HelpTooltip";
+import { ToolToast } from "../../../components/common/ToolToast";
 import { ToolPageLayout } from "../../../components/layout/ToolPageLayout";
 import { usePageTitle } from "../../../hooks/usePageTitle";
 import type { ToolExample } from "../../../types/toolPage";
+import type { ToastMessage, ToastTone } from "../../../types/toast";
 import {
   decodeBase64,
   encodeBase64,
   isBase64Error,
 } from "../../../utils/base64";
 import { routePaths } from "../../../utils/routes";
-
-type ToastTone = "success" | "failure" | "info";
-
-interface ToastMessage {
-  id: number;
-  tone: ToastTone;
-  text: string;
-}
 
 const examples: ToolExample[] = [
   {
@@ -35,18 +29,6 @@ const examples: ToolExample[] = [
     output: "YWRtaW46dGVzdDEyMw==",
   },
 ];
-
-function getToastClasses(tone: ToastTone) {
-  const classes: Record<ToastTone, string> = {
-    success:
-      "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-200",
-    failure:
-      "border-red-200 bg-red-50 text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200",
-    info: "border-cyan-200 bg-cyan-50 text-cyan-800 dark:border-cyan-900 dark:bg-cyan-950 dark:text-cyan-200",
-  };
-
-  return classes[tone];
-}
 
 export function Base64ToolPage() {
   usePageTitle("Base64 Encoder / Decoder");
@@ -238,18 +220,7 @@ export function Base64ToolPage() {
           as encrypted or secure.
         </p>
       }
-      toast={
-        toast ? (
-          <div className="fixed bottom-5 right-5 z-50 max-w-sm">
-            <Toast
-              key={toast.id}
-              className={`border shadow-lg ${getToastClasses(toast.tone)}`}
-            >
-              <div className="text-sm font-medium">{toast.text}</div>
-            </Toast>
-          </div>
-        ) : null
-      }
+      toast={<ToolToast toast={toast} />}
     />
   );
 }
