@@ -6,6 +6,7 @@ import { Base64ToolPage } from "../pages/DeveloperTools/Base64/Base64ToolPage";
 import { DataCompareToolPage } from "../pages/DeveloperTools/DataCompare/DataCompareToolPage";
 import { DeveloperToolsPage } from "../pages/DeveloperTools/DeveloperToolsPage";
 import { FormatterToolPage } from "../pages/DeveloperTools/Formatter/FormatterToolPage";
+import { HashGeneratorToolPage } from "../pages/DeveloperTools/HashGenerator/HashGeneratorToolPage";
 import { JwtDecoderToolPage } from "../pages/DeveloperTools/JwtDecoder/JwtDecoderToolPage";
 import { TimestampToolPage } from "../pages/DeveloperTools/Timestamp/TimestampToolPage";
 import { UuidToolPage } from "../pages/DeveloperTools/Uuid/UuidToolPage";
@@ -27,6 +28,7 @@ export const appRouter = createBrowserRouter(
         { path: routePaths.dataCompareTool, element: <DataCompareToolPage /> },
         { path: routePaths.timestampTool, element: <TimestampToolPage /> },
         { path: routePaths.jwtDecoderTool, element: <JwtDecoderToolPage /> },
+        { path: routePaths.hashGeneratorTool, element: <HashGeneratorToolPage /> },
         {
           path: routePaths.architectureNotes,
           element: <ArchitectureNotesPage />,

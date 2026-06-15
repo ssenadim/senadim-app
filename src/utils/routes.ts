@@ -8,5 +8,6 @@ export const routePaths = {
   dataCompareTool: "/developer-tools/data-compare",
   timestampTool: "/developer-tools/timestamp",
   jwtDecoderTool: "/developer-tools/jwt-decoder",
+  hashGeneratorTool: "/developer-tools/hash-generator",
   architectureNotes: "/architecture-notes",
 } as const;

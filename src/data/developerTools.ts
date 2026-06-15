@@ -52,4 +52,11 @@ export const developerTools: DeveloperTool[] = [
     path: routePaths.timestampTool,
     status: "available",
   },
+  {
+    title: "Hash Generator",
+    description: "Generate MD5, SHA1, SHA256 and SHA512 hashes.",
+    category: "Security",
+    path: routePaths.hashGeneratorTool,
+    status: "available",
+  },
 ];
