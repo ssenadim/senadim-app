@@ -12,6 +12,8 @@ export const routePaths = {
   regexTesterTool: "/developer-tools/regex-tester",
   urlEncoderDecoderTool: "/developer-tools/url-encoder-decoder",
   pkceGeneratorTool: "/developer-tools/pkce-generator",
-  platformEngineering: "/platform-engineering/openshift-calculator",
+  platformEngineering: "/platform-engineering",
+  openShiftCalculator: "/platform-engineering/openshift-calculator",
+  jvmMemoryCalculator: "/platform-engineering/jvm-memory-calculator",
   architectureNotes: "/architecture-notes",
 } as const;
