@@ -8,7 +8,7 @@ import type { ToolExample } from "../../../types/toolPage";
 import type { ToastMessage } from "../../../types/toast";
 import { routePaths } from "../../../utils/routes";
 
-const tabs = ["Pod Resources", "HPA", "Container Memory", "PVC Size"] as const;
+const tabs = ["Capacity Planning", "Pod Resources", "HPA", "Container Memory", "PVC Size"] as const;
 
 type CalculatorTab = (typeof tabs)[number];
 type ApplicationType = "Java" | ".NET" | "Node.js" | "Other";
@@ -55,10 +55,20 @@ const pvcExamples: ToolExample[] = [
   },
 ];
 
+const capacityExamples: ToolExample[] = [
+  {
+    title: "Traffic Sizing Example",
+    inputLabel: "Inputs",
+    input: "RPS: 100\nAverage Response Time: 200 ms\nTarget CPU: 70%\nPod CPU: 500m",
+    outputLabel: "Recommended",
+    output: "Recommended Pod Count: 1",
+  },
+];
+
 export function OpenShiftCalculatorPage() {
   usePageTitle("OpenShift Calculator Suite");
 
-  const [activeTab, setActiveTab] = useState<CalculatorTab>("Container Memory");
+  const [activeTab, setActiveTab] = useState<CalculatorTab>("Capacity Planning");
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [heap, setHeap] = useState(2048);
   const [metaspace, setMetaspace] = useState(256);
@@ -75,6 +85,10 @@ export function OpenShiftCalculatorPage() {
   const [growthBuffer, setGrowthBuffer] = useState(20);
   const [compressionEnabled, setCompressionEnabled] =
     useState<CompressionEnabled>("No");
+  const [requestsPerSecond, setRequestsPerSecond] = useState(100);
+  const [averageResponseTime, setAverageResponseTime] = useState(200);
+  const [capacityTargetCpu, setCapacityTargetCpu] = useState(70);
+  const [podCpuCapacity, setPodCpuCapacity] = useState(500);
   const [toast, setToast] = useState<ToastMessage | null>(null);
 
   const calculation = useMemo(() => {
@@ -109,6 +123,7 @@ export function OpenShiftCalculatorPage() {
   const isPodResources = activeTab === "Pod Resources";
   const isHpa = activeTab === "HPA";
   const isPvc = activeTab === "PVC Size";
+  const isCapacityPlanning = activeTab === "Capacity Planning";
 
   const podResources = useMemo(
     () => calculatePodResources(applicationType, expectedLoad),
@@ -171,6 +186,37 @@ export function OpenShiftCalculatorPage() {
 
     return { json, properties, yaml };
   }, [compressionEnabled, dailyGrowth, growthBuffer, pvcCalculation.recommended, retentionDays]);
+  const capacityCalculation = useMemo(() => {
+    // Assumptions: concurrency follows Little's Law and each concurrent request
+    // is treated as one unit of CPU pressure against effective pod CPU capacity.
+    const concurrentRequests = Math.ceil(
+      requestsPerSecond * (averageResponseTime / 1000),
+    );
+    const effectivePodCpu = podCpuCapacity * (capacityTargetCpu / 100);
+    const requiredCpu = Math.ceil(concurrentRequests * 10);
+    const recommendedPods = Math.max(1, Math.ceil(requiredCpu / effectivePodCpu));
+
+    return { concurrentRequests, recommendedPods, requiredCpu };
+  }, [averageResponseTime, capacityTargetCpu, podCpuCapacity, requestsPerSecond]);
+  const capacityOutputs = useMemo(() => {
+    const json = JSON.stringify(
+      {
+        requestsPerSecond,
+        averageResponseTimeMs: averageResponseTime,
+        targetCpuUtilization: capacityTargetCpu,
+        podCpuCapacityMillicores: podCpuCapacity,
+        concurrentRequests: capacityCalculation.concurrentRequests,
+        requiredCpuMillicores: capacityCalculation.requiredCpu,
+        recommendedPodCount: capacityCalculation.recommendedPods,
+      },
+      null,
+      2,
+    );
+    const properties = `REQUESTS_PER_SECOND=${requestsPerSecond}\nAVERAGE_RESPONSE_TIME_MS=${averageResponseTime}\nRECOMMENDED_REPLICAS=${capacityCalculation.recommendedPods}`;
+    const yaml = `replicas: ${capacityCalculation.recommendedPods}`;
+
+    return { json, properties, yaml };
+  }, [averageResponseTime, capacityCalculation, capacityTargetCpu, podCpuCapacity, requestsPerSecond]);
 
   async function copyText(value: string, label: string) {
     try {
@@ -238,6 +284,21 @@ export function OpenShiftCalculatorPage() {
     void copyText(value, "All PVC outputs");
   }
 
+  function copyAllCapacityOutputs() {
+    const value = [
+      "# OpenShift/Kubernetes YAML",
+      capacityOutputs.yaml,
+      "",
+      "# JSON",
+      capacityOutputs.json,
+      "",
+      "# Properties",
+      capacityOutputs.properties,
+    ].join("\n");
+
+    void copyText(value, "All capacity planning outputs");
+  }
+
   return (
     <ToolPageLayout
       title="OpenShift Calculator Suite"
@@ -252,6 +313,8 @@ export function OpenShiftCalculatorPage() {
       overviewTitle={
         isHpa
           ? "What is HPA?"
+          : isCapacityPlanning
+            ? "What is Capacity Planning?"
           : isPvc
             ? "Why PVC Sizing Matters"
             : isPodResources
@@ -264,6 +327,12 @@ export function OpenShiftCalculatorPage() {
             <p>HPA automatically adjusts pod count.</p>
             <p>Scaling decisions are based on resource metrics.</p>
             <p>Proper thresholds improve cost and performance balance.</p>
+          </div>
+        ) : isCapacityPlanning ? (
+          <div className="space-y-3">
+            <p>Capacity planning helps estimate infrastructure requirements.</p>
+            <p>Proper sizing improves performance and cost efficiency.</p>
+            <p>Estimates should be validated with production metrics.</p>
           </div>
         ) : isPvc ? (
           <div className="space-y-3">
@@ -306,7 +375,38 @@ export function OpenShiftCalculatorPage() {
             ))}
           </div>
 
-          {activeTab === "Container Memory" ? (
+          {activeTab === "Capacity Planning" ? (
+            <div className="grid gap-4 md:grid-cols-2">
+              <NumberField
+                id="requests-per-second"
+                label="Requests Per Second (RPS)"
+                value={requestsPerSecond}
+                onChange={setRequestsPerSecond}
+                tooltip="Expected requests per second."
+              />
+              <NumberField
+                id="average-response-time"
+                label="Average Response Time (ms)"
+                value={averageResponseTime}
+                onChange={setAverageResponseTime}
+                tooltip="Average request processing time."
+              />
+              <NumberField
+                id="capacity-target-cpu"
+                label="Target CPU Utilization (%)"
+                value={capacityTargetCpu}
+                onChange={setCapacityTargetCpu}
+                tooltip="Desired CPU utilization threshold."
+              />
+              <NumberField
+                id="pod-cpu-capacity"
+                label="Pod CPU Capacity (millicores)"
+                value={podCpuCapacity}
+                onChange={setPodCpuCapacity}
+                tooltip="Available CPU capacity per pod."
+              />
+            </div>
+          ) : activeTab === "Container Memory" ? (
             <div className="space-y-5">
               <NumberField
                 id="heap-size"
@@ -447,7 +547,41 @@ export function OpenShiftCalculatorPage() {
         </div>
       }
       outputs={
-        activeTab === "PVC Size" ? (
+        activeTab === "Capacity Planning" ? (
+          <div className="space-y-6">
+            <div className="grid gap-4 md:grid-cols-3">
+              <MetricBox label="Concurrent Requests" value={capacityCalculation.concurrentRequests.toString()} />
+              <MetricBox label="Required CPU Capacity" value={`${capacityCalculation.requiredCpu}m`} />
+              <MetricBox label="Recommended Pod Count" value={capacityCalculation.recommendedPods.toString()} />
+            </div>
+            <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+              <h2 className="text-lg font-semibold text-gray-950 dark:text-white">
+                Calculation Breakdown
+              </h2>
+              <div className="mt-4 grid gap-3 text-sm text-gray-700 dark:text-gray-200">
+                <BreakdownRow label="Concurrent Requests" value={`${requestsPerSecond} RPS x ${averageResponseTime} ms`} />
+                <BreakdownRow label="Effective Pod CPU" value={`${podCpuCapacity}m x ${capacityTargetCpu}%`} />
+                <BreakdownRow label="Required CPU Capacity" value={`${capacityCalculation.requiredCpu}m`} />
+                <BreakdownRow label="Recommended Pod Count" value={`${capacityCalculation.recommendedPods}`} strong />
+              </div>
+            </div>
+            <section>
+              <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <h2 className="text-lg font-semibold text-gray-950 dark:text-white">
+                  Copy-ready Configuration Outputs
+                </h2>
+                <Button color="light" size="sm" onClick={copyAllCapacityOutputs}>
+                  Copy All Outputs
+                </Button>
+              </div>
+              <div className="grid gap-4 lg:grid-cols-2">
+                <GeneratedOutput title="OpenShift/Kubernetes YAML" value={capacityOutputs.yaml} onCopy={() => void copyText(capacityOutputs.yaml, "YAML")} />
+                <GeneratedOutput title="JSON" value={capacityOutputs.json} onCopy={() => void copyText(capacityOutputs.json, "JSON")} />
+                <GeneratedOutput title="Properties" value={capacityOutputs.properties} onCopy={() => void copyText(capacityOutputs.properties, "Properties")} />
+              </div>
+            </section>
+          </div>
+        ) : activeTab === "PVC Size" ? (
           <div className="space-y-6">
             <div className="grid gap-4 md:grid-cols-4">
               <MetricBox label="Base Storage" value={`${pvcCalculation.baseStorage} Gi`} />
@@ -571,6 +705,8 @@ export function OpenShiftCalculatorPage() {
       examples={
         isHpa
           ? hpaExamples
+          : isCapacityPlanning
+            ? capacityExamples
           : isPvc
             ? pvcExamples
             : isPodResources
@@ -584,6 +720,12 @@ export function OpenShiftCalculatorPage() {
             <li>HPA requires metrics collection.</li>
             <li>CPU targets should be realistic.</li>
             <li>Requests must be configured correctly for HPA to behave as expected.</li>
+          </ul>
+        ) : isCapacityPlanning ? (
+          <ul className="list-disc space-y-2 pl-5 text-sm leading-7 text-gray-600 dark:text-gray-300">
+            <li>Results are estimates.</li>
+            <li>Real workloads vary.</li>
+            <li>Monitor and tune based on production metrics.</li>
           </ul>
         ) : isPvc ? (
           <ul className="list-disc space-y-2 pl-5 text-sm leading-7 text-gray-600 dark:text-gray-300">
