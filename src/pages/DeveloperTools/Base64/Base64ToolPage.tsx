@@ -135,8 +135,8 @@ export function Base64ToolPage() {
         { label: "Developer Tools", path: routePaths.developerTools },
         { label: "Base64 Encoder / Decoder" },
       ]}
-      explanationTitle="What is Base64?"
-      explanation={
+      overviewTitle="What is Base64?"
+      overview={
         <div className="space-y-3">
           <p>
             Base64 is an encoding format that represents binary or text data
@@ -153,68 +153,65 @@ export function Base64ToolPage() {
           </p>
         </div>
       }
-      examples={examples}
-    >
-      <section className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-900 sm:p-6">
-        <div className="grid gap-6 xl:grid-cols-2">
-          <div>
-            <div className="mb-2 flex items-center gap-2">
-              <label
-                htmlFor="base64-input"
-                className="text-sm font-semibold text-gray-900 dark:text-white"
-              >
-                Input Text
-              </label>
-              <HelpTooltip
-                title="Input Text"
-                description="Enter plain text to encode, or Base64 text to decode."
-                exampleInput="Hello World"
-                exampleOutput="SGVsbG8gV29ybGQ="
-              />
-            </div>
-            <Textarea
-              id="base64-input"
-              rows={12}
-              value={inputText}
-              onChange={(event) => setInputText(event.target.value)}
-              placeholder="Enter plain text or Base64 here..."
-              className="font-mono"
+      inputs={
+        <div>
+          <div className="mb-2 flex items-center gap-2">
+            <label
+              htmlFor="base64-input"
+              className="text-sm font-semibold text-gray-900 dark:text-white"
+            >
+              Input Text
+            </label>
+            <HelpTooltip
+              title="Input Text"
+              description="Enter plain text to encode, or Base64 text to decode."
+              exampleInput="Hello World"
+              exampleOutput="SGVsbG8gV29ybGQ="
             />
           </div>
-
-          <div>
-            <div className="mb-2 flex items-center gap-2">
-              <label
-                htmlFor="base64-output"
-                className="text-sm font-semibold text-gray-900 dark:text-white"
-              >
-                Result
-              </label>
-              <HelpTooltip
-                title="Result"
-                description="The generated Base64 value or decoded plain text."
-                exampleInput="admin:test123"
-                exampleOutput="YWRtaW46dGVzdDEyMw=="
-              />
-            </div>
-            <Textarea
-              id="base64-output"
-              rows={12}
-              value={outputText}
-              readOnly
-              placeholder="Result will appear here..."
-              className="font-mono"
-            />
-          </div>
+          <Textarea
+            id="base64-input"
+            rows={12}
+            value={inputText}
+            onChange={(event) => setInputText(event.target.value)}
+            placeholder="Enter plain text or Base64 here..."
+            className="font-mono"
+          />
+          {errorMessage ? (
+            <Alert color="failure" className="mt-5">
+              <span className="font-semibold">Invalid Base64 input.</span>{" "}
+              {errorMessage}
+            </Alert>
+          ) : null}
         </div>
-
-        {errorMessage ? (
-          <Alert color="failure" className="mt-5">
-            <span className="font-semibold">Invalid Base64 input.</span>{" "}
-            {errorMessage}
-          </Alert>
-        ) : null}
-
+      }
+      outputs={
+        <div>
+          <div className="mb-2 flex items-center gap-2">
+            <label
+              htmlFor="base64-output"
+              className="text-sm font-semibold text-gray-900 dark:text-white"
+            >
+              Result
+            </label>
+            <HelpTooltip
+              title="Result"
+              description="The generated Base64 value or decoded plain text."
+              exampleInput="admin:test123"
+              exampleOutput="YWRtaW46dGVzdDEyMw=="
+            />
+          </div>
+          <Textarea
+            id="base64-output"
+            rows={12}
+            value={outputText}
+            readOnly
+            placeholder="Result will appear here..."
+            className="font-mono"
+          />
+        </div>
+      }
+      actions={
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
           <Button color="blue" onClick={handleEncode}>
             Encode
@@ -232,18 +229,27 @@ export function Base64ToolPage() {
             Clear
           </Button>
         </div>
-      </section>
-
-      {toast ? (
-        <div className="fixed bottom-5 right-5 z-50 max-w-sm">
-          <Toast
-            key={toast.id}
-            className={`border shadow-lg ${getToastClasses(toast.tone)}`}
-          >
-            <div className="text-sm font-medium">{toast.text}</div>
-          </Toast>
-        </div>
-      ) : null}
-    </ToolPageLayout>
+      }
+      examples={examples}
+      notes={
+        <p className="text-sm leading-7 text-gray-600 dark:text-gray-300">
+          Base64 is useful for transport-safe representation of text and binary
+          data, but it does not protect secrets. Avoid treating encoded values
+          as encrypted or secure.
+        </p>
+      }
+      toast={
+        toast ? (
+          <div className="fixed bottom-5 right-5 z-50 max-w-sm">
+            <Toast
+              key={toast.id}
+              className={`border shadow-lg ${getToastClasses(toast.tone)}`}
+            >
+              <div className="text-sm font-medium">{toast.text}</div>
+            </Toast>
+          </div>
+        ) : null
+      }
+    />
   );
 }

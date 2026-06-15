@@ -17,8 +17,12 @@ export interface ToolPageLayoutProps {
   title: string;
   description: string;
   breadcrumbs: ToolBreadcrumbItem[];
-  explanationTitle: string;
-  explanation: ReactNode;
+  overviewTitle: string;
+  overview: ReactNode;
+  inputs: ReactNode;
+  outputs: ReactNode;
+  actions: ReactNode;
   examples: ToolExample[];
-  children: ReactNode;
+  notes?: ReactNode;
+  toast?: ReactNode;
 }
