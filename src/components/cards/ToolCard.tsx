@@ -1,4 +1,5 @@
 import { Badge, Card } from "flowbite-react";
+import { Link } from "react-router-dom";
 import type { DeveloperTool } from "../../types/tool";
 
 interface ToolCardProps {
@@ -6,15 +7,18 @@ interface ToolCardProps {
 }
 
 export function ToolCard({ tool }: ToolCardProps) {
-  return (
+  const cardContent = (
     <Card className="h-full border-gray-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
       <div className="flex h-full flex-col gap-4">
         <div className="flex items-start justify-between gap-3">
           <Badge color="info" className="w-fit">
             {tool.category}
           </Badge>
-          <Badge color="warning" className="w-fit">
-            Coming Soon
+          <Badge
+            color={tool.status === "available" ? "success" : "warning"}
+            className="w-fit"
+          >
+            {tool.status === "available" ? "Available" : "Coming Soon"}
           </Badge>
         </div>
         <div>
@@ -27,5 +31,18 @@ export function ToolCard({ tool }: ToolCardProps) {
         </div>
       </div>
     </Card>
+  );
+
+  if (!tool.path) {
+    return cardContent;
+  }
+
+  return (
+    <Link
+      to={tool.path}
+      className="block h-full rounded-lg outline-cyan-600 focus:outline-2 focus:outline-offset-2"
+    >
+      {cardContent}
+    </Link>
   );
 }
