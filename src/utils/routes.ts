@@ -6,5 +6,6 @@ export const routePaths = {
   uuidTool: "/developer-tools/uuid",
   formatterTool: "/developer-tools/formatter",
   dataCompareTool: "/developer-tools/data-compare",
+  timestampTool: "/developer-tools/timestamp",
   architectureNotes: "/architecture-notes",
 } as const;

@@ -45,8 +45,10 @@ export const developerTools: DeveloperTool[] = [
   },
   {
     title: "Timestamp Converter",
-    description: "Convert Unix timestamps and ISO dates across readable formats.",
+    description:
+      "Convert Unix timestamps to human-readable dates and convert dates back to Unix timestamps.",
     category: "Date & Time",
-    status: "coming-soon",
+    path: routePaths.timestampTool,
+    status: "available",
   },
 ];
