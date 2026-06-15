@@ -13,6 +13,7 @@ const tabs = ["Pod Resources", "HPA", "Container Memory", "PVC Size"] as const;
 type CalculatorTab = (typeof tabs)[number];
 type ApplicationType = "Java" | ".NET" | "Node.js" | "Other";
 type ExpectedLoad = "Low" | "Medium" | "High";
+type CompressionEnabled = "Yes" | "No";
 
 const examples: ToolExample[] = [
   {
@@ -44,6 +45,16 @@ const hpaExamples: ToolExample[] = [
   },
 ];
 
+const pvcExamples: ToolExample[] = [
+  {
+    title: "PVC Growth Example",
+    inputLabel: "Inputs",
+    input: "Daily Growth: 2 GB\nRetention: 90 Days\nBuffer: 20%\nCompression: Enabled",
+    outputLabel: "Recommended PVC",
+    output: "110 Gi",
+  },
+];
+
 export function OpenShiftCalculatorPage() {
   usePageTitle("OpenShift Calculator Suite");
 
@@ -59,6 +70,11 @@ export function OpenShiftCalculatorPage() {
   const [targetCpu, setTargetCpu] = useState(60);
   const [minReplicas, setMinReplicas] = useState(2);
   const [maxReplicas, setMaxReplicas] = useState(10);
+  const [dailyGrowth, setDailyGrowth] = useState(1);
+  const [retentionDays, setRetentionDays] = useState(30);
+  const [growthBuffer, setGrowthBuffer] = useState(20);
+  const [compressionEnabled, setCompressionEnabled] =
+    useState<CompressionEnabled>("No");
   const [toast, setToast] = useState<ToastMessage | null>(null);
 
   const calculation = useMemo(() => {
@@ -92,6 +108,7 @@ export function OpenShiftCalculatorPage() {
   }, [calculation.total, heap]);
   const isPodResources = activeTab === "Pod Resources";
   const isHpa = activeTab === "HPA";
+  const isPvc = activeTab === "PVC Size";
 
   const podResources = useMemo(
     () => calculatePodResources(applicationType, expectedLoad),
@@ -121,6 +138,39 @@ export function OpenShiftCalculatorPage() {
 
     return { json, yaml };
   }, [maxReplicas, minReplicas, targetCpu]);
+  const pvcCalculation = useMemo(() => {
+    const baseStorage = dailyGrowth;
+    const retentionStorage = dailyGrowth * retentionDays;
+    const adjustedStorage =
+      compressionEnabled === "Yes" ? retentionStorage * 0.5 : retentionStorage;
+    const buffer = adjustedStorage * (growthBuffer / 100);
+    const recommended = Math.ceil(adjustedStorage + buffer);
+
+    return {
+      adjustedStorage,
+      baseStorage,
+      buffer,
+      recommended,
+      retentionStorage,
+    };
+  }, [compressionEnabled, dailyGrowth, growthBuffer, retentionDays]);
+  const pvcOutputs = useMemo(() => {
+    const json = JSON.stringify(
+      {
+        dailyGrowthGb: dailyGrowth,
+        retentionDays,
+        growthBufferPercent: growthBuffer,
+        compressionEnabled: compressionEnabled === "Yes",
+        recommendedPvcGi: pvcCalculation.recommended,
+      },
+      null,
+      2,
+    );
+    const properties = `DAILY_GROWTH_GB=${dailyGrowth}\nRETENTION_DAYS=${retentionDays}\nGROWTH_BUFFER_PERCENT=${growthBuffer}\nPVC_SIZE_GI=${pvcCalculation.recommended}`;
+    const yaml = `apiVersion: v1\nkind: PersistentVolumeClaim\nspec:\n  resources:\n    requests:\n      storage: "${pvcCalculation.recommended}Gi"`;
+
+    return { json, properties, yaml };
+  }, [compressionEnabled, dailyGrowth, growthBuffer, pvcCalculation.recommended, retentionDays]);
 
   async function copyText(value: string, label: string) {
     try {
@@ -173,6 +223,21 @@ export function OpenShiftCalculatorPage() {
     void copyText(value, "All HPA outputs");
   }
 
+  function copyAllPvcOutputs() {
+    const value = [
+      "# Kubernetes/OpenShift YAML",
+      pvcOutputs.yaml,
+      "",
+      "# JSON",
+      pvcOutputs.json,
+      "",
+      "# Properties",
+      pvcOutputs.properties,
+    ].join("\n");
+
+    void copyText(value, "All PVC outputs");
+  }
+
   return (
     <ToolPageLayout
       title="OpenShift Calculator Suite"
@@ -187,7 +252,9 @@ export function OpenShiftCalculatorPage() {
       overviewTitle={
         isHpa
           ? "What is HPA?"
-          : isPodResources
+          : isPvc
+            ? "Why PVC Sizing Matters"
+            : isPodResources
             ? "Why Pod Resources Matter"
             : "Why Container Memory Matters"
       }
@@ -197,6 +264,12 @@ export function OpenShiftCalculatorPage() {
             <p>HPA automatically adjusts pod count.</p>
             <p>Scaling decisions are based on resource metrics.</p>
             <p>Proper thresholds improve cost and performance balance.</p>
+          </div>
+        ) : isPvc ? (
+          <div className="space-y-3">
+            <p>Under-sized volumes may cause outages.</p>
+            <p>Over-sized volumes increase costs.</p>
+            <p>Capacity planning improves reliability.</p>
           </div>
         ) : isPodResources ? (
           <div className="space-y-3">
@@ -325,6 +398,42 @@ export function OpenShiftCalculatorPage() {
                 tooltip="Maximum number of pods."
               />
             </div>
+          ) : activeTab === "PVC Size" ? (
+            <div className="grid gap-4 md:grid-cols-2">
+              <NumberField
+                id="daily-growth"
+                label="Daily Growth (GB)"
+                value={dailyGrowth}
+                onChange={setDailyGrowth}
+                tooltip="Average storage increase per day."
+              />
+              <NumberField
+                id="retention-days"
+                label="Retention Days"
+                value={retentionDays}
+                onChange={setRetentionDays}
+                tooltip="Number of days data should be retained."
+              />
+              <NumberField
+                id="growth-buffer"
+                label="Growth Buffer (%)"
+                value={growthBuffer}
+                onChange={setGrowthBuffer}
+                tooltip="Additional storage capacity for unexpected growth."
+              />
+              <SelectField
+                id="compression-enabled"
+                label="Compression Enabled"
+                value={compressionEnabled}
+                options={["Yes", "No"]}
+                onChange={(value) =>
+                  setCompressionEnabled(value as CompressionEnabled)
+                }
+              />
+              <p className="text-sm text-gray-600 dark:text-gray-300 md:col-span-2">
+                Compression assumes an estimated 50% storage reduction.
+              </p>
+            </div>
           ) : (
             <div className="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center dark:border-gray-700 dark:bg-gray-950">
               <Badge color="warning" className="mx-auto w-fit">
@@ -338,7 +447,31 @@ export function OpenShiftCalculatorPage() {
         </div>
       }
       outputs={
-        activeTab === "HPA" ? (
+        activeTab === "PVC Size" ? (
+          <div className="space-y-6">
+            <div className="grid gap-4 md:grid-cols-4">
+              <MetricBox label="Base Storage" value={`${pvcCalculation.baseStorage} Gi`} />
+              <MetricBox label="Retention Storage" value={`${pvcCalculation.retentionStorage} Gi`} />
+              <MetricBox label="Buffer" value={`${pvcCalculation.buffer.toFixed(1)} Gi`} />
+              <MetricBox label="Recommended PVC Size" value={`${pvcCalculation.recommended} Gi`} />
+            </div>
+            <section>
+              <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <h2 className="text-lg font-semibold text-gray-950 dark:text-white">
+                  Copy-ready Configuration Outputs
+                </h2>
+                <Button color="light" size="sm" onClick={copyAllPvcOutputs}>
+                  Copy All Outputs
+                </Button>
+              </div>
+              <div className="grid gap-4 lg:grid-cols-2">
+                <GeneratedOutput title="Kubernetes/OpenShift YAML" value={pvcOutputs.yaml} onCopy={() => void copyText(pvcOutputs.yaml, "YAML")} />
+                <GeneratedOutput title="JSON" value={pvcOutputs.json} onCopy={() => void copyText(pvcOutputs.json, "JSON")} />
+                <GeneratedOutput title="Properties" value={pvcOutputs.properties} onCopy={() => void copyText(pvcOutputs.properties, "Properties")} />
+              </div>
+            </section>
+          </div>
+        ) : activeTab === "HPA" ? (
           <div className="space-y-6">
             <div className="grid gap-4 md:grid-cols-4">
               <MetricBox label="Target CPU" value={`${targetCpu}%`} />
@@ -435,7 +568,15 @@ export function OpenShiftCalculatorPage() {
           </div>
         ) : undefined
       }
-      examples={isHpa ? hpaExamples : isPodResources ? podResourceExamples : examples}
+      examples={
+        isHpa
+          ? hpaExamples
+          : isPvc
+            ? pvcExamples
+            : isPodResources
+              ? podResourceExamples
+              : examples
+      }
       notesCollapsible
       notes={
         isHpa ? (
@@ -443,6 +584,12 @@ export function OpenShiftCalculatorPage() {
             <li>HPA requires metrics collection.</li>
             <li>CPU targets should be realistic.</li>
             <li>Requests must be configured correctly for HPA to behave as expected.</li>
+          </ul>
+        ) : isPvc ? (
+          <ul className="list-disc space-y-2 pl-5 text-sm leading-7 text-gray-600 dark:text-gray-300">
+            <li>Real growth rates vary over time.</li>
+            <li>Always monitor actual usage.</li>
+            <li>Revisit sizing periodically.</li>
           </ul>
         ) : isPodResources ? (
           <ul className="list-disc space-y-2 pl-5 text-sm leading-7 text-gray-600 dark:text-gray-300">
