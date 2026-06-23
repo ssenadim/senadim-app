@@ -15,6 +15,7 @@ export const routePaths = {
   platformEngineering: "/platform-engineering",
   openShiftCalculator: "/platform-engineering/openshift-calculator",
   jvmMemoryCalculator: "/platform-engineering/jvm-memory-calculator",
+  plantUmlViewer: "/platform-engineering/plantuml-viewer",
   architectureNotes: "/architecture-notes",
   dpopArchitectureNote: "/architecture-notes/dpop",
 } as const;

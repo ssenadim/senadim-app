@@ -24,6 +24,7 @@ export interface ToolPageLayoutProps {
   inputs?: ReactNode;
   outputs?: ReactNode;
   examples: ToolExample[];
+  onExampleSelect?: (example: ToolExample) => void;
   notes?: ReactNode;
   notesCollapsible?: boolean;
   toast?: ReactNode;

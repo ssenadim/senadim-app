@@ -20,6 +20,7 @@ export function ToolPageLayout({
   inputs,
   outputs,
   examples,
+  onExampleSelect,
   notes,
   notesCollapsible,
   toast,
@@ -51,6 +52,7 @@ export function ToolPageLayout({
         examples={examples}
         isVisible={areExamplesVisible}
         onToggle={() => setAreExamplesVisible((current) => !current)}
+        onExampleSelect={onExampleSelect}
       />
 
       {notes ? (

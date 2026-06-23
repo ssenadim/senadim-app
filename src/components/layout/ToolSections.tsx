@@ -29,6 +29,7 @@ interface ToolExamplesProps {
   examples: ToolExample[];
   isVisible: boolean;
   onToggle: () => void;
+  onExampleSelect?: (example: ToolExample) => void;
 }
 
 interface ToolNotesProps {
@@ -139,6 +140,7 @@ export function ToolExamples({
   examples,
   isVisible,
   onToggle,
+  onExampleSelect,
 }: ToolExamplesProps) {
   return (
     <section className="flex flex-col gap-5">
@@ -161,6 +163,17 @@ export function ToolExamples({
               <h2 className="text-lg font-semibold text-gray-950 dark:text-white">
                 {example.title}
               </h2>
+              {onExampleSelect ? (
+                <div className="mt-3">
+                  <Button
+                    color="light"
+                    size="xs"
+                    onClick={() => onExampleSelect(example)}
+                  >
+                    Use Example
+                  </Button>
+                </div>
+              ) : null}
               <div className="mt-4 grid gap-3">
                 <div>
                   <p className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">

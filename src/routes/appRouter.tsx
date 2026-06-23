@@ -18,6 +18,7 @@ import { HomePage } from "../pages/Home/HomePage";
 import { NotFoundPage } from "../pages/NotFound/NotFoundPage";
 import { JvmMemoryCalculatorPage } from "../pages/PlatformEngineering/JvmMemoryCalculator/JvmMemoryCalculatorPage";
 import { OpenShiftCalculatorPage } from "../pages/PlatformEngineering/OpenShiftCalculator/OpenShiftCalculatorPage";
+import { PlantUmlViewerPage } from "../pages/PlatformEngineering/PlantUmlViewer/PlantUmlViewerPage";
 import { PlatformEngineeringPage } from "../pages/PlatformEngineering/PlatformEngineeringPage";
 import { routePaths } from "../utils/routes";
 
@@ -61,6 +62,10 @@ export const appRouter = createBrowserRouter(
         {
           path: routePaths.jvmMemoryCalculator,
           element: <JvmMemoryCalculatorPage />,
+        },
+        {
+          path: routePaths.plantUmlViewer,
+          element: <PlantUmlViewerPage />,
         },
         { path: "*", element: <NotFoundPage /> },
       ],
