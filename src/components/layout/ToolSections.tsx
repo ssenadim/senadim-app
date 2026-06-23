@@ -20,7 +20,7 @@ interface ToolDescriptionProps {
 }
 
 interface ToolSectionProps {
-  title: string;
+  title?: string | null;
   description?: string;
   children: ReactNode;
 }
@@ -42,8 +42,8 @@ interface ToolNotesProps {
 function ToolSection({ title, description, children }: ToolSectionProps) {
   return (
     <section className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-900 sm:p-6">
-      <SectionHeader title={title} description={description} />
-      <div className="mt-5">{children}</div>
+      {title ? <SectionHeader title={title} description={description} /> : null}
+      <div className={title ? "mt-5" : undefined}>{children}</div>
     </section>
   );
 }
@@ -128,8 +128,14 @@ export function ToolDescription({
   );
 }
 
-export function ToolInputArea({ children }: { children: ReactNode }) {
-  return <ToolSection title="Tool Inputs">{children}</ToolSection>;
+export function ToolInputArea({
+  children,
+  title = "Tool Inputs",
+}: {
+  children: ReactNode;
+  title?: string | null;
+}) {
+  return <ToolSection title={title}>{children}</ToolSection>;
 }
 
 export function ToolResultArea({ children }: { children: ReactNode }) {

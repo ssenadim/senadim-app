@@ -423,10 +423,11 @@ export function PlantUmlViewerPage() {
           </p>
         </div>
       }
+      inputTitle={null}
       inputs={
-        <div className="grid gap-5 xl:grid-cols-2">
-          <section>
-            <div className="mb-5 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-950">
+        <div className="space-y-5">
+          <section className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-950">
+            <div className="flex flex-col gap-4">
               <div className="mb-3 flex items-center gap-2">
                 <h2 className="text-sm font-semibold text-gray-900 dark:text-white">
                   Templates
@@ -436,7 +437,7 @@ export function PlantUmlViewerPage() {
                   description="Choose a starter template to replace the editor content."
                 />
               </div>
-              <div className="grid gap-4">
+              <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-4">
                 {templateGroups.map((group) => (
                   <TemplateGroup
                     key={group.category}
@@ -447,7 +448,10 @@ export function PlantUmlViewerPage() {
                 ))}
               </div>
             </div>
+          </section>
 
+          <div className="grid gap-5 xl:grid-cols-[minmax(0,0.45fr)_minmax(0,0.55fr)]">
+            <section>
             <div className="mb-2 flex items-center gap-2">
               <label
                 htmlFor="plantuml-source"
@@ -486,9 +490,9 @@ Alice -> Bob : Hello
                 Clear
               </Button>
             </div>
-          </section>
+            </section>
 
-          <section className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-950">
+            <section className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-950">
             <div className="mb-4 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2">
                 <h2 className="text-sm font-semibold text-gray-900 dark:text-white">
@@ -528,7 +532,8 @@ Alice -> Bob : Hello
                 Enter PlantUML source and click Render Diagram to preview it here.
               </div>
             )}
-          </section>
+            </section>
+          </div>
         </div>
       }
       examples={examples}

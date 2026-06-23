@@ -17,6 +17,7 @@ export function ToolPageLayout({
   overview,
   overviewCollapsible,
   overviewToggleLabel,
+  inputTitle,
   inputs,
   outputs,
   examples,
@@ -45,7 +46,7 @@ export function ToolPageLayout({
       >
         {overview}
       </ToolDescription>
-      {inputs ? <ToolInputArea>{inputs}</ToolInputArea> : null}
+      {inputs ? <ToolInputArea title={inputTitle}>{inputs}</ToolInputArea> : null}
       {outputs ? <ToolResultArea>{outputs}</ToolResultArea> : null}
 
       <ToolExamples

@@ -21,6 +21,7 @@ export interface ToolPageLayoutProps {
   overview: ReactNode;
   overviewCollapsible?: boolean;
   overviewToggleLabel?: string;
+  inputTitle?: string | null;
   inputs?: ReactNode;
   outputs?: ReactNode;
   examples: ToolExample[];
