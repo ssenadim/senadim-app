@@ -86,6 +86,75 @@ const templateGroups: PlantUmlTemplateGroup[] = [
     ],
   },
   {
+    category: "ISAQB Architecture",
+    templates: [
+      {
+        title: "Context Diagram",
+        source: `@startuml
+actor "Customer" as User
+rectangle "Main Application" as MainApp {
+  rectangle "Web Portal" as Portal
+}
+cloud "Payment Provider" as Payment
+cloud "Identity Provider" as Identity
+cloud "CRM System" as Crm
+
+User --> Portal : uses
+Portal --> Identity : authenticate user
+Portal --> Payment : process payment
+Portal --> Crm : synchronize customer data
+
+note right of MainApp
+System boundary:
+Main Application
+end note
+@enduml`,
+      },
+      {
+        title: "Container Diagram",
+        source: `@startuml
+actor "User" as User
+rectangle "Frontend" as Frontend
+rectangle "API Gateway" as Gateway
+rectangle "Backend Services" {
+  rectangle "Customer Service" as CustomerService
+  rectangle "Order Service" as OrderService
+}
+database "Application Database" as Database
+
+User --> Frontend : browser access
+Frontend --> Gateway : REST / HTTPS
+Gateway --> CustomerService : customer API
+Gateway --> OrderService : order API
+CustomerService --> Database : read/write customers
+OrderService --> Database : read/write orders
+@enduml`,
+      },
+      {
+        title: "Runtime View",
+        source: `@startuml
+actor User
+participant Frontend
+participant "API Gateway" as Gateway
+participant "Identity Provider" as Identity
+participant "Backend Service" as Backend
+database Database
+
+User -> Frontend : Submit request
+Frontend -> Gateway : API request
+Gateway -> Identity : Validate access token
+Identity --> Gateway : Token valid
+Gateway -> Backend : Forward request
+Backend -> Database : Load and update data
+Database --> Backend : Result
+Backend --> Gateway : Response payload
+Gateway --> Frontend : API response
+Frontend --> User : Display result
+@enduml`,
+      },
+    ],
+  },
+  {
     category: "Architecture",
     templates: [
       {
