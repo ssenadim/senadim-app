@@ -114,6 +114,8 @@ export function UuidToolPage() {
         { label: "UUID Generator" },
       ]}
       overviewTitle="What is a UUID?"
+      overviewCollapsible
+      overviewToggleLabel="What is a UUID?"
       overview={
         <div className="space-y-3">
           <p>

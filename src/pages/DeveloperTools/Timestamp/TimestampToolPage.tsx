@@ -128,6 +128,8 @@ export function TimestampToolPage() {
         { label: "Timestamp Converter" },
       ]}
       overviewTitle="What is a Unix Timestamp?"
+      overviewCollapsible
+      overviewToggleLabel="What is a Unix Timestamp?"
       overview={
         <div className="space-y-3">
           <p>

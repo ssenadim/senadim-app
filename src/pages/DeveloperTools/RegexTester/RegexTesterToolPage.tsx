@@ -97,6 +97,8 @@ export function RegexTesterToolPage() {
         { label: "Regex Tester" },
       ]}
       overviewTitle="What is a Regular Expression?"
+      overviewCollapsible
+      overviewToggleLabel="What is a Regular Expression?"
       overview={
         <div className="space-y-3">
           <p>Regular expressions are patterns used to search, validate and extract text.</p>

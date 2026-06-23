@@ -90,6 +90,8 @@ export function HashGeneratorToolPage() {
         { label: "Hash Generator" },
       ]}
       overviewTitle="What is a Hash?"
+      overviewCollapsible
+      overviewToggleLabel="What is a Hash?"
       overview={
         <div className="space-y-3">
           <p>Hashing converts input data into a fixed-length output.</p>

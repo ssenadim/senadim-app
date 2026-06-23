@@ -115,6 +115,8 @@ export function PkceGeneratorToolPage() {
         { label: "PKCE Generator" },
       ]}
       overviewTitle="What is PKCE?"
+      overviewCollapsible
+      overviewToggleLabel="What is PKCE?"
       overview={
         <div className="space-y-3">
           <p>PKCE stands for Proof Key for Code Exchange.</p>

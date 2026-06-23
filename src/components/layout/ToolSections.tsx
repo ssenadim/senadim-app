@@ -13,6 +13,10 @@ interface ToolHeaderProps {
 interface ToolDescriptionProps {
   title: string;
   children: ReactNode;
+  isCollapsible?: boolean;
+  isVisible?: boolean;
+  onToggle?: () => void;
+  toggleLabel?: string;
 }
 
 interface ToolSectionProps {
@@ -84,16 +88,40 @@ export function ToolHeader({
   );
 }
 
-export function ToolDescription({ title, children }: ToolDescriptionProps) {
+export function ToolDescription({
+  title,
+  children,
+  isCollapsible,
+  isVisible = true,
+  onToggle,
+  toggleLabel,
+}: ToolDescriptionProps) {
+  if (isCollapsible) {
+    return (
+      <section>
+        <Button color="light" size="sm" onClick={onToggle}>
+          {isVisible ? "\u25BC" : "\u25B6"} {toggleLabel ?? title}
+        </Button>
+        {isVisible ? (
+          <div className="mt-4 rounded-lg border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-900 sm:p-6">
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold text-gray-950 dark:text-white">
+                {title}
+              </h2>
+              <div className="text-sm leading-7 text-gray-600 dark:text-gray-300">
+                {children}
+              </div>
+            </div>
+          </div>
+        ) : null}
+      </section>
+    );
+  }
+
   return (
-    <ToolSection title="Tool Overview">
-      <div className="space-y-4">
-        <h2 className="text-xl font-semibold text-gray-950 dark:text-white">
-          {title}
-        </h2>
-        <div className="text-sm leading-7 text-gray-600 dark:text-gray-300">
-          {children}
-        </div>
+    <ToolSection title={title}>
+      <div className="text-sm leading-7 text-gray-600 dark:text-gray-300">
+        {children}
       </div>
     </ToolSection>
   );

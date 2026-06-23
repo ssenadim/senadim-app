@@ -128,7 +128,9 @@ export function JwtDecoderToolPage() {
         { label: "Developer Tools", path: routePaths.developerTools },
         { label: "JWT Decoder" },
       ]}
-      overviewTitle="What is a JWT?"
+      overviewTitle="What is JWT?"
+      overviewCollapsible
+      overviewToggleLabel="What is JWT?"
       overview={
         <div className="space-y-3">
           <p>JWTs carry signed header, payload, and signature parts.</p>

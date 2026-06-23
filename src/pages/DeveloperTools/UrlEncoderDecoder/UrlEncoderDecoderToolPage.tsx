@@ -116,6 +116,8 @@ export function UrlEncoderDecoderToolPage() {
         { label: "URL Encoder / Decoder" },
       ]}
       overviewTitle="What is URL Encoding?"
+      overviewCollapsible
+      overviewToggleLabel="What is URL Encoding?"
       overview={
         <div className="space-y-3">
           <p>

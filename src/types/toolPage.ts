@@ -19,6 +19,8 @@ export interface ToolPageLayoutProps {
   breadcrumbs: ToolBreadcrumbItem[];
   overviewTitle: string;
   overview: ReactNode;
+  overviewCollapsible?: boolean;
+  overviewToggleLabel?: string;
   inputs?: ReactNode;
   outputs?: ReactNode;
   examples: ToolExample[];

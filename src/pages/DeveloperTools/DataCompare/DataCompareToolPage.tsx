@@ -137,7 +137,9 @@ export function DataCompareToolPage() {
         { label: "Developer Tools", path: routePaths.developerTools },
         { label: "Data Compare" },
       ]}
-      overviewTitle="What is Data Compare?"
+      overviewTitle="What is Data Comparison?"
+      overviewCollapsible
+      overviewToggleLabel="What is Data Comparison?"
       overview={
         <div className="space-y-3">
           <p>Compare structured and unstructured content.</p>

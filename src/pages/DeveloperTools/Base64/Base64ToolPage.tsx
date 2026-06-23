@@ -112,12 +112,14 @@ export function Base64ToolPage() {
   return (
     <ToolPageLayout
       title="Base64 Encoder / Decoder"
-      description="Encode plain text into Base64 or decode Base64 values back into readable text."
+      description="Encode and decode Base64 strings."
       breadcrumbs={[
         { label: "Developer Tools", path: routePaths.developerTools },
         { label: "Base64 Encoder / Decoder" },
       ]}
       overviewTitle="What is Base64?"
+      overviewCollapsible
+      overviewToggleLabel="What is Base64?"
       overview={
         <div className="space-y-3">
           <p>

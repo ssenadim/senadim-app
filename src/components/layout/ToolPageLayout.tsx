@@ -15,6 +15,8 @@ export function ToolPageLayout({
   breadcrumbs,
   overviewTitle,
   overview,
+  overviewCollapsible,
+  overviewToggleLabel,
   inputs,
   outputs,
   examples,
@@ -24,6 +26,7 @@ export function ToolPageLayout({
 }: ToolPageLayoutProps) {
   const [areExamplesVisible, setAreExamplesVisible] = useState(false);
   const [areNotesVisible, setAreNotesVisible] = useState(!notesCollapsible);
+  const [isOverviewVisible, setIsOverviewVisible] = useState(!overviewCollapsible);
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8">
@@ -32,7 +35,15 @@ export function ToolPageLayout({
         description={description}
         breadcrumbs={breadcrumbs}
       />
-      <ToolDescription title={overviewTitle}>{overview}</ToolDescription>
+      <ToolDescription
+        title={overviewTitle}
+        isCollapsible={overviewCollapsible}
+        isVisible={isOverviewVisible}
+        onToggle={() => setIsOverviewVisible((current) => !current)}
+        toggleLabel={overviewToggleLabel}
+      >
+        {overview}
+      </ToolDescription>
       {inputs ? <ToolInputArea>{inputs}</ToolInputArea> : null}
       {outputs ? <ToolResultArea>{outputs}</ToolResultArea> : null}
 

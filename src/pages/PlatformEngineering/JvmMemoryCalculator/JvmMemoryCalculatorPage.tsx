@@ -91,6 +91,8 @@ export function JvmMemoryCalculatorPage() {
         { label: "JVM Memory Calculator" },
       ]}
       overviewTitle="Why JVM Memory Sizing Matters"
+      overviewCollapsible
+      overviewToggleLabel="Why JVM Memory Sizing Matters"
       overview={
         <div className="space-y-3">
           <p>JVM memory is more than heap.</p>

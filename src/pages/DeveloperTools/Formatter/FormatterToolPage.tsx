@@ -115,7 +115,9 @@ export function FormatterToolPage() {
         { label: "Developer Tools", path: routePaths.developerTools },
         { label: "JSON & XML Formatter" },
       ]}
-      overviewTitle="What is a Formatter?"
+      overviewTitle="Why Formatting Matters"
+      overviewCollapsible
+      overviewToggleLabel="Why Formatting Matters"
       overview={
         <div className="space-y-3">
           <p>Formatters make structured data easier to read.</p>

@@ -299,6 +299,16 @@ export function OpenShiftCalculatorPage() {
     void copyText(value, "All capacity planning outputs");
   }
 
+  const overviewTitle = isHpa
+    ? "What is HPA?"
+    : isCapacityPlanning
+      ? "What is Capacity Planning?"
+      : isPvc
+        ? "Why PVC Sizing Matters"
+        : isPodResources
+          ? "Why Pod Resources Matter"
+          : "Why Container Memory Matters";
+
   return (
     <ToolPageLayout
       title="OpenShift Calculator Suite"
@@ -310,17 +320,9 @@ export function OpenShiftCalculatorPage() {
         },
         { label: "OpenShift Calculator Suite" },
       ]}
-      overviewTitle={
-        isHpa
-          ? "What is HPA?"
-          : isCapacityPlanning
-            ? "What is Capacity Planning?"
-          : isPvc
-            ? "Why PVC Sizing Matters"
-            : isPodResources
-            ? "Why Pod Resources Matter"
-            : "Why Container Memory Matters"
-      }
+      overviewTitle={overviewTitle}
+      overviewCollapsible
+      overviewToggleLabel={overviewTitle}
       overview={
         isHpa ? (
           <div className="space-y-3">
