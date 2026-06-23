@@ -160,85 +160,96 @@ Frontend --> User : Display result
       {
         title: "C4 - Context Diagram",
         source: `@startuml
-actor "Customer" as Customer
-rectangle "Mobile Banking System" as MobileBanking {
-  rectangle "Mobile App and Backend APIs" as BankingCore
-}
-rectangle "Keycloak" as Keycloak
-rectangle "Fraud Detection Service" as Fraud
-rectangle "Notification Service" as Notification
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
 
-Customer --> BankingCore : manages accounts and payments
-BankingCore --> Keycloak : authenticates customer
-BankingCore --> Fraud : checks transaction risk
-BankingCore --> Notification : sends payment alerts
+LAYOUT_WITH_LEGEND()
 
-note right of MobileBanking
-System boundary:
-Mobile Banking System
-end note
+Person(customer, "Customer", "Mobile banking customer")
+System(mobileBanking, "Mobile Banking System", "Allows customers to manage accounts, payments and security settings")
+System_Ext(keycloak, "Keycloak", "Identity and access management platform")
+System_Ext(fraud, "Fraud Detection Service", "Evaluates transaction and login risk")
+System_Ext(notification, "Notification Service", "Sends transactional and security notifications")
+
+Rel(customer, mobileBanking, "Uses", "Mobile app")
+Rel(mobileBanking, keycloak, "Authenticates customers", "OIDC")
+Rel(mobileBanking, fraud, "Checks transaction risk", "REST")
+Rel(mobileBanking, notification, "Sends alerts", "Events / REST")
+
+SHOW_LEGEND()
 @enduml`,
       },
       {
         title: "C4 - Container Diagram",
         source: `@startuml
-actor "Customer" as Customer
-rectangle "Mobile Banking System" {
-  rectangle "Mobile App" as MobileApp
-  rectangle "API Gateway" as Gateway
-  rectangle "Customer Security Service" as SecurityService
-  rectangle "Fraud Detection Service" as FraudService
-  database "PostgreSQL" as Postgres
-  database "Redis" as Redis
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+LAYOUT_WITH_LEGEND()
+
+Person(customer, "Customer", "Mobile banking customer")
+
+System_Boundary(mobileBanking, "Mobile Banking System") {
+  Container(mobileApp, "Mobile App", "iOS / Android", "Customer-facing mobile banking application")
+  Container(apiGateway, "API Gateway", "OpenShift Route / Spring Cloud Gateway", "Routes traffic and enforces API policies")
+  Container(securityService, "Customer Security Service", "Java / Spring Boot", "Handles authentication and customer security workflows")
+  Container(fraudService, "Fraud Detection Service", "Java / Spring Boot", "Evaluates login and transaction risk")
+  ContainerDb(postgres, "PostgreSQL", "Relational database", "Stores customers, credentials metadata and security events")
+  ContainerDb(redis, "Redis", "In-memory data store", "Caches sessions, tokens and short-lived security state")
 }
 
-Customer --> MobileApp : uses
-MobileApp --> Gateway : HTTPS API calls
-Gateway --> SecurityService : authentication and customer security
-Gateway --> FraudService : transaction risk checks
-SecurityService --> Postgres : stores users and security events
-SecurityService --> Redis : session and token cache
-FraudService --> Postgres : stores risk decisions
+Rel(customer, mobileApp, "Uses", "HTTPS")
+Rel(mobileApp, apiGateway, "Calls APIs", "HTTPS / JSON")
+Rel(apiGateway, securityService, "Delegates security operations", "REST")
+Rel(apiGateway, fraudService, "Requests risk decisions", "REST")
+Rel(securityService, postgres, "Reads and writes customer security data", "JDBC")
+Rel(securityService, redis, "Caches sessions and token metadata", "RESP")
+Rel(fraudService, postgres, "Stores risk decisions", "JDBC")
+
+SHOW_LEGEND()
 @enduml`,
       },
       {
         title: "C4 - Component Diagram",
         source: `@startuml
-rectangle "Customer Security Service" {
-  rectangle "Authentication Controller" as AuthController
-  rectangle "Authentication Service" as AuthService
-  rectangle "Fraud Adapter" as FraudAdapter
-  rectangle "User Repository" as UserRepository
-}
-rectangle "Fraud Detection Service" as FraudService
-database "User Database" as UserDatabase
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
 
-AuthController --> AuthService : login request
-AuthService --> UserRepository : load user
-UserRepository --> UserDatabase : query account data
-AuthService --> FraudAdapter : evaluate login risk
-FraudAdapter --> FraudService : risk check
-AuthService --> AuthController : authentication result
+LAYOUT_WITH_LEGEND()
+
+Container_Boundary(customerSecurityService, "Customer Security Service") {
+  Component(authController, "Authentication Controller", "REST Controller", "Accepts login and token-related API requests")
+  Component(authService, "Authentication Service", "Service", "Validates credentials and orchestrates security checks")
+  Component(fraudAdapter, "Fraud Adapter", "Adapter", "Calls external fraud detection capabilities")
+  Component(userRepository, "User Repository", "Repository", "Loads user security data")
+}
+
+System_Ext(fraudService, "Fraud Detection Service", "External risk scoring service")
+ContainerDb(userDatabase, "User Database", "PostgreSQL", "Stores users and security events")
+
+Rel(authController, authService, "Delegates authentication", "method call")
+Rel(authService, userRepository, "Loads user", "method call")
+Rel(userRepository, userDatabase, "Queries user data", "JDBC")
+Rel(authService, fraudAdapter, "Requests risk evaluation", "method call")
+Rel(fraudAdapter, fraudService, "Checks login risk", "REST")
+
+SHOW_LEGEND()
 @enduml`,
       },
       {
         title: "C4 - Code Diagram",
         source: `@startuml
-class AuthenticationController {
-  +login(request)
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+LAYOUT_WITH_LEGEND()
+
+Container_Boundary(codeView, "Customer Security Service - Code View") {
+  Component(authenticationController, "AuthenticationController", "Class", "Exposes login(request)")
+  Component(authenticationService, "AuthenticationService", "Class", "Authenticates credentials and creates login result")
+  Component(userRepository, "UserRepository", "Interface", "Finds users by username")
 }
 
-class AuthenticationService {
-  +authenticate(username, password)
-  -validateCredentials(user)
-}
+Rel(authenticationController, authenticationService, "Uses", "method call")
+Rel(authenticationService, userRepository, "Loads user", "method call")
 
-class UserRepository {
-  +findByUsername(username)
-}
-
-AuthenticationController --> AuthenticationService : uses
-AuthenticationService --> UserRepository : loads user
+SHOW_LEGEND()
 @enduml`,
       },
     ],
