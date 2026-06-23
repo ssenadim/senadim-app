@@ -57,10 +57,154 @@ database "PostgreSQL"
   },
 ];
 
+interface PlantUmlTemplate {
+  title: string;
+  source: string;
+}
+
+interface PlantUmlTemplateGroup {
+  category: string;
+  templates: PlantUmlTemplate[];
+}
+
+const templateGroups: PlantUmlTemplateGroup[] = [
+  {
+    category: "General",
+    templates: [
+      {
+        title: "Sequence Diagram",
+        source: examples[0].input,
+      },
+      {
+        title: "Component Diagram",
+        source: examples[1].input,
+      },
+      {
+        title: "Deployment Diagram",
+        source: examples[2].input,
+      },
+    ],
+  },
+  {
+    category: "Architecture",
+    templates: [
+      {
+        title: "OAuth2 Authorization Code Flow",
+        source: `@startuml
+
+actor User
+
+participant Browser
+participant Keycloak
+participant Application
+
+User -> Browser : Login
+Browser -> Keycloak : Authorization Request
+Keycloak -> Browser : Authorization Code
+Browser -> Application : Code
+Application -> Keycloak : Token Request
+Keycloak -> Application : Access Token
+
+@enduml`,
+      },
+      {
+        title: "Microservice Architecture",
+        source: `@startuml
+actor Client
+rectangle "API Gateway" as Gateway
+rectangle "Identity Service" as Identity
+rectangle "Order Service" as Orders
+rectangle "Payment Service" as Payments
+database "Orders DB" as OrdersDb
+database "Payments DB" as PaymentsDb
+
+Client --> Gateway
+Gateway --> Identity
+Gateway --> Orders
+Orders --> Payments
+Orders --> OrdersDb
+Payments --> PaymentsDb
+@enduml`,
+      },
+      {
+        title: "Event Driven Architecture",
+        source: `@startuml
+rectangle "Order Service" as Producer
+queue "orders.created" as Topic
+rectangle "Inventory Service" as Inventory
+rectangle "Notification Service" as Notification
+database "Read Model" as ReadModel
+
+Producer --> Topic : publish event
+Topic --> Inventory : consume
+Topic --> Notification : consume
+Inventory --> ReadModel : update projection
+@enduml`,
+      },
+    ],
+  },
+  {
+    category: "Platform Engineering",
+    templates: [
+      {
+        title: "OpenShift Deployment",
+        source: `@startuml
+cloud "Internet" as Internet
+node "OpenShift Cluster" {
+  rectangle "Ingress / Route" as Ingress
+  rectangle "API Gateway" as Gateway
+  rectangle "Keycloak" as Keycloak
+  rectangle "Backend Service" as Backend
+  database "PostgreSQL" as Database
+}
+
+Internet --> Ingress : HTTPS
+Ingress --> Gateway : route traffic
+Gateway --> Keycloak : validate token
+Gateway --> Backend : forward API request
+Backend --> Database : read/write data
+@enduml`,
+      },
+      {
+        title: "Kafka Event Flow",
+        source: `@startuml
+rectangle "Producer" as Producer
+queue "Kafka Topic" as Topic
+rectangle "Consumer" as Consumer
+
+Producer --> Topic : publish event
+Topic --> Consumer : consume event
+Consumer --> Consumer : process message
+@enduml`,
+      },
+      {
+        title: "JVM Application on OpenShift",
+        source: `@startuml
+node "OpenShift Cluster" {
+  node "Application Pod" {
+    rectangle "JVM Container" as Jvm
+    rectangle "Spring Boot App" as App
+  }
+  rectangle "ConfigMap" as Config
+  rectangle "Secret" as Secret
+  database "Persistent Storage" as Storage
+}
+
+Config --> Jvm : JAVA_OPTS
+Secret --> App : credentials
+Jvm --> App : run application
+App --> Storage : persist data
+@enduml`,
+      },
+    ],
+  },
+];
+
 export function PlantUmlViewerPage() {
   usePageTitle("PlantUML Viewer");
 
   const [source, setSource] = useState(defaultSource);
+  const [selectedTemplate, setSelectedTemplate] = useState("");
   const [diagramUrl, setDiagramUrl] = useState("");
   const [status, setStatus] = useState<"idle" | "success" | "failure">("idle");
   const [error, setError] = useState("");
@@ -118,6 +262,7 @@ export function PlantUmlViewerPage() {
 
   function handleClear() {
     setSource("");
+    setSelectedTemplate("");
     setDiagramUrl("");
     setStatus("idle");
     setError("");
@@ -126,10 +271,20 @@ export function PlantUmlViewerPage() {
 
   function handleExampleSelect(example: ToolExample) {
     setSource(example.input);
+    setSelectedTemplate("");
     setDiagramUrl("");
     setStatus("idle");
     setError("");
     showToast("info", `${example.title} loaded.`);
+  }
+
+  function handleTemplateSelect(template: PlantUmlTemplate) {
+    setSource(template.source);
+    setSelectedTemplate(template.title);
+    setDiagramUrl("");
+    setStatus("idle");
+    setError("");
+    showToast("info", `${template.title} template loaded.`);
   }
 
   return (
@@ -160,6 +315,28 @@ export function PlantUmlViewerPage() {
       inputs={
         <div className="grid gap-5 xl:grid-cols-2">
           <section>
+            <div className="mb-5 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-950">
+              <div className="mb-3 flex items-center gap-2">
+                <h2 className="text-sm font-semibold text-gray-900 dark:text-white">
+                  Templates
+                </h2>
+                <HelpTooltip
+                  title="PlantUML Templates"
+                  description="Choose a starter template to replace the editor content."
+                />
+              </div>
+              <div className="grid gap-4">
+                {templateGroups.map((group) => (
+                  <TemplateGroup
+                    key={group.category}
+                    group={group}
+                    selectedTemplate={selectedTemplate}
+                    onSelect={handleTemplateSelect}
+                  />
+                ))}
+              </div>
+            </div>
+
             <div className="mb-2 flex items-center gap-2">
               <label
                 htmlFor="plantuml-source"
@@ -177,7 +354,10 @@ export function PlantUmlViewerPage() {
             <Textarea
               id="plantuml-source"
               value={source}
-              onChange={(event) => setSource(event.target.value)}
+              onChange={(event) => {
+                setSource(event.target.value);
+                setSelectedTemplate("");
+              }}
               rows={18}
               className="font-mono"
               placeholder={`@startuml
@@ -252,6 +432,36 @@ Alice -> Bob : Hello
       notesCollapsible
       toast={<ToolToast toast={toast} />}
     />
+  );
+}
+
+function TemplateGroup({
+  group,
+  selectedTemplate,
+  onSelect,
+}: {
+  group: PlantUmlTemplateGroup;
+  selectedTemplate: string;
+  onSelect: (template: PlantUmlTemplate) => void;
+}) {
+  return (
+    <div>
+      <p className="mb-2 text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
+        {group.category}
+      </p>
+      <div className="flex flex-wrap gap-2">
+        {group.templates.map((template) => (
+          <Button
+            key={template.title}
+            color={selectedTemplate === template.title ? "blue" : "light"}
+            size="xs"
+            onClick={() => onSelect(template)}
+          >
+            {template.title}
+          </Button>
+        ))}
+      </div>
+    </div>
   );
 }
 
