@@ -108,6 +108,48 @@ Keycloak -> Application : Access Token
 @enduml`,
       },
       {
+        title: "PAR (Pushed Authorization Requests)",
+        source: `@startuml
+
+actor User
+
+participant Client
+participant AuthorizationServer
+
+Client -> AuthorizationServer : PAR Request
+AuthorizationServer -> Client : request_uri
+
+Client -> AuthorizationServer : Authorization Request (request_uri)
+
+AuthorizationServer -> User : Authenticate
+
+AuthorizationServer -> Client : Authorization Code
+
+@enduml`,
+      },
+      {
+        title: "DPoP (Proof of Possession)",
+        source: `@startuml
+
+actor User
+
+participant Client
+participant AuthorizationServer
+participant ResourceServer
+
+Client -> AuthorizationServer : Token Request + DPoP Proof
+
+AuthorizationServer -> Client : Access Token (cnf)
+
+Client -> ResourceServer : API Request + Access Token + DPoP Proof
+
+ResourceServer -> ResourceServer : Validate Token + DPoP
+
+ResourceServer -> Client : Protected Resource
+
+@enduml`,
+      },
+      {
         title: "Microservice Architecture",
         source: `@startuml
 actor Client
