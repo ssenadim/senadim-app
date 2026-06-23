@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://freeshot.online/</loc></url>
+  <url><loc>https://freeshot.online/developer-tools</loc></url>
+  <url><loc>https://freeshot.online/developer-tools/base64</loc></url>
+  <url><loc>https://freeshot.online/developer-tools/uuid</loc></url>
+  <url><loc>https://freeshot.online/developer-tools/formatter</loc></url>
+  <url><loc>https://freeshot.online/developer-tools/data-compare</loc></url>
+  <url><loc>https://freeshot.online/developer-tools/timestamp</loc></url>
+  <url><loc>https://freeshot.online/developer-tools/jwt-decoder</loc></url>
+  <url><loc>https://freeshot.online/developer-tools/hash-generator</loc></url>
+  <url><loc>https://freeshot.online/developer-tools/regex-tester</loc></url>
+  <url><loc>https://freeshot.online/developer-tools/url-encoder-decoder</loc></url>
+  <url><loc>https://freeshot.online/developer-tools/pkce-generator</loc></url>
+  <url><loc>https://freeshot.online/platform-engineering</loc></url>
+  <url><loc>https://freeshot.online/platform-engineering/plantuml-viewer</loc></url>
+  <url><loc>https://freeshot.online/platform-engineering/openshift-calculator</loc></url>
+  <url><loc>https://freeshot.online/platform-engineering/jvm-memory-calculator</loc></url>
+  <url><loc>https://freeshot.online/architecture-notes</loc></url>
+  <url><loc>https://freeshot.online/architecture-notes/dpop</loc></url>
+  <url><loc>https://freeshot.online/about</loc></url>
+</urlset>

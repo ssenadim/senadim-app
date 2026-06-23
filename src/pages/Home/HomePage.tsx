@@ -27,7 +27,7 @@ const featuredCapabilities = [
   {
     title: "Architecture & Design",
     description:
-      "Generate architecture diagrams using PlantUML and reusable architecture templates.",
+      "Architecture diagrams, C4 modeling, ISAQB templates and PlantUML tooling.",
   },
   {
     title: "Platform Engineering",
@@ -73,9 +73,26 @@ export function HomePage() {
             Freeshot
           </h1>
           <p className="mt-5 max-w-3xl text-base leading-7 text-gray-600 dark:text-gray-300">
-            Architecture design templates, platform engineering calculators and
-            developer productivity tools built for practical engineering work.
+            Freeshot provides architecture, platform engineering and developer
+            productivity tools for modern software teams.
           </p>
+          <ul className="mt-6 grid max-w-4xl gap-2 text-sm text-gray-700 dark:text-gray-200 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              "PlantUML Architecture Templates",
+              "C4 Architecture Modeling",
+              "OpenShift Capacity Planning",
+              "JVM Memory Sizing",
+              "JWT & PKCE Tools",
+              "Developer Productivity Utilities",
+            ].map((capability) => (
+              <li
+                key={capability}
+                className="rounded-lg bg-gray-50 px-3 py-2 dark:bg-gray-950"
+              >
+                {capability}
+              </li>
+            ))}
+          </ul>
           <div className="mt-7 flex flex-col gap-3 sm:flex-row">
             <Button as={Link} to={routePaths.developerTools} color="blue">
               Explore Developer Tools
@@ -109,10 +126,10 @@ export function HomePage() {
           </div>
           <ul className="grid gap-3 sm:grid-cols-2">
             {[
+              "C4 Architecture Templates",
               "ISAQB Architecture Templates",
               "OAuth2 / PAR / DPoP Flows",
               "OpenShift Architecture Templates",
-              "Instant Diagram Rendering",
             ].map((highlight) => (
               <li
                 key={highlight}
@@ -139,14 +156,14 @@ export function HomePage() {
         <MetricCard
           label="Utilities"
           value={`${totalTools}+`}
-          detail="Available toolbox entries"
+          detail="Available engineering tools"
         />
       </section>
 
       <section className="flex flex-col gap-5">
         <SectionHeader
           title="Featured Capabilities"
-          description="Freeshot is organized around architecture, platform operations and everyday developer workflows."
+          description="Freeshot is organized around architecture design, platform operations and everyday developer workflows."
         />
         <div className="grid gap-4 md:grid-cols-3">
           {featuredCapabilities.map((capability) => (
@@ -162,7 +179,7 @@ export function HomePage() {
       <section className="grid gap-5 lg:grid-cols-2">
         <FeaturedSectionCard
           title="Developer Tools"
-          description="Utilities for developers, architects and integration teams."
+          description="Developer productivity utilities for integration teams, backend engineers and architects."
           examples={featuredDeveloperTools.map((tool) => tool.title)}
           actionLabel="View Developer Tools"
           to={routePaths.developerTools}
@@ -193,16 +210,20 @@ export function HomePage() {
           About This Project
         </h2>
         <p className="mt-3 max-w-4xl text-sm leading-7 text-gray-600 dark:text-gray-300">
-          This site contains practical tools and calculators created from
-          real-world experience in software architecture, IAM, Java, .NET, APIs
-          and platform engineering.
+          Freeshot is intended for software architects, platform engineers and
+          developers who need practical support for architecture design,
+          platform engineering and developer productivity workflows.
         </p>
       </section>
 
       <section className="grid gap-5 lg:grid-cols-2">
         <RoadmapCard
           title="Current Focus"
-          items={["Developer Tools", "Platform Engineering Tools"]}
+          items={[
+            "Architecture & Design",
+            "Platform Engineering",
+            "Developer Productivity",
+          ]}
         />
         <RoadmapCard
           title="Coming Soon"
