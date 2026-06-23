@@ -16,11 +16,29 @@ const featuredDeveloperToolNames = [
 ];
 
 const featuredToolNames = [
-  "JWT Decoder",
-  "Timestamp Converter",
-  "Data Compare",
+  "PlantUML Viewer",
   "OpenShift Calculator Suite",
   "JVM Memory Calculator",
+  "JWT Decoder",
+  "Timestamp Converter",
+];
+
+const featuredCapabilities = [
+  {
+    title: "Architecture & Design",
+    description:
+      "Generate architecture diagrams using PlantUML and reusable architecture templates.",
+  },
+  {
+    title: "Platform Engineering",
+    description:
+      "OpenShift sizing, capacity planning, JVM memory calculations and operational tooling.",
+  },
+  {
+    title: "Developer Productivity",
+    description:
+      "JWT, PKCE, Regex, Encoding, Formatting and comparison utilities.",
+  },
 ];
 
 export function HomePage() {
@@ -37,6 +55,10 @@ export function HomePage() {
   );
   const featuredTools = [...developerTools, ...platformTools].filter((tool) =>
     featuredToolNames.includes(tool.title),
+  ).sort(
+    (firstTool, secondTool) =>
+      featuredToolNames.indexOf(firstTool.title) -
+      featuredToolNames.indexOf(secondTool.title),
   );
   const totalTools = availableDeveloperTools.length + availablePlatformTools.length;
 
@@ -45,14 +67,14 @@ export function HomePage() {
       <section className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-8">
         <div className="max-w-4xl">
           <p className="text-sm font-semibold uppercase text-cyan-700 dark:text-cyan-300">
-            Personal Website / Developer Toolbox / Platform Engineering Toolbox
+            Architecture / Platform Engineering / Developer Productivity
           </p>
           <h1 className="mt-4 text-4xl font-bold text-gray-950 dark:text-white sm:text-5xl">
             Freeshot
           </h1>
           <p className="mt-5 max-w-3xl text-base leading-7 text-gray-600 dark:text-gray-300">
-            Developer tools, platform engineering calculators and architecture
-            insights built by a software architect.
+            Architecture design templates, platform engineering calculators and
+            developer productivity tools built for practical engineering work.
           </p>
           <div className="mt-7 flex flex-col gap-3 sm:flex-row">
             <Button as={Link} to={routePaths.developerTools} color="blue">
@@ -62,6 +84,44 @@ export function HomePage() {
               Explore Platform Engineering Tools
             </Button>
           </div>
+        </div>
+      </section>
+
+      <section className="rounded-lg border border-cyan-200 bg-cyan-50 p-6 shadow-sm dark:border-cyan-900 dark:bg-cyan-950/40 sm:p-7">
+        <div className="grid gap-6 lg:grid-cols-[1fr_0.75fr] lg:items-center">
+          <div>
+            <p className="text-sm font-semibold uppercase text-cyan-700 dark:text-cyan-300">
+              Featured Tool
+            </p>
+            <h2 className="mt-3 text-3xl font-bold text-gray-950 dark:text-white">
+              PlantUML Viewer
+            </h2>
+            <p className="mt-4 max-w-3xl text-sm leading-7 text-gray-700 dark:text-gray-200">
+              Create architecture diagrams instantly using reusable templates
+              for ISAQB, OAuth2, PAR, DPoP, OpenShift and Microservice
+              architectures.
+            </p>
+            <div className="mt-6">
+              <Button as={Link} to={routePaths.plantUmlViewer} color="blue">
+                Open PlantUML Viewer
+              </Button>
+            </div>
+          </div>
+          <ul className="grid gap-3 sm:grid-cols-2">
+            {[
+              "ISAQB Architecture Templates",
+              "OAuth2 / PAR / DPoP Flows",
+              "OpenShift Architecture Templates",
+              "Instant Diagram Rendering",
+            ].map((highlight) => (
+              <li
+                key={highlight}
+                className="rounded-lg border border-cyan-100 bg-white px-4 py-3 text-sm font-medium text-gray-800 dark:border-cyan-900 dark:bg-gray-900 dark:text-gray-100"
+              >
+                {highlight}
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 
@@ -81,6 +141,22 @@ export function HomePage() {
           value={`${totalTools}+`}
           detail="Available toolbox entries"
         />
+      </section>
+
+      <section className="flex flex-col gap-5">
+        <SectionHeader
+          title="Featured Capabilities"
+          description="Freeshot is organized around architecture, platform operations and everyday developer workflows."
+        />
+        <div className="grid gap-4 md:grid-cols-3">
+          {featuredCapabilities.map((capability) => (
+            <CapabilityCard
+              key={capability.title}
+              title={capability.title}
+              description={capability.description}
+            />
+          ))}
+        </div>
       </section>
 
       <section className="grid gap-5 lg:grid-cols-2">
@@ -103,7 +179,7 @@ export function HomePage() {
       <section className="flex flex-col gap-5">
         <SectionHeader
           title="Featured Tools"
-          description="Frequently useful tools across development, integration, IAM and platform engineering work."
+          description="A focused set of architecture, platform engineering and developer productivity tools."
         />
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {featuredTools.map((tool) => (
@@ -173,6 +249,25 @@ function FeaturedSectionCard({
         </Button>
       </div>
     </Card>
+  );
+}
+
+function CapabilityCard({
+  title,
+  description,
+}: {
+  title: string;
+  description: string;
+}) {
+  return (
+    <section className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+      <h2 className="text-lg font-semibold text-gray-950 dark:text-white">
+        {title}
+      </h2>
+      <p className="mt-3 text-sm leading-6 text-gray-600 dark:text-gray-300">
+        {description}
+      </p>
+    </section>
   );
 }
 

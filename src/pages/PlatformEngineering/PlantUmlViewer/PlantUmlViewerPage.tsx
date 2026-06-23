@@ -155,6 +155,95 @@ Frontend --> User : Display result
     ],
   },
   {
+    category: "ISAQB / C4 Architecture",
+    templates: [
+      {
+        title: "C4 - Context Diagram",
+        source: `@startuml
+actor "Customer" as Customer
+rectangle "Mobile Banking System" as MobileBanking {
+  rectangle "Mobile App and Backend APIs" as BankingCore
+}
+rectangle "Keycloak" as Keycloak
+rectangle "Fraud Detection Service" as Fraud
+rectangle "Notification Service" as Notification
+
+Customer --> BankingCore : manages accounts and payments
+BankingCore --> Keycloak : authenticates customer
+BankingCore --> Fraud : checks transaction risk
+BankingCore --> Notification : sends payment alerts
+
+note right of MobileBanking
+System boundary:
+Mobile Banking System
+end note
+@enduml`,
+      },
+      {
+        title: "C4 - Container Diagram",
+        source: `@startuml
+actor "Customer" as Customer
+rectangle "Mobile Banking System" {
+  rectangle "Mobile App" as MobileApp
+  rectangle "API Gateway" as Gateway
+  rectangle "Customer Security Service" as SecurityService
+  rectangle "Fraud Detection Service" as FraudService
+  database "PostgreSQL" as Postgres
+  database "Redis" as Redis
+}
+
+Customer --> MobileApp : uses
+MobileApp --> Gateway : HTTPS API calls
+Gateway --> SecurityService : authentication and customer security
+Gateway --> FraudService : transaction risk checks
+SecurityService --> Postgres : stores users and security events
+SecurityService --> Redis : session and token cache
+FraudService --> Postgres : stores risk decisions
+@enduml`,
+      },
+      {
+        title: "C4 - Component Diagram",
+        source: `@startuml
+rectangle "Customer Security Service" {
+  rectangle "Authentication Controller" as AuthController
+  rectangle "Authentication Service" as AuthService
+  rectangle "Fraud Adapter" as FraudAdapter
+  rectangle "User Repository" as UserRepository
+}
+rectangle "Fraud Detection Service" as FraudService
+database "User Database" as UserDatabase
+
+AuthController --> AuthService : login request
+AuthService --> UserRepository : load user
+UserRepository --> UserDatabase : query account data
+AuthService --> FraudAdapter : evaluate login risk
+FraudAdapter --> FraudService : risk check
+AuthService --> AuthController : authentication result
+@enduml`,
+      },
+      {
+        title: "C4 - Code Diagram",
+        source: `@startuml
+class AuthenticationController {
+  +login(request)
+}
+
+class AuthenticationService {
+  +authenticate(username, password)
+  -validateCredentials(user)
+}
+
+class UserRepository {
+  +findByUsername(username)
+}
+
+AuthenticationController --> AuthenticationService : uses
+AuthenticationService --> UserRepository : loads user
+@enduml`,
+      },
+    ],
+  },
+  {
     category: "Architecture",
     templates: [
       {
