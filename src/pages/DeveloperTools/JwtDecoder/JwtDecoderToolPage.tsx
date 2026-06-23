@@ -174,8 +174,8 @@ export function JwtDecoderToolPage() {
       }
       outputs={
         <div className="space-y-6">
-          {decoded ? <StatusPanel status={getTokenStatus(decoded.payload)} /> : null}
-          {decoded ? <SecurityWarnings warnings={warnings} /> : null}
+          <JsonBlock title="Payload JSON" value={payloadJson} />
+          <JsonBlock title="Header JSON" value={headerJson} />
           {decoded ? (
             <section className="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
               <h2 className="text-lg font-semibold text-gray-950 dark:text-white">JWT Insights</h2>
@@ -205,6 +205,7 @@ export function JwtDecoderToolPage() {
               ) : null}
             </section>
           ) : null}
+          {decoded ? <StatusPanel status={getTokenStatus(decoded.payload)} /> : null}
           {decoded ? (
             <section className="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
               <h2 className="text-lg font-semibold text-gray-950 dark:text-white">Claim Search</h2>
@@ -221,9 +222,8 @@ export function JwtDecoderToolPage() {
               </div>
             </section>
           ) : null}
-          <JsonBlock title="Header JSON" value={headerJson} />
-          <JsonBlock title="Payload JSON" value={payloadJson} />
           <JsonBlock title="Signature" value={decoded?.signature ?? ""} />
+          {decoded ? <SecurityWarnings warnings={warnings} /> : null}
         </div>
       }
       examples={examples}
