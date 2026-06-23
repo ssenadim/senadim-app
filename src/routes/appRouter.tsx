@@ -2,6 +2,7 @@ import { createBrowserRouter } from "react-router-dom";
 import { AppLayout } from "../components/layout/AppLayout";
 import { AboutPage } from "../pages/About/AboutPage";
 import { ArchitectureNotesPage } from "../pages/ArchitectureNotes/ArchitectureNotesPage";
+import { DpopNotePage } from "../pages/ArchitectureNotes/DpopNotePage";
 import { Base64ToolPage } from "../pages/DeveloperTools/Base64/Base64ToolPage";
 import { DataCompareToolPage } from "../pages/DeveloperTools/DataCompare/DataCompareToolPage";
 import { DeveloperToolsPage } from "../pages/DeveloperTools/DeveloperToolsPage";
@@ -44,6 +45,10 @@ export const appRouter = createBrowserRouter(
         {
           path: routePaths.architectureNotes,
           element: <ArchitectureNotesPage />,
+        },
+        {
+          path: routePaths.dpopArchitectureNote,
+          element: <DpopNotePage />,
         },
         {
           path: routePaths.platformEngineering,

@@ -305,7 +305,7 @@ export function OpenShiftCalculatorPage() {
       description="Sizing and capacity planning tools for OpenShift workloads."
       breadcrumbs={[
         {
-          label: "Platform Engineering",
+          label: "Platform Engineering Tools",
           path: routePaths.platformEngineering,
         },
         { label: "OpenShift Calculator Suite" },

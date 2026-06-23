@@ -59,7 +59,7 @@ export function HomePage() {
               Explore Developer Tools
             </Button>
             <Button as={Link} to={routePaths.platformEngineering} color="light">
-              Explore Platform Engineering
+              Explore Platform Engineering Tools
             </Button>
           </div>
         </div>
@@ -92,10 +92,10 @@ export function HomePage() {
           to={routePaths.developerTools}
         />
         <FeaturedSectionCard
-          title="Platform Engineering"
+          title="Platform Engineering Tools"
           description="Sizing, capacity planning and operational tooling for OpenShift and containerized workloads."
           examples={availablePlatformTools.map((tool) => tool.title)}
-          actionLabel="View Platform Engineering"
+          actionLabel="View Platform Engineering Tools"
           to={routePaths.platformEngineering}
         />
       </section>
@@ -126,7 +126,7 @@ export function HomePage() {
       <section className="grid gap-5 lg:grid-cols-2">
         <RoadmapCard
           title="Current Focus"
-          items={["Developer Tools", "Platform Engineering"]}
+          items={["Developer Tools", "Platform Engineering Tools"]}
         />
         <RoadmapCard
           title="Coming Soon"

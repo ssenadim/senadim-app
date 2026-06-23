@@ -8,7 +8,7 @@ export function PlatformEngineeringPage() {
 
   return (
     <PageShell
-      eyebrow="Platform Engineering"
+      eyebrow="Platform Engineering Tools"
       title="Platform Engineering"
       description="Operational calculators and configuration generators for platform teams."
     >

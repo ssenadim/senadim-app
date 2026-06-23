@@ -87,7 +87,7 @@ export function JvmMemoryCalculatorPage() {
       title="JVM Memory Calculator"
       description="Calculate recommended JVM memory settings for containerized Java applications."
       breadcrumbs={[
-        { label: "Platform Engineering", path: routePaths.platformEngineering },
+        { label: "Platform Engineering Tools", path: routePaths.platformEngineering },
         { label: "JVM Memory Calculator" },
       ]}
       overviewTitle="Why JVM Memory Sizing Matters"
