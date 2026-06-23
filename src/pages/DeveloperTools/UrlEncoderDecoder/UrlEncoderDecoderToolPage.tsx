@@ -24,16 +24,16 @@ const examples: ToolExample[] = [
   {
     title: "Example 2",
     inputLabel: "Input",
-    input: "https://senadim.com/search?q=jwt decoder",
+    input: "https://freeshot.dev/search?q=jwt decoder",
     outputLabel: "Encoded",
-    output: "https%3A%2F%2Fsenadim.com%2Fsearch%3Fq%3Djwt%20decoder",
+    output: "https%3A%2F%2Ffreeshot.dev%2Fsearch%3Fq%3Djwt%20decoder",
   },
   {
     title: "Example 3",
     inputLabel: "Input",
-    input: "https%3A%2F%2Fsenadim.com%2Fsearch%3Fq%3Djwt%20decoder",
+    input: "https%3A%2F%2Ffreeshot.dev%2Fsearch%3Fq%3Djwt%20decoder",
     outputLabel: "Decoded",
-    output: "https://senadim.com/search?q=jwt decoder",
+    output: "https://freeshot.dev/search?q=jwt decoder",
   },
 ];
 

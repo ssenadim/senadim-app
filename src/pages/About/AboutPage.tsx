@@ -22,7 +22,7 @@ const experienceAreas = [
 const contactLinks = [
   { label: "GitHub", href: "https://github.com/" },
   { label: "LinkedIn", href: "https://www.linkedin.com/" },
-  { label: "Email", href: "mailto:hello@senadim.com" },
+  { label: "Email", href: "mailto:hello@freeshot.dev" },
 ];
 
 export function AboutPage() {
@@ -32,7 +32,7 @@ export function AboutPage() {
     <PageShell
       eyebrow="Profile"
       title="About"
-      description="A professional profile area for the owner of Senadim Toolbox, focused on technical strengths, experience areas, and contact points."
+      description="A professional profile area for the owner of Freeshot, focused on technical strengths, experience areas, and contact points."
     >
       <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
         <Card className="border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">

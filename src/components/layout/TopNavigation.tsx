@@ -34,7 +34,7 @@ export function TopNavigation({ onOpenSidebar }: TopNavigationProps) {
           </button>
           <div>
             <p className="text-sm font-semibold text-gray-950 dark:text-white">
-              Senadim Toolbox
+              Freeshot
             </p>
             <p className="hidden text-xs text-gray-500 dark:text-gray-400 sm:block">
               Practical developer utilities and architecture notes

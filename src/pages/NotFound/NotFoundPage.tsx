@@ -11,7 +11,7 @@ export function NotFoundPage() {
     <PageShell
       eyebrow="404"
       title="Page not found"
-      description="The page you are looking for does not exist in Senadim Toolbox."
+      description="The page you are looking for does not exist in Freeshot."
     >
       <div>
         <Button as={Link} to={routePaths.home} color="blue">

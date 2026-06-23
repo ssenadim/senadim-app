@@ -10,7 +10,7 @@ export function DeveloperToolsPage() {
     <PageShell
       eyebrow="Tool catalog"
       title="Developer Tools"
-      description="A curated set of practical utilities planned for the Senadim Toolbox. These cards define the product surface before implementation begins."
+      description="A curated set of practical utilities planned for Freeshot. These cards define the product surface before implementation begins."
     >
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {developerTools.map((tool) => (

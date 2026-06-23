@@ -48,7 +48,7 @@ export function HomePage() {
             Personal Website / Developer Toolbox / Platform Engineering Toolbox
           </p>
           <h1 className="mt-4 text-4xl font-bold text-gray-950 dark:text-white sm:text-5xl">
-            Senadim Toolbox
+            Freeshot
           </h1>
           <p className="mt-5 max-w-3xl text-base leading-7 text-gray-600 dark:text-gray-300">
             Developer tools, platform engineering calculators and architecture
