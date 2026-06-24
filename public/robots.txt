@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://freeshot.dev/sitemap.xml
+Sitemap: https://freeshot.online/sitemap.xml
