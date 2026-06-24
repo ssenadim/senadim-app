@@ -1,6 +1,9 @@
 import { createBrowserRouter } from "react-router-dom";
 import { AppLayout } from "../components/layout/AppLayout";
 import { AboutPage } from "../pages/About/AboutPage";
+import { AdrGeneratorPage } from "../pages/ArchitectureDesign/AdrGenerator/AdrGeneratorPage";
+import { ArchitectureDesignPage } from "../pages/ArchitectureDesign/ArchitectureDesignPage";
+import { PlantUmlViewerPage } from "../pages/ArchitectureDesign/PlantUmlViewer/PlantUmlViewerPage";
 import { ArchitectureNotesPage } from "../pages/ArchitectureNotes/ArchitectureNotesPage";
 import { DpopNotePage } from "../pages/ArchitectureNotes/DpopNotePage";
 import { Base64ToolPage } from "../pages/DeveloperTools/Base64/Base64ToolPage";
@@ -18,7 +21,6 @@ import { HomePage } from "../pages/Home/HomePage";
 import { NotFoundPage } from "../pages/NotFound/NotFoundPage";
 import { JvmMemoryCalculatorPage } from "../pages/PlatformEngineering/JvmMemoryCalculator/JvmMemoryCalculatorPage";
 import { OpenShiftCalculatorPage } from "../pages/PlatformEngineering/OpenShiftCalculator/OpenShiftCalculatorPage";
-import { PlantUmlViewerPage } from "../pages/PlatformEngineering/PlantUmlViewer/PlantUmlViewerPage";
 import { PlatformEngineeringPage } from "../pages/PlatformEngineering/PlatformEngineeringPage";
 import { routePaths } from "../utils/routes";
 
@@ -29,6 +31,14 @@ export const appRouter = createBrowserRouter(
       children: [
         { path: routePaths.home, element: <HomePage /> },
         { path: routePaths.about, element: <AboutPage /> },
+        {
+          path: routePaths.architectureDesign,
+          element: <ArchitectureDesignPage />,
+        },
+        {
+          path: routePaths.adrGenerator,
+          element: <AdrGeneratorPage />,
+        },
         { path: routePaths.developerTools, element: <DeveloperToolsPage /> },
         { path: routePaths.base64Tool, element: <Base64ToolPage /> },
         { path: routePaths.uuidTool, element: <UuidToolPage /> },

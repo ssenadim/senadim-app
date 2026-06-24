@@ -3,6 +3,7 @@ import { Button, Card } from "flowbite-react";
 import { MetricCard } from "../../components/cards/MetricCard";
 import { ToolCard } from "../../components/cards/ToolCard";
 import { SectionHeader } from "../../components/common/SectionHeader";
+import { architectureDesignTools } from "../../data/architectureDesignTools";
 import { developerTools } from "../../data/developerTools";
 import { platformTools } from "../../data/platformTools";
 import { usePageTitle } from "../../hooks/usePageTitle";
@@ -47,21 +48,24 @@ export function HomePage() {
   const availableDeveloperTools = developerTools.filter(
     (tool) => tool.status === "available",
   );
+  const availableArchitectureTools = architectureDesignTools.filter(
+    (tool) => tool.status === "available",
+  );
   const availablePlatformTools = platformTools.filter(
     (tool) => tool.status === "available",
   );
   const featuredDeveloperTools = developerTools.filter((tool) =>
     featuredDeveloperToolNames.includes(tool.title),
   );
-  const featuredTools = [...developerTools, ...platformTools].filter((tool) =>
-    featuredToolNames.includes(tool.title),
-  ).sort(
+  const featuredTools = [
+    ...architectureDesignTools,
+    ...platformTools,
+    ...developerTools,
+  ].filter((tool) => featuredToolNames.includes(tool.title)).sort(
     (firstTool, secondTool) =>
       featuredToolNames.indexOf(firstTool.title) -
       featuredToolNames.indexOf(secondTool.title),
   );
-  const totalTools = availableDeveloperTools.length + availablePlatformTools.length;
-
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-12 px-4 py-8 sm:px-6 lg:px-8">
       <section className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-8">
@@ -144,9 +148,9 @@ export function HomePage() {
 
       <section className="grid gap-4 md:grid-cols-3">
         <MetricCard
-          label="Developer Tools"
-          value={`${availableDeveloperTools.length}+`}
-          detail="Production-ready utilities"
+          label="Architecture & Design"
+          value={`${availableArchitectureTools.length}+`}
+          detail="Architecture and documentation tools"
         />
         <MetricCard
           label="Platform Engineering Tools"
@@ -154,9 +158,9 @@ export function HomePage() {
           detail="Operational calculators"
         />
         <MetricCard
-          label="Utilities"
-          value={`${totalTools}+`}
-          detail="Available engineering tools"
+          label="Developer Tools"
+          value={`${availableDeveloperTools.length}+`}
+          detail="Developer productivity utilities"
         />
       </section>
 
@@ -176,7 +180,14 @@ export function HomePage() {
         </div>
       </section>
 
-      <section className="grid gap-5 lg:grid-cols-2">
+      <section className="grid gap-5 lg:grid-cols-3">
+        <FeaturedSectionCard
+          title="Architecture & Design"
+          description="Tools for architecture diagrams, C4 modeling, ADRs and design documentation."
+          examples={availableArchitectureTools.map((tool) => tool.title)}
+          actionLabel="View Architecture & Design"
+          to={routePaths.architectureDesign}
+        />
         <FeaturedSectionCard
           title="Developer Tools"
           description="Developer productivity utilities for integration teams, backend engineers and architects."

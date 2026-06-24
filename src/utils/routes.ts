@@ -12,10 +12,12 @@ export const routePaths = {
   regexTesterTool: "/developer-tools/regex-tester",
   urlEncoderDecoderTool: "/developer-tools/url-encoder-decoder",
   pkceGeneratorTool: "/developer-tools/pkce-generator",
+  architectureDesign: "/architecture-design",
+  adrGenerator: "/architecture-design/adr-generator",
   platformEngineering: "/platform-engineering",
   openShiftCalculator: "/platform-engineering/openshift-calculator",
   jvmMemoryCalculator: "/platform-engineering/jvm-memory-calculator",
-  plantUmlViewer: "/platform-engineering/plantuml-viewer",
+  plantUmlViewer: "/architecture-design/plantuml-viewer",
   architectureNotes: "/architecture-notes",
   dpopArchitectureNote: "/architecture-notes/dpop",
 } as const;

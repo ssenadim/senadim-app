@@ -18,13 +18,6 @@ export const platformTools: DeveloperTool[] = [
     status: "available",
   },
   {
-    title: "PlantUML Viewer",
-    description: "Render PlantUML diagrams instantly from source code.",
-    category: "Architecture",
-    path: routePaths.plantUmlViewer,
-    status: "available",
-  },
-  {
     title: "Kafka Calculator",
     description: "Plan Kafka capacity, partitions, throughput, and retention.",
     category: "Streaming",
