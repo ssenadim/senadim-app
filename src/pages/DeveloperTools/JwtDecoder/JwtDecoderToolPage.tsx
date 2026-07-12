@@ -34,6 +34,15 @@ const examples: ToolExample[] = [
 const insightClaims = ["iss", "sub", "aud", "azp", "scope", "exp", "iat", "nbf", "jti"];
 const headerClaims = ["alg", "typ"];
 const dateClaims = ["exp", "iat", "nbf"];
+const timestampClaimNames = new Set([
+  "iat",
+  "nbf",
+  "exp",
+  "auth_time",
+  "updated_at",
+  "created_at",
+  "expires_at",
+]);
 
 export function JwtDecoderToolPage() {
   usePageTitle("JWT Decoder");
@@ -176,7 +185,7 @@ export function JwtDecoderToolPage() {
       }
       outputs={
         <div className="space-y-6">
-          <JsonBlock title="Payload JSON" value={payloadJson} />
+          <PayloadJsonBlock title="Payload JSON" value={payloadJson} />
           <JsonBlock title="Header JSON" value={headerJson} />
           {decoded ? (
             <section className="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
@@ -293,6 +302,151 @@ function ClaimRow({
 
 function DateClaim({ label, seconds }: { label: string; seconds: number }) {
   return <div className="rounded-lg bg-gray-50 p-3 dark:bg-gray-950"><p className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">{label}</p><p className="mt-1 font-mono text-sm text-gray-900 dark:text-gray-100">UTC: {formatJwtDate(seconds, "UTC")}</p><p className="font-mono text-sm text-gray-900 dark:text-gray-100">Europe/Istanbul: {formatJwtDate(seconds, "Europe/Istanbul")}</p><p className="font-mono text-sm text-gray-900 dark:text-gray-100">Local: {formatJwtDate(seconds)}</p></div>;
+}
+
+function PayloadJsonBlock({ title, value }: { title: string; value: string }) {
+  return (
+    <div>
+      <h2 className="mb-2 text-sm font-semibold text-gray-900 dark:text-white">
+        {title}
+      </h2>
+      <pre className="min-h-24 overflow-x-auto rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm text-gray-900 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100">
+        {value ? <TimestampAwareJson value={value} /> : "-"}
+      </pre>
+    </div>
+  );
+}
+
+function TimestampAwareJson({ value }: { value: string }) {
+  const lines = value.split("\n");
+
+  return (
+    <>
+      {lines.map((line, index) => {
+        const lineMatch = line.match(/^(\s*"([^"]+)":\s*)(-?\d+)([,]?)$/);
+
+        if (!lineMatch) {
+          return (
+            <span key={`${line}-${index}`}>
+              {line}
+              {index < lines.length - 1 ? "\n" : null}
+            </span>
+          );
+        }
+
+        const [, prefix, claimName, rawValue, suffix] = lineMatch;
+        const numericValue = Number(rawValue);
+        const timestampInfo = getTimestampTooltip(claimName, numericValue);
+
+        if (!timestampInfo) {
+          return (
+            <span key={`${claimName}-${index}`}>
+              {line}
+              {index < lines.length - 1 ? "\n" : null}
+            </span>
+          );
+        }
+
+        return (
+          <span key={`${claimName}-${index}`}>
+            {prefix}
+            <span className="group relative cursor-help rounded-sm border-b border-dotted border-cyan-500 text-cyan-800 dark:text-cyan-200">
+              {rawValue}
+              <span className="pointer-events-none absolute left-0 top-6 z-30 hidden w-72 whitespace-normal rounded-lg border border-gray-200 bg-white p-3 font-sans text-xs leading-5 text-gray-700 shadow-lg group-hover:block dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200">
+                <span className="block font-semibold text-gray-950 dark:text-white">
+                  {timestampInfo.utc}
+                </span>
+                <span className="mt-2 block font-semibold text-gray-700 dark:text-gray-300">
+                  Local Time:
+                </span>
+                <span className="block">{timestampInfo.local}</span>
+                <span className="mt-2 block font-semibold text-gray-700 dark:text-gray-300">
+                  Relative:
+                </span>
+                <span className="block">{timestampInfo.relative}</span>
+              </span>
+            </span>
+            {suffix}
+            {index < lines.length - 1 ? "\n" : null}
+          </span>
+        );
+      })}
+    </>
+  );
+}
+
+function getTimestampTooltip(claimName: string, rawValue: number) {
+  if (!Number.isFinite(rawValue)) return null;
+
+  const normalizedClaimName = claimName.toLowerCase();
+  const looksLikeTimestampClaim =
+    timestampClaimNames.has(normalizedClaimName) ||
+    normalizedClaimName.endsWith("_at") ||
+    normalizedClaimName.endsWith("_time") ||
+    normalizedClaimName.endsWith("_timestamp");
+
+  if (!looksLikeTimestampClaim) return null;
+
+  const milliseconds = rawValue > 99_999_999_999 ? rawValue : rawValue * 1000;
+  const date = new Date(milliseconds);
+
+  if (Number.isNaN(date.getTime())) return null;
+
+  return {
+    local: formatTooltipDate(date),
+    relative: formatRelativeTime(date),
+    utc: `${formatUtcTooltipDate(date)} UTC`,
+  };
+}
+
+function formatUtcTooltipDate(date: Date) {
+  const pad = (value: number) => value.toString().padStart(2, "0");
+  return [
+    date.getUTCFullYear(),
+    "-",
+    pad(date.getUTCMonth() + 1),
+    "-",
+    pad(date.getUTCDate()),
+    " ",
+    pad(date.getUTCHours()),
+    ":",
+    pad(date.getUTCMinutes()),
+    ":",
+    pad(date.getUTCSeconds()),
+  ].join("");
+}
+
+function formatTooltipDate(date: Date) {
+  return new Intl.DateTimeFormat(undefined, {
+    day: "2-digit",
+    hour: "2-digit",
+    hour12: false,
+    minute: "2-digit",
+    month: "short",
+    second: "2-digit",
+    timeZoneName: "shortOffset",
+    year: "numeric",
+  }).format(date);
+}
+
+function formatRelativeTime(date: Date) {
+  const diffSeconds = Math.round((date.getTime() - Date.now()) / 1000);
+  const absSeconds = Math.abs(diffSeconds);
+  const units = [
+    { label: "year", seconds: 31_536_000 },
+    { label: "month", seconds: 2_592_000 },
+    { label: "day", seconds: 86_400 },
+    { label: "hour", seconds: 3_600 },
+    { label: "minute", seconds: 60 },
+  ];
+  const unit =
+    units.find((candidate) => absSeconds >= candidate.seconds) ??
+    { label: "second", seconds: 1 };
+  const amount = Math.max(1, Math.round(absSeconds / unit.seconds));
+  const label = amount === 1 ? unit.label : `${unit.label}s`;
+
+  if (Math.abs(diffSeconds) < 5) return "now";
+  return diffSeconds > 0 ? `${amount} ${label} from now` : `${amount} ${label} ago`;
 }
 
 function JsonBlock({ title, value }: { title: string; value: string }) {
