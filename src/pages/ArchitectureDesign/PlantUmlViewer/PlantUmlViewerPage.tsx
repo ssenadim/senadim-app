@@ -44,13 +44,13 @@ Bob --> Alice : Token
     title: "Deployment Diagram",
     inputLabel: "Source",
     input: `@startuml
-node "OpenShift" {
+node "Container Platform" {
   node "Pod" {
     artifact "Application Container"
   }
 }
-database "PostgreSQL"
-"Application Container" --> "PostgreSQL"
+database "Application Database"
+"Application Container" --> "Application Database"
 @enduml`,
     outputLabel: "Diagram Type",
     output: "Deployment diagram",
@@ -91,15 +91,15 @@ const templateGroups: PlantUmlTemplateGroup[] = [
       {
         title: "Context Diagram",
         source: `@startuml
-actor "Customer" as User
+actor "Customer" as Customer
 rectangle "Main Application" as MainApp {
   rectangle "Web Portal" as Portal
 }
 cloud "Payment Provider" as Payment
-cloud "Identity Provider" as Identity
+cloud "Identity Service" as Identity
 cloud "CRM System" as Crm
 
-User --> Portal : uses
+Customer --> Portal : uses
 Portal --> Identity : authenticate user
 Portal --> Payment : process payment
 Portal --> Crm : synchronize customer data
@@ -113,7 +113,7 @@ end note
       {
         title: "Container Diagram",
         source: `@startuml
-actor "User" as User
+actor "Customer" as Customer
 rectangle "Frontend" as Frontend
 rectangle "API Gateway" as Gateway
 rectangle "Backend Services" {
@@ -122,7 +122,7 @@ rectangle "Backend Services" {
 }
 database "Application Database" as Database
 
-User --> Frontend : browser access
+Customer --> Frontend : browser access
 Frontend --> Gateway : REST / HTTPS
 Gateway --> CustomerService : customer API
 Gateway --> OrderService : order API
@@ -133,14 +133,14 @@ OrderService --> Database : read/write orders
       {
         title: "Runtime View",
         source: `@startuml
-actor User
+actor Customer
 participant Frontend
 participant "API Gateway" as Gateway
-participant "Identity Provider" as Identity
-participant "Backend Service" as Backend
-database Database
+participant "Identity Service" as Identity
+participant "Business Service" as Backend
+database "Application Database" as Database
 
-User -> Frontend : Submit request
+Customer -> Frontend : Submit request
 Frontend -> Gateway : API request
 Gateway -> Identity : Validate access token
 Identity --> Gateway : Token valid
@@ -149,7 +149,7 @@ Backend -> Database : Load and update data
 Database --> Backend : Result
 Backend --> Gateway : Response payload
 Gateway --> Frontend : API response
-Frontend --> User : Display result
+Frontend --> Customer : Display result
 @enduml`,
       },
     ],
@@ -166,13 +166,13 @@ LAYOUT_WITH_LEGEND()
 
 Person(customer, "Customer", "Mobile banking customer")
 System(mobileBanking, "Mobile Banking System", "Allows customers to manage accounts, payments and security settings")
-System_Ext(keycloak, "Keycloak", "Identity and access management platform")
-System_Ext(fraud, "Fraud Detection Service", "Evaluates transaction and login risk")
+System_Ext(identity, "Identity Service", "Identity and access management capability")
+System_Ext(riskEngine, "Risk Engine", "Evaluates transaction and login risk")
 System_Ext(notification, "Notification Service", "Sends transactional and security notifications")
 
 Rel(customer, mobileBanking, "Uses", "Mobile app")
-Rel(mobileBanking, keycloak, "Authenticates customers", "OIDC")
-Rel(mobileBanking, fraud, "Checks transaction risk", "REST")
+Rel(mobileBanking, identity, "Authenticates customers", "OIDC")
+Rel(mobileBanking, riskEngine, "Checks transaction risk", "REST")
 Rel(mobileBanking, notification, "Sends alerts", "Events / REST")
 
 SHOW_LEGEND()
@@ -189,20 +189,20 @@ Person(customer, "Customer", "Mobile banking customer")
 
 System_Boundary(mobileBanking, "Mobile Banking System") {
   Container(mobileApp, "Mobile App", "iOS / Android", "Customer-facing mobile banking application")
-  Container(apiGateway, "API Gateway", "OpenShift Route / Spring Cloud Gateway", "Routes traffic and enforces API policies")
-  Container(securityService, "Customer Security Service", "Java / Spring Boot", "Handles authentication and customer security workflows")
-  Container(fraudService, "Fraud Detection Service", "Java / Spring Boot", "Evaluates login and transaction risk")
-  ContainerDb(postgres, "PostgreSQL", "Relational database", "Stores customers, credentials metadata and security events")
-  ContainerDb(redis, "Redis", "In-memory data store", "Caches sessions, tokens and short-lived security state")
+  Container(apiGateway, "API Gateway", "API entry point", "Routes traffic and enforces API policies")
+  Container(securityService, "Security Service", "Application service", "Handles authentication and customer security workflows")
+  Container(riskEngine, "Risk Engine", "Application service", "Evaluates login and transaction risk")
+  ContainerDb(applicationDatabase, "Application Database", "Relational database", "Stores customers, credentials metadata and security events")
+  ContainerDb(cache, "Cache", "In-memory data store", "Caches sessions, tokens and short-lived security state")
 }
 
 Rel(customer, mobileApp, "Uses", "HTTPS")
 Rel(mobileApp, apiGateway, "Calls APIs", "HTTPS / JSON")
 Rel(apiGateway, securityService, "Delegates security operations", "REST")
-Rel(apiGateway, fraudService, "Requests risk decisions", "REST")
-Rel(securityService, postgres, "Reads and writes customer security data", "JDBC")
-Rel(securityService, redis, "Caches sessions and token metadata", "RESP")
-Rel(fraudService, postgres, "Stores risk decisions", "JDBC")
+Rel(apiGateway, riskEngine, "Requests risk decisions", "REST")
+Rel(securityService, applicationDatabase, "Reads and writes customer security data", "SQL")
+Rel(securityService, cache, "Caches sessions and token metadata", "Cache protocol")
+Rel(riskEngine, applicationDatabase, "Stores risk decisions", "SQL")
 
 SHOW_LEGEND()
 @enduml`,
@@ -214,21 +214,21 @@ SHOW_LEGEND()
 
 LAYOUT_WITH_LEGEND()
 
-Container_Boundary(customerSecurityService, "Customer Security Service") {
+Container_Boundary(customerSecurityService, "Security Service") {
   Component(authController, "Authentication Controller", "REST Controller", "Accepts login and token-related API requests")
   Component(authService, "Authentication Service", "Service", "Validates credentials and orchestrates security checks")
-  Component(fraudAdapter, "Fraud Adapter", "Adapter", "Calls external fraud detection capabilities")
+  Component(riskAdapter, "Risk Adapter", "Adapter", "Calls external risk analysis capabilities")
   Component(userRepository, "User Repository", "Repository", "Loads user security data")
 }
 
-System_Ext(fraudService, "Fraud Detection Service", "External risk scoring service")
-ContainerDb(userDatabase, "User Database", "PostgreSQL", "Stores users and security events")
+System_Ext(riskEngine, "Risk Engine", "External risk scoring service")
+ContainerDb(userDatabase, "Application Database", "Relational database", "Stores users and security events")
 
 Rel(authController, authService, "Delegates authentication", "method call")
 Rel(authService, userRepository, "Loads user", "method call")
-Rel(userRepository, userDatabase, "Queries user data", "JDBC")
-Rel(authService, fraudAdapter, "Requests risk evaluation", "method call")
-Rel(fraudAdapter, fraudService, "Checks login risk", "REST")
+Rel(userRepository, userDatabase, "Queries user data", "SQL")
+Rel(authService, riskAdapter, "Requests risk evaluation", "method call")
+Rel(riskAdapter, riskEngine, "Checks login risk", "REST")
 
 SHOW_LEGEND()
 @enduml`,
@@ -240,7 +240,7 @@ SHOW_LEGEND()
 
 LAYOUT_WITH_LEGEND()
 
-Container_Boundary(codeView, "Customer Security Service - Code View") {
+Container_Boundary(codeView, "Security Service - Code View") {
   Component(authenticationController, "AuthenticationController", "Class", "Exposes login(request)")
   Component(authenticationService, "AuthenticationService", "Class", "Authenticates credentials and creates login result")
   Component(userRepository, "UserRepository", "Interface", "Finds users by username")
@@ -261,18 +261,18 @@ SHOW_LEGEND()
         title: "OAuth2 Authorization Code Flow",
         source: `@startuml
 
-actor User
+actor Customer
 
-participant Browser
-participant Keycloak
-participant Application
+participant "Web Portal" as WebPortal
+participant "Identity Service" as IdentityService
+participant "Business Service" as BusinessService
 
-User -> Browser : Login
-Browser -> Keycloak : Authorization Request
-Keycloak -> Browser : Authorization Code
-Browser -> Application : Code
-Application -> Keycloak : Token Request
-Keycloak -> Application : Access Token
+Customer -> WebPortal : Login
+WebPortal -> IdentityService : Authorization Request
+IdentityService -> WebPortal : Authorization Code
+WebPortal -> BusinessService : Code
+BusinessService -> IdentityService : Token Request
+IdentityService -> BusinessService : Access Token
 
 @enduml`,
       },
@@ -280,7 +280,7 @@ Keycloak -> Application : Access Token
         title: "PAR (Pushed Authorization Requests)",
         source: `@startuml
 
-actor User
+actor Customer
 
 participant Client
 participant AuthorizationServer
@@ -290,7 +290,7 @@ AuthorizationServer -> Client : request_uri
 
 Client -> AuthorizationServer : Authorization Request (request_uri)
 
-AuthorizationServer -> User : Authenticate
+AuthorizationServer -> Customer : Authenticate
 
 AuthorizationServer -> Client : Authorization Code
 
@@ -300,7 +300,7 @@ AuthorizationServer -> Client : Authorization Code
         title: "DPoP (Proof of Possession)",
         source: `@startuml
 
-actor User
+actor Customer
 
 participant Client
 participant AuthorizationServer
@@ -321,35 +321,33 @@ ResourceServer -> Client : Protected Resource
       {
         title: "Microservice Architecture",
         source: `@startuml
-actor Client
+actor Customer
 rectangle "API Gateway" as Gateway
 rectangle "Identity Service" as Identity
-rectangle "Order Service" as Orders
-rectangle "Payment Service" as Payments
-database "Orders DB" as OrdersDb
-database "Payments DB" as PaymentsDb
+rectangle "Business Service" as BusinessService
+rectangle "Notification Service" as Notification
+database "Application Database" as ApplicationDatabase
 
-Client --> Gateway
+Customer --> Gateway
 Gateway --> Identity
-Gateway --> Orders
-Orders --> Payments
-Orders --> OrdersDb
-Payments --> PaymentsDb
+Gateway --> BusinessService
+BusinessService --> Notification
+BusinessService --> ApplicationDatabase
 @enduml`,
       },
       {
         title: "Event Driven Architecture",
         source: `@startuml
-rectangle "Order Service" as Producer
-queue "orders.created" as Topic
-rectangle "Inventory Service" as Inventory
+rectangle "Business Service" as Producer
+queue "Event Bus" as EventBus
+rectangle "Downstream Service" as Consumer
 rectangle "Notification Service" as Notification
 database "Read Model" as ReadModel
 
-Producer --> Topic : publish event
-Topic --> Inventory : consume
-Topic --> Notification : consume
-Inventory --> ReadModel : update projection
+Producer --> EventBus : publish event
+EventBus --> Consumer : consume
+EventBus --> Notification : consume
+Consumer --> ReadModel : update projection
 @enduml`,
       },
     ],
@@ -358,46 +356,46 @@ Inventory --> ReadModel : update projection
     category: "Platform Engineering",
     templates: [
       {
-        title: "OpenShift Deployment",
+        title: "Container Platform Deployment",
         source: `@startuml
 cloud "Internet" as Internet
-node "OpenShift Cluster" {
-  rectangle "Ingress / Route" as Ingress
+node "Container Platform" {
+  rectangle "Ingress" as Ingress
   rectangle "API Gateway" as Gateway
-  rectangle "Keycloak" as Keycloak
-  rectangle "Backend Service" as Backend
-  database "PostgreSQL" as Database
+  rectangle "Identity Service" as IdentityService
+  rectangle "Business Service" as BusinessService
+  database "Application Database" as Database
 }
 
 Internet --> Ingress : HTTPS
 Ingress --> Gateway : route traffic
-Gateway --> Keycloak : validate token
-Gateway --> Backend : forward API request
-Backend --> Database : read/write data
+Gateway --> IdentityService : validate token
+Gateway --> BusinessService : forward API request
+BusinessService --> Database : read/write data
 @enduml`,
       },
       {
-        title: "Kafka Event Flow",
+        title: "Event Bus Flow",
         source: `@startuml
 rectangle "Producer" as Producer
-queue "Kafka Topic" as Topic
+queue "Event Bus" as EventBus
 rectangle "Consumer" as Consumer
 
-Producer --> Topic : publish event
-Topic --> Consumer : consume event
+Producer --> EventBus : publish event
+EventBus --> Consumer : consume event
 Consumer --> Consumer : process message
 @enduml`,
       },
       {
-        title: "JVM Application on OpenShift",
+        title: "JVM Application on Container Platform",
         source: `@startuml
-node "OpenShift Cluster" {
+node "Container Platform" {
   node "Application Pod" {
     rectangle "JVM Container" as Jvm
-    rectangle "Spring Boot App" as App
+    rectangle "Java Application" as App
   }
-  rectangle "ConfigMap" as Config
-  rectangle "Secret" as Secret
+  rectangle "Configuration Service" as Config
+  rectangle "Secrets Service" as Secret
   database "Persistent Storage" as Storage
 }
 

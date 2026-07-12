@@ -8,13 +8,13 @@ import type { ToolExample } from "../../../types/toolPage";
 import type { ToastMessage } from "../../../types/toast";
 import { routePaths } from "../../../utils/routes";
 
-type JvmProfile = "Keycloak" | "Spring Boot" | "Generic Java";
+type JvmProfile = "Identity Service" | "Web Application" | "Generic Java";
 
 const examples: ToolExample[] = [
   {
     title: "4096 MB Container Example",
     inputLabel: "Inputs",
-    input: "Container Memory: 4096 MB\nProfile: Spring Boot",
+    input: "Container Memory: 4096 MB\nProfile: Web Application",
     outputLabel: "Recommended",
     output: "Heap: 2662 MB\nMetaspace: 410 MB\nNative: 614 MB\nBuffer: 410 MB",
   },
@@ -24,7 +24,7 @@ export function JvmMemoryCalculatorPage() {
   usePageTitle("JVM Memory Calculator");
 
   const [containerMemory, setContainerMemory] = useState(4096);
-  const [profile, setProfile] = useState<JvmProfile>("Spring Boot");
+  const [profile, setProfile] = useState<JvmProfile>("Web Application");
   const [toast, setToast] = useState<ToastMessage | null>(null);
 
   const result = useMemo(
@@ -128,8 +128,8 @@ export function JvmMemoryCalculatorPage() {
               value={profile}
               onChange={(event) => setProfile(event.target.value as JvmProfile)}
             >
-              <option value="Keycloak">Keycloak</option>
-              <option value="Spring Boot">Spring Boot</option>
+              <option value="Identity Service">Identity Service</option>
+              <option value="Web Application">Web Application</option>
               <option value="Generic Java">Generic Java</option>
             </Select>
           </div>
@@ -181,21 +181,21 @@ export function JvmMemoryCalculatorPage() {
 }
 
 function calculateJvmMemory(containerMemory: number, profile: JvmProfile) {
-  // Assumptions: Keycloak keeps more native/metaspace headroom, Spring Boot can
-  // allocate more heap, and Generic Java uses a conservative balanced split.
+  // Assumptions: identity services keep more native/metaspace headroom, web
+  // applications can allocate more heap, and generic Java uses a balanced split.
   const profiles: Record<JvmProfile, {
     bufferPercent: number;
     heapPercent: number;
     metaspacePercent: number;
     nativePercent: number;
   }> = {
-    Keycloak: {
+    "Identity Service": {
       heapPercent: 55,
       metaspacePercent: 12,
       nativePercent: 18,
       bufferPercent: 15,
     },
-    "Spring Boot": {
+    "Web Application": {
       heapPercent: 65,
       metaspacePercent: 10,
       nativePercent: 15,

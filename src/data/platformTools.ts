@@ -3,10 +3,11 @@ import { routePaths } from "../utils/routes";
 
 export const platformTools: DeveloperTool[] = [
   {
-    title: "OpenShift Calculator Suite",
-    description: "Sizing and capacity planning tools for OpenShift workloads.",
-    category: "OpenShift",
-    path: routePaths.openShiftCalculator,
+    title: "Container Platform Calculator Suite",
+    description:
+      "Sizing and capacity planning tools for container platform workloads.",
+    category: "Container Platform",
+    path: routePaths.containerPlatformCalculator,
     status: "available",
   },
   {
@@ -18,9 +19,9 @@ export const platformTools: DeveloperTool[] = [
     status: "available",
   },
   {
-    title: "Kafka Calculator",
-    description: "Plan Kafka capacity, partitions, throughput, and retention.",
-    category: "Streaming",
+    title: "Event Bus Calculator",
+    description: "Plan event bus capacity, partitions, throughput, and retention.",
+    category: "Messaging",
     status: "coming-soon",
   },
 ];

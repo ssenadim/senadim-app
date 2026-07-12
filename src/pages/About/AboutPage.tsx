@@ -22,7 +22,7 @@ const experienceAreas = [
 const contactLinks = [
   { label: "GitHub", href: "https://github.com/" },
   { label: "LinkedIn", href: "https://www.linkedin.com/" },
-  { label: "Email", href: "mailto:hello@freeshot.dev" },
+  { label: "Email", href: "mailto:hello@freeshot.online" },
 ];
 
 export function AboutPage() {

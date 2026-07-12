@@ -18,7 +18,7 @@ const featuredDeveloperToolNames = [
 
 const featuredToolNames = [
   "PlantUML Viewer",
-  "OpenShift Calculator Suite",
+  "Container Platform Calculator Suite",
   "JVM Memory Calculator",
   "JWT Decoder",
   "Timestamp Converter",
@@ -33,7 +33,7 @@ const featuredCapabilities = [
   {
     title: "Platform Engineering",
     description:
-      "OpenShift sizing, capacity planning, JVM memory calculations and operational tooling.",
+      "Container platform sizing, capacity planning, JVM memory calculations and operational tooling.",
   },
   {
     title: "Developer Productivity",
@@ -84,7 +84,7 @@ export function HomePage() {
             {[
               "PlantUML Architecture Templates",
               "C4 Architecture Modeling",
-              "OpenShift Capacity Planning",
+              "Container Platform Capacity Planning",
               "JVM Memory Sizing",
               "JWT & PKCE Tools",
               "Developer Productivity Utilities",
@@ -119,7 +119,7 @@ export function HomePage() {
             </h2>
             <p className="mt-4 max-w-3xl text-sm leading-7 text-gray-700 dark:text-gray-200">
               Create architecture diagrams instantly using reusable templates
-              for ISAQB, OAuth2, PAR, DPoP, OpenShift and Microservice
+              for ISAQB, OAuth2, PAR, DPoP, container platform and microservice
               architectures.
             </p>
             <div className="mt-6">
@@ -133,7 +133,7 @@ export function HomePage() {
               "C4 Architecture Templates",
               "ISAQB Architecture Templates",
               "OAuth2 / PAR / DPoP Flows",
-              "OpenShift Architecture Templates",
+              "Container Platform Architecture Templates",
             ].map((highlight) => (
               <li
                 key={highlight}
@@ -197,7 +197,7 @@ export function HomePage() {
         />
         <FeaturedSectionCard
           title="Platform Engineering Tools"
-          description="Sizing, capacity planning and operational tooling for OpenShift and containerized workloads."
+          description="Sizing, capacity planning and operational tooling for container platform workloads."
           examples={availablePlatformTools.map((tool) => tool.title)}
           actionLabel="View Platform Engineering Tools"
           to={routePaths.platformEngineering}
@@ -238,7 +238,7 @@ export function HomePage() {
         />
         <RoadmapCard
           title="Coming Soon"
-          items={["Kafka Calculator", "Additional Platform Engineering utilities"]}
+          items={["Event Bus Calculator", "Additional Platform Engineering utilities"]}
         />
       </section>
     </div>

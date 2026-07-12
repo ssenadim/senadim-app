@@ -20,7 +20,7 @@ import { UuidToolPage } from "../pages/DeveloperTools/Uuid/UuidToolPage";
 import { HomePage } from "../pages/Home/HomePage";
 import { NotFoundPage } from "../pages/NotFound/NotFoundPage";
 import { JvmMemoryCalculatorPage } from "../pages/PlatformEngineering/JvmMemoryCalculator/JvmMemoryCalculatorPage";
-import { OpenShiftCalculatorPage } from "../pages/PlatformEngineering/OpenShiftCalculator/OpenShiftCalculatorPage";
+import { ContainerPlatformCalculatorPage } from "../pages/PlatformEngineering/ContainerPlatformCalculator/ContainerPlatformCalculatorPage";
 import { PlatformEngineeringPage } from "../pages/PlatformEngineering/PlatformEngineeringPage";
 import { routePaths } from "../utils/routes";
 
@@ -66,8 +66,8 @@ export const appRouter = createBrowserRouter(
           element: <PlatformEngineeringPage />,
         },
         {
-          path: routePaths.openShiftCalculator,
-          element: <OpenShiftCalculatorPage />,
+          path: routePaths.containerPlatformCalculator,
+          element: <ContainerPlatformCalculatorPage />,
         },
         {
           path: routePaths.jvmMemoryCalculator,

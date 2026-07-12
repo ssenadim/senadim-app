@@ -187,7 +187,7 @@ code_verifier=${verifier || "<code_verifier>"}`}</pre>
           <li>S256 is the recommended method.</li>
           <li>Plain is supported for compatibility only.</li>
           <li>PKCE is commonly used with Authorization Code Flow.</li>
-          <li>Keycloak, Azure AD, Okta and Auth0 support PKCE.</li>
+          <li>Most modern identity platforms support PKCE.</li>
         </ul>
       }
       toast={<ToolToast toast={toast} />}

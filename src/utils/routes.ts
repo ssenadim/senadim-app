@@ -15,7 +15,7 @@ export const routePaths = {
   architectureDesign: "/architecture-design",
   adrGenerator: "/architecture-design/adr-generator",
   platformEngineering: "/platform-engineering",
-  openShiftCalculator: "/platform-engineering/openshift-calculator",
+  containerPlatformCalculator: "/platform-engineering/container-platform-calculator",
   jvmMemoryCalculator: "/platform-engineering/jvm-memory-calculator",
   plantUmlViewer: "/architecture-design/plantuml-viewer",
   architectureNotes: "/architecture-notes",
