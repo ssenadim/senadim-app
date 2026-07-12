@@ -20,11 +20,16 @@ interface AdrForm {
   title: string;
   number: string;
   status: AdrStatus;
+  decisionDate: string;
+  author: string;
+  stakeholders: string[];
+  tags: string;
   drivers: string[];
   context: string;
   decision: string;
   alternatives: string;
   consequences: string;
+  negativeConsequences: string;
 }
 
 interface AdrTemplate {
@@ -43,9 +48,21 @@ const decisionDrivers = [
   "Scalability",
   "Availability",
   "Maintainability",
-  "Cost",
+  "Operational Simplicity",
   "Compliance",
-  "Simplicity",
+  "Cost",
+  "Developer Experience",
+  "Observability",
+  "Reliability",
+  "Portability",
+];
+
+const stakeholderOptions = [
+  "Architecture Team",
+  "Platform Team",
+  "Security Team",
+  "Development Team",
+  "Operations Team",
 ];
 
 const statusOptions: AdrStatus[] = [
@@ -57,35 +74,62 @@ const statusOptions: AdrStatus[] = [
   "Rejected",
 ];
 
+function getTodayDate() {
+  return new Date().toISOString().slice(0, 10);
+}
+
 const emptyForm: AdrForm = {
   title: "",
   number: "001",
   status: "Accepted",
+  decisionDate: getTodayDate(),
+  author: "",
+  stakeholders: [],
+  tags: "",
   drivers: [],
   context: "",
   decision: "",
   alternatives: "",
   consequences: "",
+  negativeConsequences: "",
 };
 
 function createForm({
   title,
   status = "Accepted",
+  author = "",
+  stakeholders = [],
+  tags = "",
   drivers,
   context,
   decision,
   alternatives,
   consequences,
-}: Omit<AdrForm, "number" | "status"> & { status?: AdrStatus }) {
+  negativeConsequences = "",
+}: Omit<
+  AdrForm,
+  "number" | "status" | "decisionDate" | "author" | "stakeholders" | "tags" | "negativeConsequences"
+> & {
+  author?: string;
+  negativeConsequences?: string;
+  stakeholders?: string[];
+  status?: AdrStatus;
+  tags?: string;
+}) {
   return {
     title,
     number: "001",
     status,
+    decisionDate: getTodayDate(),
+    author,
+    stakeholders,
+    tags,
     drivers,
     context,
     decision,
     alternatives,
     consequences,
+    negativeConsequences,
   };
 }
 
@@ -97,22 +141,28 @@ const templateGroups: AdrTemplateGroup[] = [
         title: "Authentication Strategy",
         form: createForm({
           title: "Adopt Centralized Authentication Strategy",
-          drivers: ["Security", "Maintainability", "Compliance"],
+          drivers: ["Security", "Compliance", "Developer Experience"],
+          stakeholders: ["Architecture Team", "Security Team", "Development Team"],
+          tags: "identity, oidc, authentication",
           context:
-            "Multiple applications need consistent authentication, session handling and token validation.",
+            "Multiple applications need consistent authentication, session handling, token validation and auditability across web and API channels.",
           decision:
-            "Use a centralized authentication strategy based on OpenID Connect and shared identity provider integration.",
+            "Adopt a centralized Authentication Service based on OpenID Connect and shared integration standards.",
           alternatives:
-            "Keep application-specific authentication; build a custom authentication service; delegate authentication to each product team.",
+            "Keep application-specific authentication; build a custom Authentication Service; delegate authentication ownership to each product team.",
           consequences:
-            "Authentication becomes more consistent and auditable, but teams must align on token lifetimes, client registration and operational ownership.",
+            "Authentication becomes consistent, auditable and easier to integrate across teams.",
+          negativeConsequences:
+            "Teams must align on token lifetimes, client registration, service ownership and operational runbooks.",
         }),
       },
       {
         title: "API Gateway Selection",
         form: createForm({
           title: "Introduce API Gateway for External APIs",
-          drivers: ["Security", "Maintainability", "Availability"],
+          drivers: ["Security", "Maintainability", "Observability"],
+          stakeholders: ["Architecture Team", "Platform Team", "Development Team"],
+          tags: "api, gateway, integration",
           context:
             "Backend services expose APIs with inconsistent routing, authentication and observability patterns.",
           decision:
@@ -120,14 +170,18 @@ const templateGroups: AdrTemplateGroup[] = [
           alternatives:
             "Expose services directly; use ingress-only routing; implement gateway behavior in each backend service.",
           consequences:
-            "Routing and policies become centralized, while the gateway becomes a critical runtime dependency that requires strong operations.",
+            "Routing, API policies and cross-cutting controls become centralized.",
+          negativeConsequences:
+            "The API Gateway becomes a critical runtime dependency and requires strong operational ownership.",
         }),
       },
       {
         title: "Database Selection",
         form: createForm({
           title: "Use Application Database as Primary Relational Store",
-          drivers: ["Maintainability", "Cost", "Availability"],
+          drivers: ["Maintainability", "Cost", "Reliability"],
+          stakeholders: ["Architecture Team", "Development Team", "Operations Team"],
+          tags: "data, persistence, relational",
           context:
             "The application requires transactional consistency, relational queries and operationally familiar database technology.",
           decision:
@@ -135,7 +189,9 @@ const templateGroups: AdrTemplateGroup[] = [
           alternatives:
             "Use a document database; use a managed proprietary database; split data across multiple specialized stores from the start.",
           consequences:
-            "Teams gain mature relational capabilities and broad operational knowledge, but must design schema migration and scaling practices carefully.",
+            "Teams gain mature relational capabilities, clear transactional boundaries and broad operational familiarity.",
+          negativeConsequences:
+            "Teams must design schema migration, backup, retention and scaling practices carefully.",
         }),
       },
       {
@@ -143,7 +199,9 @@ const templateGroups: AdrTemplateGroup[] = [
         form: createForm({
           title: "Adopt Event Driven Architecture for Domain Events",
           status: "Proposed",
-          drivers: ["Scalability", "Availability", "Maintainability"],
+          drivers: ["Scalability", "Availability", "Reliability"],
+          stakeholders: ["Architecture Team", "Development Team", "Operations Team"],
+          tags: "events, async, integration",
           context:
             "Several services need to react to business changes without tight synchronous coupling.",
           decision:
@@ -151,7 +209,9 @@ const templateGroups: AdrTemplateGroup[] = [
           alternatives:
             "Use synchronous REST callbacks; share database tables; schedule periodic polling jobs.",
           consequences:
-            "Services become more decoupled and scalable, but teams must handle eventual consistency, idempotency and event schema governance.",
+            "Services become more decoupled and scalable, and business events become reusable integration points.",
+          negativeConsequences:
+            "Teams must handle eventual consistency, idempotency, replay behavior and event schema governance.",
         }),
       },
       {
@@ -159,7 +219,9 @@ const templateGroups: AdrTemplateGroup[] = [
         form: createForm({
           title: "Structure the Platform as Domain-Oriented Microservices",
           status: "Proposed",
-          drivers: ["Scalability", "Maintainability", "Availability"],
+          drivers: ["Scalability", "Maintainability", "Operational Simplicity"],
+          stakeholders: ["Architecture Team", "Platform Team", "Development Team"],
+          tags: "microservices, domain, platform",
           context:
             "The platform contains several business domains with different release cycles and ownership boundaries.",
           decision:
@@ -167,7 +229,9 @@ const templateGroups: AdrTemplateGroup[] = [
           alternatives:
             "Keep a modular monolith; split by technical layers; create shared database-centric services.",
           consequences:
-            "Independent delivery improves, but operational complexity, distributed tracing and API governance become more important.",
+            "Domain ownership and independent delivery improve for teams with mature operational practices.",
+          negativeConsequences:
+            "Operational complexity, distributed tracing, API governance and runtime failure handling become more important.",
         }),
       },
     ],
@@ -179,7 +243,9 @@ const templateGroups: AdrTemplateGroup[] = [
         title: "Identity Service Adoption",
         form: createForm({
           title: "Adopt an Enterprise Identity Service",
-          drivers: ["Security", "Compliance", "Maintainability"],
+          drivers: ["Security", "Compliance", "Reliability"],
+          stakeholders: ["Architecture Team", "Security Team", "Operations Team"],
+          tags: "identity, access-management, security",
           context:
             "The platform requires centralized identity and access management for web applications, APIs and service integrations.",
           decision:
@@ -187,14 +253,18 @@ const templateGroups: AdrTemplateGroup[] = [
           alternatives:
             "Build a custom IAM service; use a managed cloud identity provider; keep application-specific authentication modules.",
           consequences:
-            "Teams get standard OAuth2 and OpenID Connect capabilities, but must operate the identity platform reliably and define shared governance.",
+            "Teams get standard OAuth2 and OpenID Connect capabilities through a shared enterprise capability.",
+          negativeConsequences:
+            "The identity platform must be operated reliably and governed consistently across teams.",
         }),
       },
       {
         title: "OAuth2 Provider Selection",
         form: createForm({
           title: "Standardize on OAuth2 and OpenID Connect Provider",
-          drivers: ["Security", "Compliance", "Simplicity"],
+          drivers: ["Security", "Compliance", "Portability"],
+          stakeholders: ["Architecture Team", "Security Team", "Development Team"],
+          tags: "oauth2, oidc, authorization",
           context:
             "Applications and APIs need a shared protocol for delegated authorization and identity claims.",
           decision:
@@ -202,7 +272,9 @@ const templateGroups: AdrTemplateGroup[] = [
           alternatives:
             "Use proprietary SSO protocols; implement custom bearer tokens; keep basic authentication for internal APIs.",
           consequences:
-            "Security integration becomes standards-based, but teams must understand token validation, scopes, audiences and client configuration.",
+            "Security integration becomes standards-based and portable across applications.",
+          negativeConsequences:
+            "Teams must understand token validation, scopes, audiences and client configuration.",
         }),
       },
       {
@@ -324,27 +396,56 @@ function formatAdrNumber(value: string) {
   return cleanedValue || "001";
 }
 
+function slugify(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 60);
+}
+
 function buildAdrMarkdown(form: AdrForm) {
   const adrNumber = formatAdrNumber(form.number).padStart(3, "0");
+  const title = form.title.trim() || "Untitled Architecture Decision";
   const drivers =
     form.drivers.length > 0
-      ? form.drivers.map((driver) => `- ${driver}`).join("\n")
-      : "- Not specified";
+      ? form.drivers.map((driver) => `* ${driver}`).join("\n")
+      : "* Not specified";
+  const stakeholders =
+    form.stakeholders.length > 0
+      ? form.stakeholders.map((stakeholder) => `* ${stakeholder}`).join("\n")
+      : "* Not specified";
+  const tags =
+    form.tags
+      .split(",")
+      .map((tag) => tag.trim())
+      .filter(Boolean);
+  const tagLine =
+    tags.length > 0
+      ? tags.map((tag) => `\`${tag}\``).join(", ")
+      : "Not specified";
 
   return [
-    `# ADR-${adrNumber}`,
+    `# ADR-${adrNumber}: ${title}`,
     "",
-    "## Title",
+    `**Status:** ${form.status}`,
     "",
-    form.title.trim() || "Untitled Architecture Decision",
+    `**Decision Date:** ${form.decisionDate || getTodayDate()}`,
     "",
-    "## Status",
+    form.author.trim() ? `**Author:** ${form.author.trim()}` : "**Author:** Not specified",
     "",
-    form.status,
+    "**Stakeholders**",
+    "",
+    stakeholders,
+    "",
+    `**Tags:** ${tagLine}`,
     "",
     "## Decision Drivers",
     "",
     drivers,
+    "",
+    "---",
     "",
     "## Context",
     "",
@@ -360,7 +461,13 @@ function buildAdrMarkdown(form: AdrForm) {
     "",
     "## Consequences",
     "",
-    form.consequences.trim() || "Describe consequences and trade-offs.",
+    "### Positive",
+    "",
+    form.consequences.trim() || "Describe expected benefits and positive outcomes.",
+    "",
+    "### Negative",
+    "",
+    form.negativeConsequences.trim() || "Describe trade-offs, risks and follow-up responsibilities.",
   ].join("\n");
 }
 
@@ -404,6 +511,16 @@ export function AdrGeneratorPage() {
     }));
   }
 
+  function toggleStakeholder(stakeholder: string) {
+    setSelectedTemplate("");
+    setForm((current) => ({
+      ...current,
+      stakeholders: current.stakeholders.includes(stakeholder)
+        ? current.stakeholders.filter((item) => item !== stakeholder)
+        : [...current.stakeholders, stakeholder],
+    }));
+  }
+
   function validateForm() {
     if (!form.title.trim()) return "Title is required to generate an ADR.";
     if (!form.context.trim()) return "Context is required to explain the decision background.";
@@ -428,6 +545,20 @@ export function AdrGeneratorPage() {
   async function handleCopyMarkdown() {
     await navigator.clipboard.writeText(markdown);
     showToast("success", "ADR markdown copied.");
+  }
+
+  function handleDownloadMarkdown() {
+    const adrNumber = formatAdrNumber(form.number).padStart(3, "0");
+    const fileName = `ADR-${adrNumber}-${slugify(form.title || "architecture-decision")}.md`;
+    const blob = new Blob([markdown], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = fileName;
+    link.click();
+    URL.revokeObjectURL(url);
+    showToast("success", "ADR markdown downloaded.");
   }
 
   function handleClear() {
@@ -563,6 +694,80 @@ export function AdrGeneratorPage() {
                   </div>
                 </div>
 
+                <div className="grid gap-4 lg:grid-cols-[11rem_1fr]">
+                  <div>
+                    <FieldLabel
+                      htmlFor="adr-decision-date"
+                      label="Decision Date"
+                      help="Date when the decision was proposed, accepted or last reviewed."
+                    />
+                    <TextInput
+                      id="adr-decision-date"
+                      type="date"
+                      value={form.decisionDate}
+                      onChange={(event) =>
+                        updateField("decisionDate", event.target.value)
+                      }
+                    />
+                  </div>
+                  <div>
+                    <FieldLabel
+                      htmlFor="adr-author"
+                      label="Author"
+                      help="Optional owner or author responsible for drafting this ADR."
+                    />
+                    <TextInput
+                      id="adr-author"
+                      value={form.author}
+                      onChange={(event) => updateField("author", event.target.value)}
+                      placeholder="Architecture Team"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="mb-2 flex items-center gap-2">
+                    <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                      Stakeholders
+                    </p>
+                    <HelpTooltip
+                      title="Stakeholders"
+                      description="Select teams that should review, own or be informed about this decision."
+                    />
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {stakeholderOptions.map((stakeholder) => (
+                      <button
+                        key={stakeholder}
+                        type="button"
+                        onClick={() => toggleStakeholder(stakeholder)}
+                        className={[
+                          "rounded-lg border px-3 py-2 text-sm font-medium transition",
+                          form.stakeholders.includes(stakeholder)
+                            ? "border-cyan-500 bg-cyan-50 text-cyan-800 dark:border-cyan-400 dark:bg-cyan-950 dark:text-cyan-200"
+                            : "border-gray-200 bg-white text-gray-700 hover:border-cyan-300 hover:text-cyan-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:border-cyan-700 dark:hover:text-cyan-300",
+                        ].join(" ")}
+                      >
+                        {stakeholder}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <FieldLabel
+                    htmlFor="adr-tags"
+                    label="Tags"
+                    help="Optional comma-separated tags for search, ownership or documentation grouping."
+                  />
+                  <TextInput
+                    id="adr-tags"
+                    value={form.tags}
+                    onChange={(event) => updateField("tags", event.target.value)}
+                    placeholder="identity, api, platform"
+                  />
+                </div>
+
                 <div>
                   <div className="mb-2 flex items-center gap-2">
                     <p className="text-sm font-semibold text-gray-900 dark:text-white">
@@ -615,10 +820,17 @@ export function AdrGeneratorPage() {
                 />
                 <AdrTextarea
                   id="adr-consequences"
-                  label="Consequences"
+                  label="Positive Consequences"
                   value={form.consequences}
                   onChange={(value) => updateField("consequences", value)}
-                  help="Document the expected benefits, trade-offs and follow-up responsibilities."
+                  help="Document the expected benefits and positive outcomes."
+                />
+                <AdrTextarea
+                  id="adr-negative-consequences"
+                  label="Negative Consequences"
+                  value={form.negativeConsequences}
+                  onChange={(value) => updateField("negativeConsequences", value)}
+                  help="Document trade-offs, risks and follow-up responsibilities."
                 />
 
                 <div className="flex flex-wrap gap-2">
@@ -627,6 +839,9 @@ export function AdrGeneratorPage() {
                   </Button>
                   <Button color="light" onClick={handleCopyMarkdown}>
                     Copy Markdown
+                  </Button>
+                  <Button color="light" onClick={handleDownloadMarkdown}>
+                    Download .md
                   </Button>
                   <Button color="light" onClick={handleClear}>
                     Clear
@@ -640,6 +855,9 @@ export function AdrGeneratorPage() {
                 <h2 className="text-sm font-semibold text-gray-900 dark:text-white">
                   Markdown Preview
                 </h2>
+                <span className="rounded-md bg-cyan-100 px-2 py-1 text-xs font-semibold text-cyan-800 dark:bg-cyan-950 dark:text-cyan-200">
+                  GitHub Flavored Markdown
+                </span>
                 <HelpTooltip
                   title="Markdown Preview"
                   description="Live markdown preview generated from the ADR details."
