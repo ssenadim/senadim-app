@@ -7,9 +7,11 @@ import { usePageTitle } from "../../../hooks/usePageTitle";
 import type { ToolExample } from "../../../types/toolPage";
 import type { ToastMessage, ToastTone } from "../../../types/toast";
 import {
+  formatHtml,
   formatJson,
   formatXml,
   isFormatterFailure,
+  minifyHtml,
   minifyJson,
   minifyXml,
   type FormatterType,
@@ -30,11 +32,17 @@ const examples: ToolExample[] = [
     input: "<user><name>John</name></user>",
     outputLabel: "Output",
     output: "<user>\n  <name>John</name>\n</user>",
+  },  {
+    title: "HTML Example",
+    inputLabel: "Input",
+    input: "<main><h1>Hello</h1><p>Welcome</p></main>",
+    outputLabel: "Output",
+    output: "<main>\n  <h1>Hello</h1>\n  <p>Welcome</p>\n</main>",
   },
 ];
 
 export function FormatterToolPage() {
-  usePageTitle("JSON & XML Formatter");
+  usePageTitle("Data Formatter");
 
   const [formatType, setFormatType] = useState<FormatterType>("json");
   const [inputText, setInputText] = useState("");
@@ -57,7 +65,7 @@ export function FormatterToolPage() {
   }
 
   function handleFormat() {
-    const result = formatType === "json" ? formatJson(inputText) : formatXml(inputText);
+    const result = formatType === "json" ? formatJson(inputText) : formatType === "xml" ? formatXml(inputText) : formatHtml(inputText);
 
     if (isFormatterFailure(result)) {
       setErrorMessage(result.error);
@@ -72,7 +80,7 @@ export function FormatterToolPage() {
   }
 
   function handleMinify() {
-    const result = formatType === "json" ? minifyJson(inputText) : minifyXml(inputText);
+    const result = formatType === "json" ? minifyJson(inputText) : formatType === "xml" ? minifyXml(inputText) : minifyHtml(inputText);
 
     if (isFormatterFailure(result)) {
       setErrorMessage(result.error);
@@ -109,11 +117,11 @@ export function FormatterToolPage() {
 
   return (
     <ToolPageLayout
-      title="JSON & XML Formatter"
-      description="Format or minify JSON and XML content for APIs, integrations, logs, and debugging workflows."
+      title="Data Formatter"
+      description="Format, validate and transform structured data such as JSON, XML and HTML for APIs, integrations, web development and debugging."
       breadcrumbs={[
         { label: "Developer Tools", path: routePaths.developerTools },
-        { label: "JSON & XML Formatter" },
+        { label: "Data Formatter" },
       ]}
       overviewTitle="Why Formatting Matters"
       overviewCollapsible
@@ -154,6 +162,7 @@ export function FormatterToolPage() {
             >
               <option value="json">JSON</option>
               <option value="xml">XML</option>
+              <option value="html">HTML</option>
             </Select>
           </div>
 
@@ -167,7 +176,7 @@ export function FormatterToolPage() {
               </label>
               <HelpTooltip
                 title="Input"
-                description="Paste JSON or XML content here."
+                description="Paste JSON, XML, or HTML content here."
                 exampleInput='{"name":"John"}'
                 exampleOutput='{\n  "name": "John"\n}'
               />
@@ -177,7 +186,7 @@ export function FormatterToolPage() {
               rows={10}
               value={inputText}
               onChange={(event) => setInputText(event.target.value)}
-              placeholder="Paste JSON or XML content here..."
+              placeholder="Paste JSON, XML, or HTML content here..."
               className="font-mono"
             />
           </div>
@@ -246,5 +255,5 @@ export function FormatterToolPage() {
 }
 
 function getFormatLabel(formatType: FormatterType) {
-  return formatType === "json" ? "JSON" : "XML";
+  return formatType === "json" ? "JSON" : formatType === "xml" ? "XML" : "HTML";
 }

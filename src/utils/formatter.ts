@@ -1,4 +1,4 @@
-export type FormatterType = "json" | "xml";
+export type FormatterType = "json" | "xml" | "html";
 
 export interface FormatterSuccess {
   value: string;
@@ -56,6 +56,25 @@ export function minifyXml(input: string): FormatterResult {
   return { value: parsedXml.value.replace(/>\s+</g, "><").trim() };
 }
 
+export function formatHtml(input: string): FormatterResult {
+  const compactHtml = input.replace(/>\s+</g, "><").trim();
+
+  if (!compactHtml) {
+    return { error: "HTML input is empty." };
+  }
+
+  return { value: prettifyHtml(compactHtml) };
+}
+
+export function minifyHtml(input: string): FormatterResult {
+  const minifiedHtml = input.replace(/>\s+</g, "><").trim();
+
+  if (!minifiedHtml) {
+    return { error: "HTML input is empty." };
+  }
+
+  return { value: minifiedHtml };
+}
 function parseXml(input: string): FormatterResult {
   try {
     const parser = new DOMParser();
@@ -106,6 +125,39 @@ function prettifyXml(xml: string) {
     .join("\n");
 }
 
+function prettifyHtml(html: string) {
+  const tokens = html.replace(/(>)(<)(\/*)/g, "$1\n$2$3").split("\n");
+  let indentLevel = 0;
+
+  return tokens
+    .map((token) => {
+      const trimmedToken = token.trim();
+
+      if (trimmedToken.startsWith("</")) {
+        indentLevel = Math.max(indentLevel - 1, 0);
+      }
+
+      const line = `${"  ".repeat(indentLevel)}${trimmedToken}`;
+
+      if (
+        trimmedToken.startsWith("<") &&
+        !trimmedToken.startsWith("</") &&
+        !trimmedToken.startsWith("<!") &&
+        !trimmedToken.endsWith("/>") &&
+        !trimmedToken.includes("</") &&
+        !isHtmlVoidElement(trimmedToken)
+      ) {
+        indentLevel += 1;
+      }
+
+      return line;
+    })
+    .join("\n");
+}
+
+function isHtmlVoidElement(token: string) {
+  return /^<(area|base|br|col|embed|hr|img|input|link|meta|param|source|track|wbr)(\s|>)/i.test(token);
+}
 function getErrorMessage(error: unknown) {
   if (error instanceof Error && error.message) {
     return error.message;

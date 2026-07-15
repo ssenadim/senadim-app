@@ -17,9 +17,9 @@ export const developerTools: DeveloperTool[] = [
     status: "available",
   },
   {
-    title: "JSON & XML Formatter",
+    title: "Data Formatter",
     description:
-      "Format, validate, and minify JSON or XML payloads for APIs, integrations, logs, and debugging.",
+      "Format, validate and transform structured data such as JSON, XML and HTML for APIs, integrations, web development and debugging.",
     category: "Data",
     path: routePaths.formatterTool,
     status: "available",
