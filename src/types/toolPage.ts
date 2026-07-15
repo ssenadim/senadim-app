@@ -7,6 +7,7 @@ export interface ToolBreadcrumbItem {
 
 export interface ToolExample {
   title: string;
+  description?: string;
   inputLabel: string;
   input: string;
   outputLabel: string;

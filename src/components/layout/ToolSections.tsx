@@ -169,35 +169,40 @@ export function ToolExamples({
               <h2 className="max-w-full break-words whitespace-normal text-lg font-semibold leading-7 text-gray-950 dark:text-white">
                 {example.title}
               </h2>
-              {onExampleSelect ? (
-                <div className="mt-3">
-                  <Button
-                    color="light"
-                    size="xs"
-                    onClick={() => onExampleSelect(example)}
-                  >
-                    Use Example
-                  </Button>
-                </div>
-              ) : null}
-              <div className="mt-4 grid gap-3">
-                <div>
-                  <p className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
-                    {example.inputLabel}
+              {example.description ? (
+                <>
+                  <p className="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">
+                    {example.description}
                   </p>
-                  <pre className="mt-2 overflow-x-auto rounded-lg bg-gray-50 p-3 text-sm text-gray-800 dark:bg-gray-950 dark:text-gray-200">
-                    {example.input}
-                  </pre>
-                </div>
-                <div>
-                  <p className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
-                    {example.outputLabel}
-                  </p>
-                  <pre className="mt-2 overflow-x-auto rounded-lg bg-gray-50 p-3 text-sm text-gray-800 dark:bg-gray-950 dark:text-gray-200">
-                    {example.output}
-                  </pre>
-                </div>
-              </div>
+                  {onExampleSelect ? (
+                    <div className="mt-4">
+                      <Button color="light" size="sm" onClick={() => onExampleSelect(example)}>
+                        Use Template
+                      </Button>
+                    </div>
+                  ) : null}
+                </>
+              ) : (
+                <>
+                  {onExampleSelect ? (
+                    <div className="mt-3">
+                      <Button color="light" size="xs" onClick={() => onExampleSelect(example)}>
+                        Use Example
+                      </Button>
+                    </div>
+                  ) : null}
+                  <div className="mt-4 grid gap-3">
+                    <div>
+                      <p className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">{example.inputLabel}</p>
+                      <pre className="mt-2 overflow-x-auto rounded-lg bg-gray-50 p-3 text-sm text-gray-800 dark:bg-gray-950 dark:text-gray-200">{example.input}</pre>
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">{example.outputLabel}</p>
+                      <pre className="mt-2 overflow-x-auto rounded-lg bg-gray-50 p-3 text-sm text-gray-800 dark:bg-gray-950 dark:text-gray-200">{example.output}</pre>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           ))}
         </div>

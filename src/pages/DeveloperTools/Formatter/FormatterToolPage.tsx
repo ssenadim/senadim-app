@@ -20,27 +20,30 @@ import { routePaths } from "../../../utils/routes";
 
 const examples: ToolExample[] = [
   {
-    title: "JSON Example",
+    title: "Basic JSON",
+    description: "Typical REST API response.",
     inputLabel: "Input",
     input: '{"name":"John","age":30}',
     outputLabel: "Output",
     output: '{\n  "name": "John",\n  "age": 30\n}',
   },
   {
-    title: "XML Example",
+    title: "Basic XML",
+    description: "Simple XML document.",
     inputLabel: "Input",
     input: "<user><name>John</name></user>",
     outputLabel: "Output",
     output: "<user>\n  <name>John</name>\n</user>",
   },  {
-    title: "HTML: Basic Page",
+    title: "Basic HTML Page",
+    description: "Simple HTML5 document.",
     inputLabel: "Input",
     input: "<main><h1>Hello</h1><p>Welcome</p></main>",
     outputLabel: "Output",
     output: "<main>\n  <h1>Hello</h1>\n  <p>Welcome</p>\n</main>",
-  },  { title: "HTML: Responsive Layout", inputLabel: "Input", input: "<main><section><article>One</article><article>Two</article></section></main>", outputLabel: "Output", output: "Beautified responsive layout" },
-  { title: "HTML: Simple Form", inputLabel: "Input", input: "<form><label>Email<input type=\"email\"></label><button>Send</button></form>", outputLabel: "Output", output: "Beautified form markup" },
-  { title: "HTML: Table", inputLabel: "Input", input: "<table><tr><th>Name</th></tr><tr><td>Alex</td></tr></table>", outputLabel: "Output", output: "Beautified table markup" },
+  },  { title: "Responsive Layout", description: "Modern semantic HTML layout.", inputLabel: "Input", input: "<main><section><article>One</article><article>Two</article></section></main>", outputLabel: "Output", output: "Beautified responsive layout" },
+  { title: "Simple Form", description: "Common HTML form controls.", inputLabel: "Input", input: "<form><label>Email<input type=\"email\"></label><button>Send</button></form>", outputLabel: "Output", output: "Beautified form markup" },
+  { title: "Table Example", description: "Semantic HTML table.", inputLabel: "Input", input: "<table><tr><th>Name</th></tr><tr><td>Alex</td></tr></table>", outputLabel: "Output", output: "Beautified table markup" },
 
 ];
 
