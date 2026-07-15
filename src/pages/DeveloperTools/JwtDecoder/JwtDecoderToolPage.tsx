@@ -43,6 +43,19 @@ const timestampClaimNames = new Set([
   "created_at",
   "expires_at",
 ]);
+const claimDescriptions: Record<string, string> = {
+  alg: "The signing algorithm declared in the JWT header.",
+  typ: "The token media type declared in the JWT header.",
+  iss: "Issuer: the identity provider or authorization server that created the token.",
+  sub: "Subject: the principal the token represents.",
+  aud: "Audience: the API or resource server this token is intended for.",
+  azp: "Authorized party: the client application that requested the token.",
+  scope: "The permissions granted to the token.",
+  exp: "Expiration time: the instant after which the token must not be accepted.",
+  iat: "Issued at: the time at which the token was created.",
+  nbf: "Not before: the instant before which the token must not be accepted.",
+  jti: "JWT ID: a unique identifier for this token.",
+};
 
 export function JwtDecoderToolPage() {
   usePageTitle("JWT Decoder");
@@ -151,7 +164,7 @@ export function JwtDecoderToolPage() {
         </div>
       }
       inputs={
-        <div className="space-y-5">
+        <div className="min-w-0 space-y-5">
           <div>
             <div className="mb-2 flex items-center gap-2">
               <label htmlFor="jwt-input" className="text-sm font-semibold text-gray-900 dark:text-white">
@@ -170,7 +183,7 @@ export function JwtDecoderToolPage() {
               value={token}
               onChange={(event) => setToken(event.target.value)}
               placeholder="Paste JWT token here..."
-              className="font-mono"
+              className="w-full max-w-full break-all font-mono"
             />
           </div>
           {error ? <p className="text-sm font-semibold text-red-600 dark:text-red-300">{error}</p> : null}
@@ -184,13 +197,14 @@ export function JwtDecoderToolPage() {
         </div>
       }
       outputs={
-        <div className="space-y-6">
-          <PayloadJsonBlock title="Payload JSON" value={payloadJson} />
+        <div className="min-w-0 space-y-6">
+          {decoded ? <StatusPanel status={getTokenStatus(decoded.payload)} /> : null}
           <JsonBlock title="Header JSON" value={headerJson} />
+          <PayloadJsonBlock title="Payload JSON" value={payloadJson} />
           {decoded ? (
             <section className="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
               <h2 className="text-lg font-semibold text-gray-950 dark:text-white">JWT Insights</h2>
-              <div className="mt-4 grid gap-3 md:grid-cols-2">
+              <div className="mt-5 grid gap-3 lg:grid-cols-3">
                 {headerClaims.map((claim) => {
                   const value = getStringClaim(decoded.header, claim);
                   return value ? <ClaimRow key={claim} label={claim} value={value} highlighted /> : null;
@@ -200,7 +214,7 @@ export function JwtDecoderToolPage() {
                   return value ? <ClaimRow key={claim} label={claim} value={value} highlighted /> : null;
                 })}
               </div>
-              <div className="mt-5 grid gap-3">
+              <div className="mt-5 grid gap-3 lg:grid-cols-3">
                 {dateClaims.map((claim) => {
                   const value = getNumericClaim(decoded.payload, claim);
                   return value ? <DateClaim key={claim} label={claim} seconds={value} /> : null;
@@ -216,7 +230,6 @@ export function JwtDecoderToolPage() {
               ) : null}
             </section>
           ) : null}
-          {decoded ? <StatusPanel status={getTokenStatus(decoded.payload)} /> : null}
           {decoded ? (
             <section className="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
               <h2 className="text-lg font-semibold text-gray-950 dark:text-white">Claim Search</h2>
@@ -297,11 +310,14 @@ function ClaimRow({
   value: string;
   highlighted?: boolean;
 }) {
-  return <div className={`rounded-lg p-3 ${highlighted ? "border border-cyan-200 bg-cyan-50 dark:border-cyan-900 dark:bg-cyan-950/40" : "bg-gray-50 dark:bg-gray-950"}`}><p className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">{label}</p><p className="mt-1 break-all font-mono text-sm text-gray-900 dark:text-gray-100">{value}</p></div>;
+  const description = claimDescriptions[label.toLowerCase()];
+
+  return <div className={`rounded-lg p-3 ${highlighted ? "border border-cyan-200 bg-cyan-50 dark:border-cyan-900 dark:bg-cyan-950/40" : "bg-gray-50 dark:bg-gray-950"}`}><div className="flex items-center gap-2"><p className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">{label}</p>{description ? <HelpTooltip title={label} description={description} /> : null}</div><p className="mt-1 break-all font-mono text-sm text-gray-900 dark:text-gray-100">{value}</p></div>;
 }
 
 function DateClaim({ label, seconds }: { label: string; seconds: number }) {
-  return <div className="rounded-lg bg-gray-50 p-3 dark:bg-gray-950"><p className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">{label}</p><p className="mt-1 font-mono text-sm text-gray-900 dark:text-gray-100">UTC: {formatJwtDate(seconds, "UTC")}</p><p className="font-mono text-sm text-gray-900 dark:text-gray-100">Europe/Istanbul: {formatJwtDate(seconds, "Europe/Istanbul")}</p><p className="font-mono text-sm text-gray-900 dark:text-gray-100">Local: {formatJwtDate(seconds)}</p></div>;
+  const description = claimDescriptions[label];
+  return <div className="rounded-lg bg-gray-50 p-3 dark:bg-gray-950"><div className="flex items-center gap-2"><p className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">{label}</p>{description ? <HelpTooltip title={label} description={description} /> : null}</div><p className="mt-1 font-mono text-sm text-gray-900 dark:text-gray-100">UTC: {formatJwtDate(seconds, "UTC")}</p><p className="font-mono text-sm text-gray-900 dark:text-gray-100">Europe/Istanbul: {formatJwtDate(seconds, "Europe/Istanbul")}</p><p className="font-mono text-sm text-gray-900 dark:text-gray-100">Local: {formatJwtDate(seconds)}</p></div>;
 }
 
 function PayloadJsonBlock({ title, value }: { title: string; value: string }) {
@@ -310,7 +326,7 @@ function PayloadJsonBlock({ title, value }: { title: string; value: string }) {
       <h2 className="mb-2 text-sm font-semibold text-gray-900 dark:text-white">
         {title}
       </h2>
-      <pre className="min-h-24 overflow-x-auto rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm text-gray-900 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100">
+      <pre className="min-h-24 max-w-full overflow-x-auto rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm text-gray-900 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100">
         {value ? <TimestampAwareJson value={value} /> : "-"}
       </pre>
     </div>
@@ -450,5 +466,5 @@ function formatRelativeTime(date: Date) {
 }
 
 function JsonBlock({ title, value }: { title: string; value: string }) {
-  return <div><h2 className="mb-2 text-sm font-semibold text-gray-900 dark:text-white">{title}</h2><pre className="min-h-24 overflow-x-auto rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm text-gray-900 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100">{value || "-"}</pre></div>;
+  return <div><h2 className="mb-2 text-sm font-semibold text-gray-900 dark:text-white">{title}</h2><pre className="min-h-24 max-w-full overflow-x-auto rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm text-gray-900 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100">{value || "-"}</pre></div>;
 }
