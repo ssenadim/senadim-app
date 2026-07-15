@@ -160,13 +160,13 @@ export function ToolExamples({
         }
       />
       {isVisible ? (
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid items-stretch gap-4 md:grid-cols-2">
           {examples.map((example) => (
             <div
               key={example.title}
-              className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-900"
+              className="min-w-0 rounded-lg border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-900"
             >
-              <h2 className="text-lg font-semibold text-gray-950 dark:text-white">
+              <h2 className="max-w-full break-words whitespace-normal text-lg font-semibold leading-7 text-gray-950 dark:text-white">
                 {example.title}
               </h2>
               {onExampleSelect ? (

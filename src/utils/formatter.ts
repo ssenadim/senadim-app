@@ -57,23 +57,85 @@ export function minifyXml(input: string): FormatterResult {
 }
 
 export function formatHtml(input: string): FormatterResult {
-  const compactHtml = input.replace(/>\s+</g, "><").trim();
+  const validation = validateHtml(input);
 
-  if (!compactHtml) {
-    return { error: "HTML input is empty." };
+  if (validation) {
+    return validation;
   }
 
-  return { value: prettifyHtml(compactHtml) };
+  const protectedHtml = protectHtmlBlocks(input);
+  const compactHtml = protectedHtml.value.replace(/>\s+</g, "><").trim();
+
+  return { value: restoreHtmlBlocks(prettifyHtml(compactHtml), protectedHtml.blocks) };
 }
 
 export function minifyHtml(input: string): FormatterResult {
-  const minifiedHtml = input.replace(/>\s+</g, "><").trim();
+  const validation = validateHtml(input);
 
-  if (!minifiedHtml) {
+  if (validation) {
+    return validation;
+  }
+
+  const protectedHtml = protectHtmlBlocks(input);
+  const minifiedHtml = protectedHtml.value.replace(/>\s+</g, "><").trim();
+
+  return { value: restoreHtmlBlocks(minifiedHtml, protectedHtml.blocks) };
+}
+function validateHtml(input: string): FormatterFailure | null {
+  if (!input.trim()) {
     return { error: "HTML input is empty." };
   }
 
-  return { value: minifiedHtml };
+  const protectedHtml = protectHtmlBlocks(input);
+  const withoutComments = protectedHtml.value.replace(/<!--[\s\S]*?-->/g, "");
+
+  if (withoutComments.includes("<!--")) {
+    return { error: "Invalid HTML. A comment is missing its closing --> marker." };
+  }
+
+  const stack: string[] = [];
+  const tagPattern = /<\/?([A-Za-z][\w:-]*)(?:\s[^<>]*?)?\/?\s*>/g;
+  let match: RegExpExecArray | null;
+
+  while ((match = tagPattern.exec(withoutComments))) {
+    const token = match[0];
+    const tagName = match[1].toLowerCase();
+    const isClosingTag = token.startsWith("</");
+    const isSelfClosing = /\/\s*>$/.test(token) || isHtmlVoidElement(token);
+
+    if (isClosingTag) {
+      const openingTag = stack.pop();
+      if (openingTag !== tagName) {
+        return { error: `Invalid HTML. Closing </${tagName}> does not match the expected tag.` };
+      }
+    } else if (!isSelfClosing) {
+      stack.push(tagName);
+    }
+  }
+
+  if (stack.length > 0) {
+    return { error: `Invalid HTML. Missing closing </${stack[stack.length - 1]}> tag.` };
+  }
+
+  return null;
+}
+
+function protectHtmlBlocks(html: string) {
+  const blocks: string[] = [];
+  const value = html.replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, (block) => {
+    const placeholder = `@@HTML_BLOCK_${blocks.length}@@`;
+    blocks.push(block);
+    return placeholder;
+  });
+
+  return { value, blocks };
+}
+
+function restoreHtmlBlocks(html: string, blocks: string[]) {
+  return blocks.reduce(
+    (result, block, index) => result.replace(`@@HTML_BLOCK_${index}@@`, block),
+    html,
+  );
 }
 function parseXml(input: string): FormatterResult {
   try {

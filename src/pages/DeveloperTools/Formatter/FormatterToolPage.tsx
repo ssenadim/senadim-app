@@ -33,12 +33,15 @@ const examples: ToolExample[] = [
     outputLabel: "Output",
     output: "<user>\n  <name>John</name>\n</user>",
   },  {
-    title: "HTML Example",
+    title: "HTML: Basic Page",
     inputLabel: "Input",
     input: "<main><h1>Hello</h1><p>Welcome</p></main>",
     outputLabel: "Output",
     output: "<main>\n  <h1>Hello</h1>\n  <p>Welcome</p>\n</main>",
-  },
+  },  { title: "HTML: Responsive Layout", inputLabel: "Input", input: "<main><section><article>One</article><article>Two</article></section></main>", outputLabel: "Output", output: "Beautified responsive layout" },
+  { title: "HTML: Simple Form", inputLabel: "Input", input: "<form><label>Email<input type=\"email\"></label><button>Send</button></form>", outputLabel: "Output", output: "Beautified form markup" },
+  { title: "HTML: Table", inputLabel: "Input", input: "<table><tr><th>Name</th></tr><tr><td>Alex</td></tr></table>", outputLabel: "Output", output: "Beautified table markup" },
+
 ];
 
 export function FormatterToolPage() {
@@ -128,7 +131,7 @@ export function FormatterToolPage() {
       overviewToggleLabel="Why Formatting Matters"
       overview={
         <div className="space-y-3">
-          <p>Formatters make structured data easier to read.</p>
+          <p>Data Formatter supports JSON, XML, and HTML structured data.</p>
           <p>Minifiers remove unnecessary whitespace.</p>
           <p>
             They are useful for APIs, integrations, logs, and debugging when
@@ -144,7 +147,7 @@ export function FormatterToolPage() {
                 htmlFor="formatter-type"
                 className="text-sm font-semibold text-gray-900 dark:text-white"
               >
-                Format Type
+                {formatType === "html" ? "Beautify" : "Format"} Type
               </label>
               <HelpTooltip
                 title="Format Type"
@@ -200,7 +203,7 @@ export function FormatterToolPage() {
 
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <Button color="blue" onClick={handleFormat}>
-              Format
+              {formatType === "html" ? "Beautify" : "Format"}
             </Button>
             <Button color="green" onClick={handleMinify}>
               Minify
@@ -241,6 +244,7 @@ export function FormatterToolPage() {
         </div>
       }
       examples={examples}
+      onExampleSelect={(example) => { setFormatType(example.title.startsWith("XML") ? "xml" : example.title.startsWith("HTML") ? "html" : "json"); setInputText(example.input); setOutputText(""); setErrorMessage(""); }}
       notesCollapsible
       notes={
         <ul className="list-disc space-y-2 pl-5 text-sm leading-7 text-gray-600 dark:text-gray-300">
