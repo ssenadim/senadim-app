@@ -4,19 +4,18 @@ import { SectionHeader } from "../../components/common/SectionHeader";
 import { usePageTitle } from "../../hooks/usePageTitle";
 
 const expertise = [
-  "React and TypeScript architecture",
-  "Frontend platform design",
-  "Component systems",
-  "API integration patterns",
-  "Performance-aware UI engineering",
-  "Static deployment workflows",
+  "Developer Productivity",
+  "Platform Engineering",
+  "Architecture & Design",
 ];
 
 const experienceAreas = [
-  "Developer productivity tools",
-  "Reusable UI foundations",
-  "Documentation-driven architecture",
-  "Scalable Vite applications",
+  "Vendor Neutral",
+  "Developer First",
+  "Privacy Focused",
+  "Lightweight",
+  "Practical",
+  "Consistent User Experience",
 ];
 
 export function AboutPage() {
@@ -26,7 +25,7 @@ export function AboutPage() {
     <PageShell
       eyebrow="Freeshot"
       title="About Freeshot"
-      description="Freeshot is a modern engineering toolkit designed to simplify everyday work for software engineers, platform teams and solution architects. It brings together practical tools for Developer Productivity, Platform Engineering and Architecture & Design in a single, lightweight web application. The goal is simple: Help engineering teams spend less time on repetitive tasks and more time building great software."
+      description="Freeshot is a modern engineering toolkit designed to simplify everyday work for software engineers, platform engineers and solution architects. It combines practical tools for Developer Productivity, Platform Engineering and Architecture & Design into a single, lightweight web application. Our mission is simple: Help engineering teams spend less time on repetitive tasks and more time building great software."
     >
       <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
         <Card className="border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
@@ -34,23 +33,19 @@ export function AboutPage() {
             Our Mission
           </h2>
           <p className="mt-3 text-sm leading-7 text-gray-600 dark:text-gray-300">
-            I build practical, maintainable developer experiences with strong
-            TypeScript foundations and a product-minded approach to frontend
-            architecture.
+            Freeshot focuses on solving real engineering problems with practical,
+            easy-to-use tools. Every feature follows three simple principles:
           </p>
           <div className="mt-5 flex flex-wrap gap-2">
-            <Badge color="info">React</Badge>
-            <Badge color="success">TypeScript</Badge>
-            <Badge color="purple">Vite</Badge>
+            <Badge color="info">Simple</Badge>
+            <Badge color="success">Fast</Badge>
+            <Badge color="purple">Useful</Badge>
           </div>
         </Card>
 
         <div className="flex flex-col gap-6">
           <section className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-            <SectionHeader
-              title="Core Capabilities"
-              description="Focused capabilities for everyday engineering work."
-            />
+            <SectionHeader title="Core Capabilities" />
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
               {expertise.map((item) => (
                 <div
