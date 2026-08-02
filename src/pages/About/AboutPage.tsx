@@ -72,6 +72,22 @@ const evolutionSteps: Array<{
     icon: "compass",
   },
 ];
+const technologies = [
+  "React",
+  "TypeScript",
+  "Vite",
+  "Tailwind CSS",
+  "Flowbite React",
+];
+
+const currentVersion = "v1.0 (Preview)";
+
+const comingNext = [
+  "Threat Modeling Helper",
+  "Architecture Notes",
+  "Home Page Refresh",
+  "Continuous UX Improvements",
+];
 function CardTitle({
   icon,
   children,
@@ -231,6 +247,49 @@ export function AboutPage() {
             analysts, security architects, software architects and framework
             engineering teams.
           </p>
+        </section>
+        <section className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+          <CardTitle icon="target">Product Information</CardTitle>
+          <div className="mt-6 grid gap-4 lg:grid-cols-[1fr_0.75fr_1.25fr]">
+            <article className="rounded-lg border border-gray-200 bg-gray-50 p-5 dark:border-gray-700 dark:bg-gray-900">
+              <h3 className="text-sm font-semibold text-gray-950 dark:text-white">
+                Built With
+              </h3>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {technologies.map((technology) => (
+                  <Badge key={technology} color="gray">
+                    {technology}
+                  </Badge>
+                ))}
+              </div>
+            </article>
+
+            <article className="rounded-lg border border-gray-200 bg-gray-50 p-5 dark:border-gray-700 dark:bg-gray-900">
+              <h3 className="text-sm font-semibold text-gray-950 dark:text-white">
+                Current Version
+              </h3>
+              <p className="mt-4 text-lg font-bold text-cyan-700 dark:text-cyan-300">
+                {currentVersion}
+              </p>
+            </article>
+
+            <article className="rounded-lg border border-gray-200 bg-gray-50 p-5 dark:border-gray-700 dark:bg-gray-900">
+              <h3 className="text-sm font-semibold text-gray-950 dark:text-white">
+                Coming Next
+              </h3>
+              <ul className="mt-4 grid gap-2.5">
+                {comingNext.map((item) => (
+                  <li
+                    key={item}
+                    className="flex items-start gap-3 text-sm leading-5 text-gray-700 dark:text-gray-200"
+                  >
+                    <span className="mt-1.5 size-2 shrink-0 rounded-full bg-cyan-500" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </article>
+          </div>
         </section>{" "}
       </PageShell>
     </div>

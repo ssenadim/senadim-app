@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Button, Card } from "flowbite-react";
+import { Badge, Button, Card } from "flowbite-react";
 import { MetricCard } from "../../components/cards/MetricCard";
 import { ToolCard } from "../../components/cards/ToolCard";
 import { SectionHeader } from "../../components/common/SectionHeader";
@@ -71,33 +71,29 @@ export function HomePage() {
       <section className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-8">
         <div className="max-w-4xl">
           <p className="text-sm font-semibold uppercase text-cyan-700 dark:text-cyan-300">
-            Architecture / Platform Engineering / Developer Productivity
+            Modern Engineering Toolkit
           </p>
           <h1 className="mt-4 text-4xl font-bold text-gray-950 dark:text-white sm:text-5xl">
             Freeshot
           </h1>
-          <p className="mt-5 max-w-3xl text-base leading-7 text-gray-600 dark:text-gray-300">
-            Freeshot provides architecture, platform engineering and developer
-            productivity tools for modern software teams.
+          <p className="mt-5 text-2xl leading-tight font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-3xl">
+            <span className="block">Developer Productivity.</span>
+            <span className="block">Platform Engineering.</span>
+            <span className="block">Architecture &amp; Design.</span>
+            <span className="mt-2 block text-cyan-700 dark:text-cyan-300">
+              Everything in one place.
+            </span>
           </p>
-          <ul className="mt-6 grid max-w-4xl gap-2 text-sm text-gray-700 dark:text-gray-200 sm:grid-cols-2 lg:grid-cols-3">
-            {[
-              "PlantUML Architecture Templates",
-              "C4 Architecture Modeling",
-              "Container Platform Capacity Planning",
-              "JVM Memory Sizing",
-              "JWT & PKCE Tools",
-              "Developer Productivity Utilities",
-            ].map((capability) => (
-              <li
-                key={capability}
-                className="rounded-lg bg-gray-50 px-3 py-2 dark:bg-gray-950"
-              >
-                {capability}
-              </li>
-            ))}
-          </ul>
-          <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+          <p className="mt-6 max-w-3xl text-base leading-7 text-gray-600 dark:text-gray-300">
+            Freeshot is a lightweight, modern web application that brings
+            practical daily tools together to improve engineering productivity.
+          </p>
+          <div className="mt-6 flex flex-wrap gap-2">
+            <Badge color="info">Developer Productivity</Badge>
+            <Badge color="success">Platform Engineering</Badge>
+            <Badge color="purple">Architecture &amp; Design</Badge>
+          </div>
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Button as={Link} to={routePaths.developerTools} color="blue">
               Explore Developer Tools
             </Button>
