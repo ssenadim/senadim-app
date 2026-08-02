@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
-import { Button, Card } from "flowbite-react";
+import type { ReactNode } from "react";
+import { Badge, Button, Card } from "flowbite-react";
 import { MetricCard } from "../../components/cards/MetricCard";
 import { ToolCard } from "../../components/cards/ToolCard";
 import { SectionHeader } from "../../components/common/SectionHeader";
@@ -9,12 +10,6 @@ import { platformTools } from "../../data/platformTools";
 import { usePageTitle } from "../../hooks/usePageTitle";
 import { routePaths } from "../../utils/routes";
 
-const featuredDeveloperToolNames = [
-  "JWT Decoder",
-  "Timestamp Converter",
-  "Data Compare",
-  "Regex Tester",
-];
 
 const featuredToolNames = [
   "PlantUML Viewer",
@@ -41,7 +36,60 @@ const featuredCapabilities = [
       "JWT, PKCE, Regex, Encoding, Formatting and comparison utilities.",
   },
 ];
+type FeaturedCategoryIcon = "code" | "layers" | "compass";
 
+const featuredCategories: Array<{
+  title: string;
+  description: string;
+  tools: string[];
+  icon: FeaturedCategoryIcon;
+}> = [
+  {
+    title: "Developer Productivity",
+    description: "Everyday tools that improve developer productivity.",
+    tools: [
+      "JWT Decoder",
+      "Data Formatter",
+      "Base64 Encoder / Decoder",
+      "UUID Generator",
+      "Regex Tester",
+    ],
+    icon: "code",
+  },
+  {
+    title: "Platform Engineering",
+    description: "Utilities for cloud platforms and infrastructure operations.",
+    tools: ["OpenShift Calculator", "JVM Memory Calculator"],
+    icon: "layers",
+  },
+  {
+    title: "Architecture & Design",
+    description:
+      "Tools that help software architects visualize and document systems.",
+    tools: ["PlantUML Viewer", "ADR Generator"],
+    icon: "compass",
+  },
+];
+
+const featuredCategoryIconPaths: Record<FeaturedCategoryIcon, ReactNode> = {
+  code: (
+    <>
+      <path d="m8 9-3 3 3 3M16 9l3 3-3 3M14 5l-4 14" />
+    </>
+  ),
+  layers: (
+    <>
+      <path d="m12 3 9 5-9 5-9-5 9-5Z" />
+      <path d="m3 12 9 5 9-5M3 16l9 5 9-5" />
+    </>
+  ),
+  compass: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="m15.5 8.5-2.1 4.9-4.9 2.1 2.1-4.9 4.9-2.1Z" />
+    </>
+  ),
+};
 export function HomePage() {
   usePageTitle("Home");
 
@@ -54,9 +102,7 @@ export function HomePage() {
   const availablePlatformTools = platformTools.filter(
     (tool) => tool.status === "available",
   );
-  const featuredDeveloperTools = developerTools.filter((tool) =>
-    featuredDeveloperToolNames.includes(tool.title),
-  );
+
   const featuredTools = [
     ...architectureDesignTools,
     ...platformTools,
@@ -71,33 +117,29 @@ export function HomePage() {
       <section className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-8">
         <div className="max-w-4xl">
           <p className="text-sm font-semibold uppercase text-cyan-700 dark:text-cyan-300">
-            Architecture / Platform Engineering / Developer Productivity
+            Modern Engineering Toolkit
           </p>
           <h1 className="mt-4 text-4xl font-bold text-gray-950 dark:text-white sm:text-5xl">
             Freeshot
           </h1>
-          <p className="mt-5 max-w-3xl text-base leading-7 text-gray-600 dark:text-gray-300">
-            Freeshot provides architecture, platform engineering and developer
-            productivity tools for modern software teams.
+          <p className="mt-5 text-2xl leading-tight font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-3xl">
+            <span className="block">Developer Productivity.</span>
+            <span className="block">Platform Engineering.</span>
+            <span className="block">Architecture &amp; Design.</span>
+            <span className="mt-2 block text-cyan-700 dark:text-cyan-300">
+              Everything in one place.
+            </span>
           </p>
-          <ul className="mt-6 grid max-w-4xl gap-2 text-sm text-gray-700 dark:text-gray-200 sm:grid-cols-2 lg:grid-cols-3">
-            {[
-              "PlantUML Architecture Templates",
-              "C4 Architecture Modeling",
-              "Container Platform Capacity Planning",
-              "JVM Memory Sizing",
-              "JWT & PKCE Tools",
-              "Developer Productivity Utilities",
-            ].map((capability) => (
-              <li
-                key={capability}
-                className="rounded-lg bg-gray-50 px-3 py-2 dark:bg-gray-950"
-              >
-                {capability}
-              </li>
-            ))}
-          </ul>
-          <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+          <p className="mt-6 max-w-3xl text-base leading-7 text-gray-600 dark:text-gray-300">
+            Freeshot is a lightweight, modern web application that brings
+            practical daily tools together to improve engineering productivity.
+          </p>
+          <div className="mt-6 flex flex-wrap gap-2">
+            <Badge color="info">Developer Productivity</Badge>
+            <Badge color="success">Platform Engineering</Badge>
+            <Badge color="purple">Architecture &amp; Design</Badge>
+          </div>
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Button as={Link} to={routePaths.developerTools} color="blue">
               Explore Developer Tools
             </Button>
@@ -180,28 +222,13 @@ export function HomePage() {
         </div>
       </section>
 
-      <section className="grid gap-5 lg:grid-cols-3">
-        <FeaturedSectionCard
-          title="Architecture & Design"
-          description="Tools for architecture diagrams, C4 modeling, ADRs and design documentation."
-          examples={availableArchitectureTools.map((tool) => tool.title)}
-          actionLabel="View Architecture & Design"
-          to={routePaths.architectureDesign}
-        />
-        <FeaturedSectionCard
-          title="Developer Tools"
-          description="Developer productivity utilities for integration teams, backend engineers and architects."
-          examples={featuredDeveloperTools.map((tool) => tool.title)}
-          actionLabel="View Developer Tools"
-          to={routePaths.developerTools}
-        />
-        <FeaturedSectionCard
-          title="Platform Engineering Tools"
-          description="Sizing, capacity planning and operational tooling for container platform workloads."
-          examples={availablePlatformTools.map((tool) => tool.title)}
-          actionLabel="View Platform Engineering Tools"
-          to={routePaths.platformEngineering}
-        />
+      <section className="flex flex-col gap-5">
+        <SectionHeader title="Explore by Category" />
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {featuredCategories.map((category) => (
+            <CategoryOverviewCard key={category.title} {...category} />
+          ))}
+        </div>
       </section>
 
       <section className="flex flex-col gap-5">
@@ -245,40 +272,53 @@ export function HomePage() {
   );
 }
 
-interface FeaturedSectionCardProps {
+interface CategoryOverviewCardProps {
   title: string;
   description: string;
-  examples: string[];
-  actionLabel: string;
-  to: string;
+  tools: string[];
+  icon: FeaturedCategoryIcon;
 }
 
-function FeaturedSectionCard({
+function CategoryOverviewCard({
   title,
   description,
-  examples,
-  actionLabel,
-  to,
-}: FeaturedSectionCardProps) {
+  tools,
+  icon,
+}: CategoryOverviewCardProps) {
   return (
-    <Card className="border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
-      <h2 className="text-2xl font-bold text-gray-950 dark:text-white">
-        {title}
-      </h2>
+    <Card className="h-full border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
+      <div className="flex items-center gap-3">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-cyan-50 text-cyan-700 dark:bg-cyan-950/60 dark:text-cyan-300">
+          <svg
+            className="size-5"
+            aria-hidden="true"
+            fill="none"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <g
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="1.8"
+            >
+              {featuredCategoryIconPaths[icon]}
+            </g>
+          </svg>
+        </span>
+        <h3 className="text-xl font-bold text-gray-950 dark:text-white">
+          {title}
+        </h3>
+      </div>
       <p className="text-sm leading-6 text-gray-600 dark:text-gray-300">
         {description}
       </p>
-      <ul className="grid gap-2 text-sm text-gray-700 dark:text-gray-200 sm:grid-cols-2">
-        {examples.map((example) => (
-          <li key={example} className="rounded-lg bg-gray-50 px-3 py-2 dark:bg-gray-900">
-            {example}
-          </li>
+      <div className="flex flex-wrap gap-2">
+        {tools.map((tool) => (
+          <Badge key={tool} color="gray">
+            {tool}
+          </Badge>
         ))}
-      </ul>
-      <div>
-        <Button as={Link} to={to} color="light" size="sm">
-          {actionLabel}
-        </Button>
       </div>
     </Card>
   );
