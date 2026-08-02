@@ -12,6 +12,7 @@ export const platformTools: DeveloperTool[] = [
   },
   {
     title: "JVM Memory Calculator",
+    highlights: ["New"],
     description:
       "Calculate recommended JVM memory settings for containerized Java applications.",
     category: "Java",

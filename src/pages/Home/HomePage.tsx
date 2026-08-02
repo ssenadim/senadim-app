@@ -2,23 +2,30 @@ import { Link } from "react-router-dom";
 import type { ReactNode } from "react";
 import { Badge, Button, Card } from "flowbite-react";
 import { MetricCard } from "../../components/cards/MetricCard";
-import { ToolCard } from "../../components/cards/ToolCard";
+import { ToolHighlightBadge } from "../../components/common/ToolHighlightBadge";
 import { SectionHeader } from "../../components/common/SectionHeader";
 import { architectureDesignTools } from "../../data/architectureDesignTools";
 import { developerTools } from "../../data/developerTools";
 import { platformTools } from "../../data/platformTools";
 import { usePageTitle } from "../../hooks/usePageTitle";
+import type { DeveloperTool } from "../../types/tool";
 import { routePaths } from "../../utils/routes";
 
 
-const featuredToolNames = [
-  "PlantUML Viewer",
-  "Container Platform Calculator Suite",
-  "JVM Memory Calculator",
-  "JWT Decoder",
-  "Timestamp Converter",
+
+const allTools = [
+  ...architectureDesignTools,
+  ...platformTools,
+  ...developerTools,
 ];
 
+const popularTools = allTools.filter((tool) =>
+  tool.highlights?.includes("Popular"),
+);
+
+const recentlyAddedTools = allTools.filter((tool) =>
+  tool.highlights?.includes("New"),
+);
 const featuredCapabilities = [
   {
     title: "Architecture & Design",
@@ -164,15 +171,7 @@ export function HomePage() {
     (tool) => tool.status === "available",
   );
 
-  const featuredTools = [
-    ...architectureDesignTools,
-    ...platformTools,
-    ...developerTools,
-  ].filter((tool) => featuredToolNames.includes(tool.title)).sort(
-    (firstTool, secondTool) =>
-      featuredToolNames.indexOf(firstTool.title) -
-      featuredToolNames.indexOf(secondTool.title),
-  );
+
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-12 px-4 py-8 sm:px-6 lg:px-8">
       <section className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-8">
@@ -332,15 +331,23 @@ export function HomePage() {
         </div>
       </section>
 
-      <section className="flex flex-col gap-5">
-        <SectionHeader
-          title="Featured Tools"
-          description="A focused set of architecture, platform engineering and developer productivity tools."
-        />
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {featuredTools.map((tool) => (
-            <ToolCard key={tool.title} tool={tool} />
-          ))}
+      <section className="grid gap-6 xl:grid-cols-2">
+        <div className="flex flex-col gap-4">
+          <SectionHeader title="Popular Tools" />
+          <div className="grid gap-3 sm:grid-cols-2">
+            {popularTools.map((tool) => (
+              <DiscoveryToolCard key={tool.title} tool={tool} />
+            ))}
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-4">
+          <SectionHeader title="Recently Added" />
+          <div className="grid gap-3 sm:grid-cols-2">
+            {recentlyAddedTools.map((tool) => (
+              <DiscoveryToolCard key={tool.title} tool={tool} />
+            ))}
+          </div>
         </div>
       </section>
 
@@ -425,6 +432,35 @@ function CategoryOverviewCard({
   );
 }
 
+function DiscoveryToolCard({ tool }: { tool: DeveloperTool }) {
+  if (!tool.path) {
+    return null;
+  }
+
+  return (
+    <Link
+      to={tool.path}
+      className="block h-full rounded-lg outline-cyan-600 focus:outline-2 focus:outline-offset-2"
+      aria-label={`Open ${tool.title}`}
+    >
+      <article className="flex h-full flex-col gap-3 rounded-lg border border-gray-200 bg-white p-4 shadow-sm hover:border-cyan-300 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-cyan-700">
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <h3 className="font-semibold text-gray-950 dark:text-white">
+            {tool.title}
+          </h3>
+          <div className="flex flex-wrap justify-end gap-1.5">
+            {tool.highlights?.map((highlight) => (
+              <ToolHighlightBadge key={highlight} label={highlight} />
+            ))}
+          </div>
+        </div>
+        <Badge color="gray" className="w-fit">
+          {tool.category}
+        </Badge>
+      </article>
+    </Link>
+  );
+}
 interface QuickAccessCardProps {
   title: string;
   description: string;
