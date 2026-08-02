@@ -71,6 +71,44 @@ const featuredCategories: Array<{
   },
 ];
 
+const quickAccessTools = [
+  {
+    title: "JWT Decoder",
+    description: "Inspect JWT headers and payloads securely in your browser.",
+    category: "Developer Productivity",
+    path: routePaths.jwtDecoderTool,
+  },
+  {
+    title: "Data Formatter",
+    description: "Format and validate JSON, XML and other structured data.",
+    category: "Developer Productivity",
+    path: routePaths.formatterTool,
+  },
+  {
+    title: "OpenShift Calculator",
+    description: "Plan container platform capacity and resource requirements.",
+    category: "Platform Engineering",
+    path: routePaths.containerPlatformCalculator,
+  },
+  {
+    title: "JVM Memory Calculator",
+    description: "Calculate JVM memory settings for containerized applications.",
+    category: "Platform Engineering",
+    path: routePaths.jvmMemoryCalculator,
+  },
+  {
+    title: "PlantUML Viewer",
+    description: "Render architecture diagrams instantly from PlantUML source.",
+    category: "Architecture & Design",
+    path: routePaths.plantUmlViewer,
+  },
+  {
+    title: "ADR Generator",
+    description: "Create Architecture Decision Records from a structured template.",
+    category: "Architecture & Design",
+    path: routePaths.adrGenerator,
+  },
+];
 const whyFreeshotPrinciples = [
   {
     title: "Developer First",
@@ -284,6 +322,18 @@ export function HomePage() {
 
       <section className="flex flex-col gap-5">
         <SectionHeader
+          title="Quick Access"
+          description="Start with the tools most frequently used by developers, platform engineers and software architects."
+        />
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {quickAccessTools.map((tool) => (
+            <QuickAccessCard key={tool.title} {...tool} />
+          ))}
+        </div>
+      </section>
+
+      <section className="flex flex-col gap-5">
+        <SectionHeader
           title="Featured Tools"
           description="A focused set of architecture, platform engineering and developer productivity tools."
         />
@@ -375,6 +425,41 @@ function CategoryOverviewCard({
   );
 }
 
+interface QuickAccessCardProps {
+  title: string;
+  description: string;
+  category: string;
+  path: string;
+}
+
+function QuickAccessCard({
+  title,
+  description,
+  category,
+  path,
+}: QuickAccessCardProps) {
+  return (
+    <Link
+      to={path}
+      className="block h-full rounded-lg outline-cyan-600 focus:outline-2 focus:outline-offset-2"
+      aria-label={`Open ${title}`}
+    >
+      <Card className="h-full border-gray-200 bg-white shadow-sm hover:border-cyan-300 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-cyan-700">
+        <Badge color="gray" className="w-fit">
+          {category}
+        </Badge>
+        <div>
+          <h3 className="text-base font-semibold text-gray-950 dark:text-white">
+            {title}
+          </h3>
+          <p className="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">
+            {description}
+          </p>
+        </div>
+      </Card>
+    </Link>
+  );
+}
 function CapabilityCard({
   title,
   description,
