@@ -71,6 +71,29 @@ const featuredCategories: Array<{
   },
 ];
 
+const whyFreeshotPrinciples = [
+  {
+    title: "Developer First",
+    description: "Built for real engineering workflows.",
+  },
+  {
+    title: "Vendor Neutral",
+    description: "Works across technologies and platforms.",
+  },
+  {
+    title: "Privacy Focused",
+    description: "Your data stays in your browser whenever possible.",
+  },
+  {
+    title: "Lightweight",
+    description: "Fast, simple and distraction-free.",
+  },
+  {
+    title: "Community Driven",
+    description:
+      "Continuously improved through feedback from developers, architects and engineering teams.",
+  },
+];
 const featuredCategoryIconPaths: Record<FeaturedCategoryIcon, ReactNode> = {
   code: (
     <>
@@ -227,6 +250,34 @@ export function HomePage() {
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {featuredCategories.map((category) => (
             <CategoryOverviewCard key={category.title} {...category} />
+          ))}
+        </div>
+      </section>
+
+      <section className="flex flex-col gap-5">
+        <SectionHeader
+          title="Why Freeshot?"
+          description="Freeshot is designed to help engineers solve everyday technical problems faster with practical, lightweight and vendor-neutral tools."
+        />
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+          {whyFreeshotPrinciples.map((principle) => (
+            <article
+              key={principle.title}
+              className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900"
+            >
+              <div className="flex items-center gap-2">
+                <span
+                  aria-hidden="true"
+                  className="size-2 shrink-0 rounded-full bg-cyan-500"
+                />
+                <h3 className="font-semibold text-gray-950 dark:text-white">
+                  {principle.title}
+                </h3>
+              </div>
+              <p className="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">
+                {principle.description}
+              </p>
+            </article>
           ))}
         </div>
       </section>
