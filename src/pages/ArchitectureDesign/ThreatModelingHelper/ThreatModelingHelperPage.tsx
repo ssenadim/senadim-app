@@ -280,6 +280,16 @@ function ThreatResults({ threats }: { threats: IdentifiedThreat[] }) {
                       </span>{" "}
                       {threat.whyItApplies}
                     </p>
+                    <div className="mt-3 border-t border-gray-200 pt-2 dark:border-gray-700">
+                      <h5 className="text-xs font-semibold tracking-wide text-gray-600 uppercase dark:text-gray-300">
+                        Recommended Mitigations
+                      </h5>
+                      <ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-gray-700 dark:text-gray-300">
+                        {threat.recommendations.map((recommendation) => (
+                          <li key={recommendation}>{recommendation}</li>
+                        ))}
+                      </ul>
+                    </div>
                   </article>
                 ))}
               </div>

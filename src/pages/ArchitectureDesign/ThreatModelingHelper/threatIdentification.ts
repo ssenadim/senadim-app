@@ -1,3 +1,4 @@
+import { getSecurityRecommendations } from "./securityRecommendations";
 export const strideCategories = [
   "Spoofing",
   "Tampering",
@@ -22,6 +23,7 @@ export interface IdentifiedThreat {
   category: StrideCategory;
   explanation: string;
   whyItApplies: string;
+  recommendations: readonly string[];
 }
 
 interface ThreatRule {
@@ -30,7 +32,7 @@ interface ThreatRule {
   applies: (context: ThreatModelContext) => boolean;
   identify: (
     context: ThreatModelContext,
-  ) => Omit<IdentifiedThreat, "id" | "category">;
+  ) => Omit<IdentifiedThreat, "id" | "category" | "recommendations">;
 }
 
 const threatRules: readonly ThreatRule[] = [
@@ -114,6 +116,7 @@ export function identifyThreats(
       id: rule.id,
       category: rule.category,
       ...rule.identify(context),
+      recommendations: getSecurityRecommendations(rule.category, context),
     }));
 }
 
