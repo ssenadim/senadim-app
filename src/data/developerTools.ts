@@ -4,7 +4,6 @@ import { routePaths } from "../utils/routes";
 export const developerTools: DeveloperTool[] = [
   {
     title: "Base64 Encoder / Decoder",
-    highlights: ["Popular"],
     description: "Encode and decode Base64 strings for quick API and token debugging.",
     category: "Encoding",
     path: routePaths.base64Tool,
@@ -12,7 +11,6 @@ export const developerTools: DeveloperTool[] = [
   },
   {
     title: "JWT Decoder",
-    highlights: ["Popular"],
     description: "Inspect JWT headers and payloads without sending sensitive data away.",
     category: "Security",
     path: routePaths.jwtDecoderTool,
@@ -20,7 +18,6 @@ export const developerTools: DeveloperTool[] = [
   },
   {
     title: "Data Formatter",
-    highlights: ["Popular", "Recommended"],
     description:
       "Format, validate and transform structured data such as JSON, XML and HTML for APIs, integrations, web development and debugging.",
     category: "Data",

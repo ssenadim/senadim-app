@@ -4,6 +4,7 @@ import { AboutPage } from "../pages/About/AboutPage";
 import { AdrGeneratorPage } from "../pages/ArchitectureDesign/AdrGenerator/AdrGeneratorPage";
 import { ArchitectureDesignPage } from "../pages/ArchitectureDesign/ArchitectureDesignPage";
 import { PlantUmlViewerPage } from "../pages/ArchitectureDesign/PlantUmlViewer/PlantUmlViewerPage";
+import { ThreatModelingHelperPage } from "../pages/ArchitectureDesign/ThreatModelingHelper/ThreatModelingHelperPage";
 import { ArchitectureNotesPage } from "../pages/ArchitectureNotes/ArchitectureNotesPage";
 import { DpopNotePage } from "../pages/ArchitectureNotes/DpopNotePage";
 import { Base64ToolPage } from "../pages/DeveloperTools/Base64/Base64ToolPage";
@@ -40,6 +41,10 @@ export const appRouter = createBrowserRouter(
           element: <AdrGeneratorPage />,
         },
         { path: routePaths.developerTools, element: <DeveloperToolsPage /> },
+        {
+          path: routePaths.threatModelingHelper,
+          element: <ThreatModelingHelperPage />,
+        },
         { path: routePaths.base64Tool, element: <Base64ToolPage /> },
         { path: routePaths.uuidTool, element: <UuidToolPage /> },
         { path: routePaths.formatterTool, element: <FormatterToolPage /> },

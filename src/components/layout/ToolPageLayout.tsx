@@ -49,12 +49,14 @@ export function ToolPageLayout({
       {inputs ? <ToolInputArea title={inputTitle}>{inputs}</ToolInputArea> : null}
       {outputs ? <ToolResultArea>{outputs}</ToolResultArea> : null}
 
-      <ToolExamples
-        examples={examples}
-        isVisible={areExamplesVisible}
-        onToggle={() => setAreExamplesVisible((current) => !current)}
-        onExampleSelect={onExampleSelect}
-      />
+      {examples.length > 0 ? (
+        <ToolExamples
+          examples={examples}
+          isVisible={areExamplesVisible}
+          onToggle={() => setAreExamplesVisible((current) => !current)}
+          onExampleSelect={onExampleSelect}
+        />
+      ) : null}
 
       {notes ? (
         <ToolNotes

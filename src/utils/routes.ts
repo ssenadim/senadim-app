@@ -14,6 +14,7 @@ export const routePaths = {
   pkceGeneratorTool: "/developer-tools/pkce-generator",
   architectureDesign: "/architecture-design",
   adrGenerator: "/architecture-design/adr-generator",
+  threatModelingHelper: "/architecture-design/threat-modeling-helper",
   platformEngineering: "/platform-engineering",
   containerPlatformCalculator: "/platform-engineering/container-platform-calculator",
   jvmMemoryCalculator: "/platform-engineering/jvm-memory-calculator",
