@@ -1,8 +1,21 @@
 import { useState } from "react";
-import { Checkbox, Radio, Select, TextInput } from "flowbite-react";
+import {
+  Alert,
+  Badge,
+  Checkbox,
+  Radio,
+  Select,
+  TextInput,
+} from "flowbite-react";
+
 import { ToolPageLayout } from "../../../components/layout/ToolPageLayout";
 import { usePageTitle } from "../../../hooks/usePageTitle";
 import { routePaths } from "../../../utils/routes";
+import {
+  identifyThreats,
+  strideCategories,
+  type IdentifiedThreat,
+} from "./threatIdentification";
 
 const applicationTypes = [
   "Web Application",
@@ -43,6 +56,12 @@ export function ThreatModelingHelperPage() {
   const [sensitiveData, setSensitiveData] = useState<string[]>([]);
   const [isInternetFacing, setIsInternetFacing] = useState(false);
 
+  const identifiedThreats = identifyThreats({
+    applicationType,
+    authentication,
+    sensitiveData,
+    isInternetFacing,
+  });
   function toggleSensitiveData(dataType: string) {
     setSensitiveData((current) =>
       current.includes(dataType)
@@ -66,7 +85,8 @@ export function ThreatModelingHelperPage() {
       overview={
         <p>
           Describe the application, its access model and the data it handles.
-          This sprint only records project context and does not identify threats.
+          This sprint only records project context and does not identify
+          threats.
         </p>
       }
       inputTitle="Project Information"
@@ -205,6 +225,8 @@ export function ThreatModelingHelperPage() {
               value={isInternetFacing ? "Yes" : "No"}
             />
           </dl>
+
+          <ThreatResults threats={identifiedThreats} />
         </div>
       }
       examples={[]}
@@ -212,13 +234,70 @@ export function ThreatModelingHelperPage() {
   );
 }
 
+function ThreatResults({ threats }: { threats: IdentifiedThreat[] }) {
+  const groups = strideCategories
+    .map((category) => ({
+      category,
+      threats: threats.filter((threat) => threat.category === category),
+    }))
+    .filter((group) => group.threats.length > 0);
+
+  return (
+    <section className="mt-5 border-t border-gray-200 pt-5 dark:border-gray-700">
+      <h2 className="text-lg font-semibold text-gray-950 dark:text-white">
+        Identified Threats
+      </h2>
+
+      {groups.length === 0 ? (
+        <Alert color="info" className="mt-3">
+          No STRIDE threats match the current project characteristics.
+        </Alert>
+      ) : (
+        <div className="mt-3 space-y-4">
+          {groups.map((group) => (
+            <section key={group.category}>
+              <h3 className="mb-2 text-sm font-semibold text-gray-900 dark:text-white">
+                {group.category}
+              </h3>
+              <div className="grid gap-3 lg:grid-cols-2">
+                {group.threats.map((threat) => (
+                  <article
+                    key={threat.id}
+                    className="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-950"
+                  >
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                      <h4 className="font-semibold text-gray-950 dark:text-white">
+                        {threat.title}
+                      </h4>
+                      <Badge color="gray">{threat.category}</Badge>
+                    </div>
+                    <p className="mt-1 text-sm text-gray-700 dark:text-gray-300">
+                      {threat.explanation}
+                    </p>
+                    <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
+                      <span className="font-semibold text-gray-900 dark:text-white">
+                        Why it applies:
+                      </span>{" "}
+                      {threat.whyItApplies}
+                    </p>
+                  </article>
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
 function SummaryItem({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-950">
-      <dt className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+      <dt className="text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">
         {label}
       </dt>
-      <dd className="mt-1 break-words text-sm font-medium text-gray-900 dark:text-white">
+      <dd className="mt-1 text-sm font-medium break-words text-gray-900 dark:text-white">
         {value}
       </dd>
     </div>
