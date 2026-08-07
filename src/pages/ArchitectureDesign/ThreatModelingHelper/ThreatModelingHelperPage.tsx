@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Alert,
   Badge,
+  Button,
   Checkbox,
   Radio,
   Select,
@@ -12,6 +13,12 @@ import { ToolPageLayout } from "../../../components/layout/ToolPageLayout";
 import { usePageTitle } from "../../../hooks/usePageTitle";
 import { routePaths } from "../../../utils/routes";
 import { identifyThreats, type IdentifiedThreat } from "./threatIdentification";
+import { ToolToast } from "../../../components/common/ToolToast";
+import type { ToastMessage, ToastTone } from "../../../types/toast";
+import {
+  generateThreatModelReport,
+  getThreatModelFilename,
+} from "./threatModelReport";
 
 const applicationTypes = [
   "Web Application",
@@ -51,6 +58,7 @@ export function ThreatModelingHelperPage() {
   );
   const [sensitiveData, setSensitiveData] = useState<string[]>([]);
   const [isInternetFacing, setIsInternetFacing] = useState(false);
+  const [toast, setToast] = useState<ToastMessage | null>(null);
 
   const identifiedThreats = identifyThreats({
     applicationType,
@@ -58,6 +66,61 @@ export function ThreatModelingHelperPage() {
     sensitiveData,
     isInternetFacing,
   });
+
+  const markdownReport = generateThreatModelReport({
+    projectName,
+    applicationType,
+    authentication,
+    isInternetFacing,
+    sensitiveData,
+    threats: identifiedThreats,
+  });
+  const reportFilename = getThreatModelFilename(projectName);
+  const canExportReport = identifiedThreats.length > 0;
+
+  useEffect(() => {
+    if (!toast) return;
+
+    const timeoutId = window.setTimeout(() => setToast(null), 3200);
+    return () => window.clearTimeout(timeoutId);
+  }, [toast]);
+
+  function showToast(tone: ToastTone, text: string) {
+    setToast({ id: Date.now(), tone, text });
+  }
+
+  async function handleCopyMarkdown() {
+    if (!canExportReport) {
+      showToast("info", "Identify at least one threat before exporting.");
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(markdownReport);
+      showToast("success", "Threat model markdown copied.");
+    } catch {
+      showToast("failure", "Copy failed. Please copy the report manually.");
+    }
+  }
+
+  function handleDownloadMarkdown() {
+    if (!canExportReport) {
+      showToast("info", "Identify at least one threat before exporting.");
+      return;
+    }
+
+    const blob = new Blob([markdownReport], {
+      type: "text/markdown;charset=utf-8",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = reportFilename;
+    link.click();
+    URL.revokeObjectURL(url);
+    showToast("success", "Threat model markdown downloaded.");
+  }
   function toggleSensitiveData(dataType: string) {
     setSensitiveData((current) =>
       current.includes(dataType)
@@ -223,9 +286,16 @@ export function ThreatModelingHelperPage() {
           </dl>
 
           <ThreatResults threats={identifiedThreats} />
+          <ThreatModelReport
+            markdown={markdownReport}
+            canExport={canExportReport}
+            onCopy={() => void handleCopyMarkdown()}
+            onDownload={handleDownloadMarkdown}
+          />
         </div>
       }
       examples={[]}
+      toast={<ToolToast toast={toast} />}
     />
   );
 }
@@ -373,4 +443,61 @@ function groupThreatsByCategory(threats: readonly IdentifiedThreat[]) {
 
     return groups;
   }, []);
+}
+
+function ThreatModelReport({
+  markdown,
+  canExport,
+  onCopy,
+  onDownload,
+}: {
+  markdown: string;
+  canExport: boolean;
+  onCopy: () => void;
+  onDownload: () => void;
+}) {
+  return (
+    <section className="mt-5 border-t border-gray-200 pt-5 dark:border-gray-700">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-semibold text-gray-950 dark:text-white">
+            Threat Model Report
+          </h2>
+          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+            Live Markdown documentation generated locally from the current
+            threat model.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            color="light"
+            size="sm"
+            disabled={!canExport}
+            onClick={onCopy}
+          >
+            Copy Markdown
+          </Button>
+          <Button
+            color="light"
+            size="sm"
+            disabled={!canExport}
+            onClick={onDownload}
+          >
+            Download .md
+          </Button>
+        </div>
+      </div>
+
+      {canExport ? (
+        <pre className="mt-3 max-h-[32rem] overflow-auto rounded-lg border border-gray-200 bg-gray-50 p-3 font-mono text-sm leading-relaxed whitespace-pre-wrap text-gray-800 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-200">
+          {markdown}
+        </pre>
+      ) : (
+        <Alert color="info" className="mt-3">
+          Complete the project information and identify at least one applicable
+          threat before exporting a report.
+        </Alert>
+      )}
+    </section>
+  );
 }
