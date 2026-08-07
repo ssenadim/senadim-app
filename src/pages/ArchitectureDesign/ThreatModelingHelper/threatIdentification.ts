@@ -1,4 +1,9 @@
 import { getSecurityRecommendations } from "./securityRecommendations";
+import {
+  assessThreatRisk,
+  sortThreatsByRisk,
+  type RiskAssessment,
+} from "./riskAssessment";
 export const strideCategories = [
   "Spoofing",
   "Tampering",
@@ -24,6 +29,7 @@ export interface IdentifiedThreat {
   explanation: string;
   whyItApplies: string;
   recommendations: readonly string[];
+  riskAssessment: RiskAssessment;
 }
 
 interface ThreatRule {
@@ -32,7 +38,10 @@ interface ThreatRule {
   applies: (context: ThreatModelContext) => boolean;
   identify: (
     context: ThreatModelContext,
-  ) => Omit<IdentifiedThreat, "id" | "category" | "recommendations">;
+  ) => Omit<
+    IdentifiedThreat,
+    "id" | "category" | "recommendations" | "riskAssessment"
+  >;
 }
 
 const threatRules: readonly ThreatRule[] = [
@@ -110,14 +119,17 @@ const threatRules: readonly ThreatRule[] = [
 export function identifyThreats(
   context: ThreatModelContext,
 ): IdentifiedThreat[] {
-  return threatRules
-    .filter((rule) => rule.applies(context))
-    .map((rule) => ({
-      id: rule.id,
-      category: rule.category,
-      ...rule.identify(context),
-      recommendations: getSecurityRecommendations(rule.category, context),
-    }));
+  return sortThreatsByRisk(
+    threatRules
+      .filter((rule) => rule.applies(context))
+      .map((rule) => ({
+        id: rule.id,
+        category: rule.category,
+        ...rule.identify(context),
+        recommendations: getSecurityRecommendations(rule.category, context),
+        riskAssessment: assessThreatRisk(rule.category, context),
+      })),
+  );
 }
 
 function formatApplicationType(applicationType: string) {

@@ -11,11 +11,7 @@ import {
 import { ToolPageLayout } from "../../../components/layout/ToolPageLayout";
 import { usePageTitle } from "../../../hooks/usePageTitle";
 import { routePaths } from "../../../utils/routes";
-import {
-  identifyThreats,
-  strideCategories,
-  type IdentifiedThreat,
-} from "./threatIdentification";
+import { identifyThreats, type IdentifiedThreat } from "./threatIdentification";
 
 const applicationTypes = [
   "Web Application",
@@ -235,12 +231,7 @@ export function ThreatModelingHelperPage() {
 }
 
 function ThreatResults({ threats }: { threats: IdentifiedThreat[] }) {
-  const groups = strideCategories
-    .map((category) => ({
-      category,
-      threats: threats.filter((threat) => threat.category === category),
-    }))
-    .filter((group) => group.threats.length > 0);
+  const groups = groupThreatsByCategory(threats);
 
   return (
     <section className="mt-5 border-t border-gray-200 pt-5 dark:border-gray-700">
@@ -282,6 +273,28 @@ function ThreatResults({ threats }: { threats: IdentifiedThreat[] }) {
                     </p>
                     <div className="mt-3 border-t border-gray-200 pt-2 dark:border-gray-700">
                       <h5 className="text-xs font-semibold tracking-wide text-gray-600 uppercase dark:text-gray-300">
+                        Risk Assessment
+                      </h5>
+                      <dl className="mt-2 flex flex-wrap gap-2">
+                        <RiskBadge
+                          label="Likelihood"
+                          value={threat.riskAssessment.likelihood}
+                        />
+                        <RiskBadge
+                          label="Impact"
+                          value={threat.riskAssessment.impact}
+                        />
+                        <RiskBadge
+                          label="Risk Level"
+                          value={threat.riskAssessment.riskLevel}
+                        />
+                      </dl>
+                      <p className="mt-2 text-xs leading-relaxed text-gray-600 dark:text-gray-400">
+                        {threat.riskAssessment.explanation}
+                      </p>
+                    </div>
+                    <div className="mt-3 border-t border-gray-200 pt-2 dark:border-gray-700">
+                      <h5 className="text-xs font-semibold tracking-wide text-gray-600 uppercase dark:text-gray-300">
                         Recommended Mitigations
                       </h5>
                       <ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-gray-700 dark:text-gray-300">
@@ -312,4 +325,52 @@ function SummaryItem({ label, value }: { label: string; value: string }) {
       </dd>
     </div>
   );
+}
+
+type RiskBadgeValue =
+  | IdentifiedThreat["riskAssessment"]["likelihood"]
+  | IdentifiedThreat["riskAssessment"]["riskLevel"];
+
+const riskBadgeColors = {
+  Low: "success",
+  Medium: "warning",
+  High: "failure",
+  Critical: "purple",
+} as const;
+
+function RiskBadge({ label, value }: { label: string; value: RiskBadgeValue }) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <dt className="text-xs font-medium text-gray-600 dark:text-gray-400">
+        {label}
+      </dt>
+      <dd>
+        <Badge color={riskBadgeColors[value]}>{value}</Badge>
+      </dd>
+    </div>
+  );
+}
+
+function groupThreatsByCategory(threats: readonly IdentifiedThreat[]) {
+  return threats.reduce<
+    Array<{
+      category: IdentifiedThreat["category"];
+      threats: IdentifiedThreat[];
+    }>
+  >((groups, threat) => {
+    const existingGroup = groups.find(
+      (group) => group.category === threat.category,
+    );
+
+    if (existingGroup) {
+      existingGroup.threats.push(threat);
+    } else {
+      groups.push({
+        category: threat.category,
+        threats: [threat],
+      });
+    }
+
+    return groups;
+  }, []);
 }
