@@ -132,7 +132,7 @@ export function ThreatModelingHelperPage() {
   return (
     <ToolPageLayout
       title="Threat Modeling Helper"
-      description="Capture project information to prepare for threat modeling."
+      description="Define project context, review prioritized threats and export implementation-ready documentation."
       breadcrumbs={[
         {
           label: "Architecture & Design",
@@ -140,17 +140,17 @@ export function ThreatModelingHelperPage() {
         },
         { label: "Threat Modeling Helper" },
       ]}
-      overviewTitle="Project definition"
+      overviewTitle="1. Project Definition"
       overview={
         <p>
-          Describe the application, its access model and the data it handles.
-          This sprint only records project context and does not identify
-          threats.
+          Define the project context, then review applicable threats,
+          recommendations, risk details and exportable documentation in one
+          workflow.
         </p>
       }
       inputTitle="Project Information"
       inputs={
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid gap-5 lg:grid-cols-2">
           <div>
             <label
               htmlFor="project-name"
@@ -236,7 +236,7 @@ export function ThreatModelingHelperPage() {
             <legend className="mb-2 text-sm font-semibold text-gray-900 dark:text-white">
               Sensitive Data
             </legend>
-            <div className="flex flex-wrap gap-2">
+            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
               {sensitiveDataOptions.map((dataType) => {
                 const id = `sensitive-${dataType.toLowerCase().replace(/ /g, "-")}`;
 
@@ -244,7 +244,7 @@ export function ThreatModelingHelperPage() {
                   <label
                     key={dataType}
                     htmlFor={id}
-                    className="flex cursor-pointer items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200"
+                    className="flex min-w-0 cursor-pointer items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium break-words text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200"
                   >
                     <Checkbox
                       id={id}
@@ -262,23 +262,27 @@ export function ThreatModelingHelperPage() {
       outputs={
         <div>
           <h2 className="text-lg font-semibold text-gray-950 dark:text-white">
-            Project Summary
+            2. Project Summary
           </h2>
-          <dl className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <SummaryItem
-              label="Project Name"
-              value={projectName.trim() || "Not provided"}
-            />
+          <dl className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {projectName.trim() ? (
+              <SummaryItem
+                label="Project Name"
+                value={projectName.trim() || "Not provided"}
+              />
+            ) : null}
             <SummaryItem label="Application Type" value={applicationType} />
             <SummaryItem label="Authentication" value={authentication} />
-            <SummaryItem
-              label="Sensitive Data"
-              value={
-                sensitiveData.length > 0
-                  ? sensitiveData.join(", ")
-                  : "None selected"
-              }
-            />
+            {sensitiveData.length > 0 ? (
+              <SummaryItem
+                label="Sensitive Data"
+                value={
+                  sensitiveData.length > 0
+                    ? sensitiveData.join(", ")
+                    : "None selected"
+                }
+              />
+            ) : null}
             <SummaryItem
               label="Internet Facing"
               value={isInternetFacing ? "Yes" : "No"}
@@ -306,31 +310,43 @@ function ThreatResults({ threats }: { threats: IdentifiedThreat[] }) {
   return (
     <section className="mt-5 border-t border-gray-200 pt-5 dark:border-gray-700">
       <h2 className="text-lg font-semibold text-gray-950 dark:text-white">
-        Identified Threats
+        3. Identified Threats
       </h2>
+      <ThreatCountSummary threats={threats} />
 
-      {groups.length === 0 ? (
+      {threats.length === 0 ? (
         <Alert color="info" className="mt-3">
-          No STRIDE threats match the current project characteristics.
+          Update authentication, internet exposure or sensitive-data selections
+          to identify applicable threats.
         </Alert>
       ) : (
-        <div className="mt-3 space-y-4">
+        <div className="mt-3 grid gap-3 lg:grid-cols-2">
           {groups.map((group) => (
-            <section key={group.category}>
-              <h3 className="mb-2 text-sm font-semibold text-gray-900 dark:text-white">
-                {group.category}
-              </h3>
-              <div className="grid gap-3 lg:grid-cols-2">
+            <section key={group.category} className="contents">
+              <h3 className="sr-only">{group.category}</h3>
+              <div className="contents">
                 {group.threats.map((threat) => (
                   <article
                     key={threat.id}
-                    className="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-950"
+                    className="flex min-w-0 flex-col rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-950"
                   >
                     <div className="flex flex-wrap items-start justify-between gap-2">
-                      <h4 className="font-semibold text-gray-950 dark:text-white">
+                      <h4 className="min-w-0 flex-1 font-semibold break-words text-gray-950 dark:text-white">
                         {threat.title}
                       </h4>
-                      <Badge color="gray">{threat.category}</Badge>
+                      <div className="flex shrink-0 flex-wrap justify-end gap-2">
+                        <Badge color="gray" className="max-w-full">
+                          STRIDE: {threat.category}
+                        </Badge>
+                        <Badge
+                          color={
+                            riskBadgeColors[threat.riskAssessment.riskLevel]
+                          }
+                          className="px-2.5 py-1 text-sm font-bold"
+                        >
+                          Risk: {threat.riskAssessment.riskLevel}
+                        </Badge>
+                      </div>
                     </div>
                     <p className="mt-1 text-sm text-gray-700 dark:text-gray-300">
                       {threat.explanation}
@@ -343,7 +359,17 @@ function ThreatResults({ threats }: { threats: IdentifiedThreat[] }) {
                     </p>
                     <div className="mt-3 border-t border-gray-200 pt-2 dark:border-gray-700">
                       <h5 className="text-xs font-semibold tracking-wide text-gray-600 uppercase dark:text-gray-300">
-                        Risk Assessment
+                        4. Recommended Mitigations
+                      </h5>
+                      <ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-gray-700 dark:text-gray-300">
+                        {threat.recommendations.map((recommendation) => (
+                          <li key={recommendation}>{recommendation}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div className="mt-3 border-t border-gray-200 pt-2 dark:border-gray-700">
+                      <h5 className="text-xs font-semibold tracking-wide text-gray-600 uppercase dark:text-gray-300">
+                        5. Risk Assessment
                       </h5>
                       <dl className="mt-2 flex flex-wrap gap-2">
                         <RiskBadge
@@ -354,24 +380,10 @@ function ThreatResults({ threats }: { threats: IdentifiedThreat[] }) {
                           label="Impact"
                           value={threat.riskAssessment.impact}
                         />
-                        <RiskBadge
-                          label="Risk Level"
-                          value={threat.riskAssessment.riskLevel}
-                        />
                       </dl>
                       <p className="mt-2 text-xs leading-relaxed text-gray-600 dark:text-gray-400">
                         {threat.riskAssessment.explanation}
                       </p>
-                    </div>
-                    <div className="mt-3 border-t border-gray-200 pt-2 dark:border-gray-700">
-                      <h5 className="text-xs font-semibold tracking-wide text-gray-600 uppercase dark:text-gray-300">
-                        Recommended Mitigations
-                      </h5>
-                      <ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-gray-700 dark:text-gray-300">
-                        {threat.recommendations.map((recommendation) => (
-                          <li key={recommendation}>{recommendation}</li>
-                        ))}
-                      </ul>
                     </div>
                   </article>
                 ))}
@@ -386,7 +398,7 @@ function ThreatResults({ threats }: { threats: IdentifiedThreat[] }) {
 
 function SummaryItem({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-950">
+    <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-950">
       <dt className="text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">
         {label}
       </dt>
@@ -397,6 +409,52 @@ function SummaryItem({ label, value }: { label: string; value: string }) {
   );
 }
 
+function ThreatCountSummary({
+  threats,
+}: {
+  threats: readonly IdentifiedThreat[];
+}) {
+  if (threats.length === 0) {
+    return null;
+  }
+
+  const counts = {
+    Critical: 0,
+    High: 0,
+    Medium: 0,
+    Low: 0,
+  };
+
+  threats.forEach((threat) => {
+    counts[threat.riskAssessment.riskLevel] += 1;
+  });
+
+  const items = [
+    { label: "Total", value: threats.length, color: "gray" },
+    { label: "Critical", value: counts.Critical, color: "purple" },
+    { label: "High", value: counts.High, color: "failure" },
+    { label: "Medium", value: counts.Medium, color: "warning" },
+    { label: "Low", value: counts.Low, color: "success" },
+  ] as const;
+
+  return (
+    <dl
+      aria-label="Threat count summary"
+      className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2"
+    >
+      {items.map((item) => (
+        <div key={item.label} className="flex items-center gap-1.5">
+          <dt className="text-xs font-medium text-gray-600 dark:text-gray-400">
+            {item.label}
+          </dt>
+          <dd>
+            <Badge color={item.color}>{item.value}</Badge>
+          </dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
 type RiskBadgeValue =
   | IdentifiedThreat["riskAssessment"]["likelihood"]
   | IdentifiedThreat["riskAssessment"]["riskLevel"];
@@ -458,17 +516,17 @@ function ThreatModelReport({
 }) {
   return (
     <section className="mt-5 border-t border-gray-200 pt-5 dark:border-gray-700">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h2 className="text-lg font-semibold text-gray-950 dark:text-white">
-            Threat Model Report
+            6. Threat Model Report
           </h2>
           <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
             Live Markdown documentation generated locally from the current
             threat model.
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="grid w-full grid-cols-1 gap-2 sm:w-auto sm:grid-cols-2">
           <Button
             color="light"
             size="sm"
@@ -489,13 +547,17 @@ function ThreatModelReport({
       </div>
 
       {canExport ? (
-        <pre className="mt-3 max-h-[32rem] overflow-auto rounded-lg border border-gray-200 bg-gray-50 p-3 font-mono text-sm leading-relaxed whitespace-pre-wrap text-gray-800 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-200">
+        <pre
+          tabIndex={0}
+          aria-label="Generated threat model Markdown preview"
+          className="mt-3 max-h-[32rem] max-w-full overflow-auto rounded-lg border border-gray-200 bg-gray-50 p-3 font-mono text-sm leading-relaxed break-words whitespace-pre-wrap text-gray-800 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-200"
+        >
           {markdown}
         </pre>
       ) : (
         <Alert color="info" className="mt-3">
-          Complete the project information and identify at least one applicable
-          threat before exporting a report.
+          The report becomes available after at least one applicable threat is
+          identified. Update the project selections above to continue.
         </Alert>
       )}
     </section>
