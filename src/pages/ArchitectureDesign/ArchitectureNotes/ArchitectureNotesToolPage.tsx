@@ -280,6 +280,8 @@ export function ArchitectureNotesToolPage() {
             filters={filters}
             availableTags={availableTags}
             hasActiveFilters={hasActiveFilters}
+            resultCount={visibleNotes.length}
+            totalCount={notes.length}
             onChange={updateFilters}
             onClear={clearFilters}
           />
@@ -331,22 +333,45 @@ function NotesToolbar({
   filters,
   availableTags,
   hasActiveFilters,
+  resultCount,
+  totalCount,
   onChange,
   onClear,
 }: {
   filters: ArchitectureNoteFilters;
   availableTags: string[];
   hasActiveFilters: boolean;
+  resultCount: number;
+  totalCount: number;
   onChange: (patch: Partial<ArchitectureNoteFilters>) => void;
   onClear: () => void;
 }) {
+  const resultLabel = `${resultCount} ${resultCount === 1 ? "result" : "results"}`;
+  const hasResultFilters = Boolean(
+    filters.search || filters.type || filters.tag,
+  );
+
   return (
     <section
       className="min-w-0 rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900"
-      aria-label="Search and filter architecture notes"
+      aria-labelledby="architecture-notes-filter-heading"
     >
-      <div className="grid min-w-0 gap-3 md:grid-cols-2 xl:grid-cols-[minmax(16rem,1.6fr)_repeat(3,minmax(10rem,1fr))_auto] xl:items-end">
-        <div className="min-w-0 md:col-span-2 xl:col-span-1">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <h2
+          id="architecture-notes-filter-heading"
+          className="text-sm font-semibold text-gray-950 dark:text-white"
+        >
+          Find Notes
+        </h2>
+        <p
+          className="text-xs font-medium text-gray-500 dark:text-gray-400"
+          aria-live="polite"
+        >
+          {hasResultFilters ? `${resultLabel} of ${totalCount}` : resultLabel}
+        </p>
+      </div>
+      <div className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(16rem,1.6fr)_repeat(3,minmax(9rem,1fr))_auto] xl:items-end">
+        <div className="min-w-0 sm:col-span-2 xl:col-span-1">
           <label
             htmlFor="architecture-notes-search"
             className="mb-1.5 block text-xs font-medium text-gray-600 dark:text-gray-300"
@@ -437,7 +462,7 @@ function NotesToolbar({
             className="justify-self-start whitespace-nowrap xl:mb-0.5"
             onClick={onClear}
           >
-            Clear Filters
+            Clear filters
           </Button>
         ) : null}
       </div>
@@ -539,14 +564,24 @@ function NotesList({
                     : "border-gray-200 bg-white hover:border-cyan-300 dark:border-gray-700 dark:bg-gray-900 dark:hover:border-cyan-800"
                 }`}
               >
-                <span className="block text-sm font-semibold break-words text-gray-950 dark:text-white">
-                  {note.title}
+                <span className="flex min-w-0 items-start justify-between gap-2">
+                  <span className="min-w-0 text-sm font-semibold break-words text-gray-950 dark:text-white">
+                    {note.title}
+                  </span>
+                  {selected ? (
+                    <span className="shrink-0 rounded-full bg-cyan-100 px-2 py-0.5 text-[0.6875rem] font-semibold text-cyan-800 dark:bg-cyan-900 dark:text-cyan-100">
+                      Selected
+                    </span>
+                  ) : null}
                 </span>
                 <span className="mt-2 flex flex-wrap items-center gap-2">
                   <Badge color="gray">{note.type}</Badge>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
-                    {formatNoteDate(note.updatedAt)}
-                  </span>
+                  <time
+                    dateTime={note.updatedAt}
+                    className="text-xs text-gray-500 dark:text-gray-400"
+                  >
+                    Updated {formatNoteDate(note.updatedAt)}
+                  </time>
                 </span>
                 {note.tags.length > 0 ? (
                   <span className="mt-2 flex flex-wrap gap-1.5">
@@ -580,7 +615,7 @@ function NotesList({
             className="mt-3"
             onClick={onClearFilters}
           >
-            Clear Filters
+            Clear filters
           </Button>
         </div>
       )}
@@ -615,10 +650,16 @@ function NoteEditor({
   onDownloadMarkdown: () => void;
   onSave: () => void;
 }) {
+  const savedActionsDescription = !isExisting
+    ? "Save this note to enable Markdown export and ADR handoff."
+    : isDirty
+      ? "These actions use the last saved version. Save first to include your current changes."
+      : "Copy or download the saved Markdown, or transfer its context to the ADR Generator.";
+
   return (
     <section className="min-w-0 rounded-lg border border-gray-200 bg-white p-4 sm:p-5 dark:border-gray-700 dark:bg-gray-900">
       <div className="flex flex-col gap-3 border-b border-gray-200 pb-4 sm:flex-row sm:items-start sm:justify-between dark:border-gray-700">
-        <div>
+        <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <h2 className="font-semibold text-gray-950 dark:text-white">
               {isExisting ? "Edit Note" : "New Note"}
@@ -630,49 +671,74 @@ function NoteEditor({
             )}
           </div>
           <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            Preview updates as you type. Changes are saved only when you select
-            Save. Export and ADR handoff use the last saved version.
+            Preview updates as you type. Changes are stored only when you save.
           </p>
         </div>
-        <div className="flex max-w-full flex-wrap gap-2">
+        <div className="flex max-w-full flex-wrap gap-2 sm:justify-end">
           <Button color="blue" size="sm" onClick={onSave}>
             Save
-          </Button>
-          <Button
-            color="failure"
-            size="sm"
-            disabled={!isExisting}
-            onClick={onDelete}
-          >
-            Delete
           </Button>
           <Button
             color="light"
             size="sm"
             disabled={!isExisting}
+            onClick={onDelete}
+            aria-label={`Delete ${draft.title || "architecture note"}`}
+          >
+            Delete
+          </Button>
+        </div>
+      </div>
+      <div className="mt-4 flex min-w-0 flex-col gap-3 rounded-lg bg-gray-50 p-3 sm:flex-row sm:items-center sm:justify-between dark:bg-gray-950/70">
+        <div className="min-w-0">
+          <p className="text-xs font-semibold text-gray-800 dark:text-gray-200">
+            Saved note actions
+          </p>
+          <p
+            id="architecture-note-saved-actions-description"
+            className="mt-0.5 text-xs leading-5 text-gray-500 dark:text-gray-400"
+          >
+            {savedActionsDescription}
+          </p>
+        </div>
+        <div className="flex max-w-full flex-wrap gap-2 sm:shrink-0 sm:justify-end">
+          <Button
+            color="light"
+            size="xs"
+            disabled={!isExisting}
             onClick={onCopyMarkdown}
+            aria-describedby="architecture-note-saved-actions-description"
           >
             Copy Markdown
           </Button>
           <Button
             color="light"
-            size="sm"
+            size="xs"
             disabled={!isExisting}
             onClick={onDownloadMarkdown}
+            aria-describedby="architecture-note-saved-actions-description"
           >
             Download .md
           </Button>
           <Button
             color="light"
-            size="sm"
+            size="xs"
             disabled={!isExisting}
             onClick={onCreateAdr}
+            aria-describedby="architecture-note-saved-actions-description architecture-note-adr-description"
           >
             Create ADR from Note
           </Button>
         </div>
       </div>
-      <div className="mt-5 grid min-w-0 gap-5 sm:grid-cols-2">
+      <p
+        id="architecture-note-adr-description"
+        className="mt-2 text-xs leading-5 text-gray-500 dark:text-gray-400"
+      >
+        ADR handoff transfers the saved title, tags and Markdown into a new ADR
+        draft. It does not create an architecture decision automatically.
+      </p>
+      <div className="mt-5 grid min-w-0 gap-4 sm:grid-cols-2">
         <div className="min-w-0 sm:col-span-2">
           <label
             htmlFor="architecture-note-title"
@@ -682,8 +748,11 @@ function NoteEditor({
           </label>
           <TextInput
             id="architecture-note-title"
+            sizing="lg"
+            className="min-w-0"
             value={draft.title}
             onChange={(event) => onChange({ title: event.target.value })}
+            placeholder="Name this architecture note"
           />
         </div>
         <div className="min-w-0">
@@ -717,6 +786,7 @@ function NoteEditor({
           <div className="flex min-w-0 gap-2">
             <TextInput
               id="architecture-note-tag"
+              aria-describedby="architecture-note-tag-help"
               className="min-w-0 flex-1"
               value={tagInput}
               onChange={(event) => onTagInputChange(event.target.value)}
@@ -732,6 +802,12 @@ function NoteEditor({
               Add
             </Button>
           </div>
+          <p
+            id="architecture-note-tag-help"
+            className="mt-1.5 text-xs text-gray-500 dark:text-gray-400"
+          >
+            Press Enter or type a comma to add a tag.
+          </p>
         </div>
         {draft.tags.length > 0 ? (
           <div
@@ -808,15 +884,14 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
     <section className="flex min-h-96 min-w-0 items-center justify-center rounded-lg border border-dashed border-gray-300 bg-white p-6 text-center dark:border-gray-700 dark:bg-gray-900">
       <div className="max-w-lg">
         <h2 className="text-xl font-semibold text-gray-950 dark:text-white">
-          Capture architecture context in one place
+          No note selected
         </h2>
         <p className="mt-3 text-sm leading-7 text-gray-600 dark:text-gray-300">
-          Record system context, integration details, security considerations
-          and open architecture questions without creating a formal decision
-          record.
+          Select a saved note from the list, or start a new note to capture
+          architecture context.
         </p>
         <Button color="blue" className="mt-5" onClick={onCreate}>
-          Create First Note
+          New Note
         </Button>
       </div>
     </section>
