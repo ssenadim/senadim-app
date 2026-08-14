@@ -6,6 +6,8 @@ import { architectureNoteTemplates } from "../../../data/architectureNoteTemplat
 import { usePageTitle } from "../../../hooks/usePageTitle";
 import {
   architectureNoteTypes,
+  type ArchitectureNoteFilters,
+  type ArchitectureNoteSort,
   type ArchitectureNoteType,
   type EditableArchitectureNote,
 } from "../../../types/architectureNote";
@@ -14,6 +16,8 @@ import {
   addUniqueTag,
   createArchitectureNote,
   createArchitectureNoteFromTemplate,
+  filterAndSortArchitectureNotes,
+  getArchitectureNoteTags,
   hasNoteChanges,
   loadArchitectureNotes,
   prepareNoteForSave,
@@ -22,6 +26,23 @@ import {
 } from "../../../utils/architectureNotes";
 import { routePaths } from "../../../utils/routes";
 import { MarkdownPreview } from "./MarkdownPreview";
+
+const defaultNoteFilters: ArchitectureNoteFilters = {
+  search: "",
+  type: "",
+  tag: "",
+  sort: "updated-desc",
+};
+
+const architectureNoteSortOptions: ReadonlyArray<{
+  value: ArchitectureNoteSort;
+  label: string;
+}> = [
+  { value: "updated-desc", label: "Recently Updated" },
+  { value: "created-desc", label: "Recently Created" },
+  { value: "title-asc", label: "Title A-Z" },
+  { value: "title-desc", label: "Title Z-A" },
+];
 
 function createNoteId() {
   return globalThis.crypto?.randomUUID?.() ?? `architecture-note-${Date.now()}`;
@@ -51,6 +72,8 @@ export function ArchitectureNotesToolPage() {
     return firstNote ? { ...firstNote, tags: [...firstNote.tags] } : null;
   });
   const [tagInput, setTagInput] = useState("");
+  const [filters, setFilters] =
+    useState<ArchitectureNoteFilters>(defaultNoteFilters);
   const [toast, setToast] = useState<ToastMessage | null>(null);
 
   const savedSelection = useMemo(
@@ -60,12 +83,34 @@ export function ArchitectureNotesToolPage() {
   const isDirty = Boolean(
     draft && (!savedSelection || hasNoteChanges(savedSelection, draft)),
   );
+  const availableTags = useMemo(() => getArchitectureNoteTags(notes), [notes]);
+  const visibleNotes = useMemo(
+    () => filterAndSortArchitectureNotes(notes, filters),
+    [filters, notes],
+  );
+  const hasActiveFilters =
+    Boolean(filters.search || filters.type || filters.tag) ||
+    filters.sort !== defaultNoteFilters.sort;
+  const hasResultFilters = Boolean(
+    filters.search || filters.type || filters.tag,
+  );
 
   useEffect(() => {
     if (!toast) return;
     const timeoutId = window.setTimeout(() => setToast(null), 3200);
     return () => window.clearTimeout(timeoutId);
   }, [toast]);
+
+  useEffect(() => {
+    if (
+      filters.tag &&
+      !availableTags.some(
+        (tag) => tag.toLocaleLowerCase() === filters.tag.toLocaleLowerCase(),
+      )
+    ) {
+      setFilters((current) => ({ ...current, tag: "" }));
+    }
+  }, [availableTags, filters.tag]);
 
   function showToast(tone: ToastTone, text: string) {
     setToast({ id: Date.now(), tone, text });
@@ -93,6 +138,14 @@ export function ArchitectureNotesToolPage() {
 
   function updateDraft(patch: Partial<EditableArchitectureNote>) {
     setDraft((current) => (current ? { ...current, ...patch } : current));
+  }
+
+  function updateFilters(patch: Partial<ArchitectureNoteFilters>) {
+    setFilters((current) => ({ ...current, ...patch }));
+  }
+
+  function clearFilters() {
+    setFilters(defaultNoteFilters);
   }
 
   function addTag() {
@@ -180,12 +233,22 @@ export function ArchitectureNotesToolPage() {
       inputs={
         <div className="grid min-w-0 gap-5">
           <NoteTemplates onUseTemplate={startNoteFromTemplate} />
+          <NotesToolbar
+            filters={filters}
+            availableTags={availableTags}
+            hasActiveFilters={hasActiveFilters}
+            onChange={updateFilters}
+            onClear={clearFilters}
+          />
           <div className="grid min-w-0 gap-5 lg:grid-cols-[minmax(15rem,0.36fr)_minmax(0,1fr)]">
             <NotesList
-              notes={notes}
+              notes={visibleNotes}
+              totalNotes={notes.length}
+              hasResultFilters={hasResultFilters}
               selectedNoteId={selectedNoteId}
               onNew={startNewNote}
               onSelect={selectNote}
+              onClearFilters={clearFilters}
             />
             {draft ? (
               <NoteEditor
@@ -215,6 +278,124 @@ export function ArchitectureNotesToolPage() {
       notesCollapsible
       toast={<ToolToast toast={toast} />}
     />
+  );
+}
+
+function NotesToolbar({
+  filters,
+  availableTags,
+  hasActiveFilters,
+  onChange,
+  onClear,
+}: {
+  filters: ArchitectureNoteFilters;
+  availableTags: string[];
+  hasActiveFilters: boolean;
+  onChange: (patch: Partial<ArchitectureNoteFilters>) => void;
+  onClear: () => void;
+}) {
+  return (
+    <section
+      className="min-w-0 rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900"
+      aria-label="Search and filter architecture notes"
+    >
+      <div className="grid min-w-0 gap-3 md:grid-cols-2 xl:grid-cols-[minmax(16rem,1.6fr)_repeat(3,minmax(10rem,1fr))_auto] xl:items-end">
+        <div className="min-w-0 md:col-span-2 xl:col-span-1">
+          <label
+            htmlFor="architecture-notes-search"
+            className="mb-1.5 block text-xs font-medium text-gray-600 dark:text-gray-300"
+          >
+            Search
+          </label>
+          <TextInput
+            id="architecture-notes-search"
+            type="search"
+            sizing="sm"
+            value={filters.search}
+            placeholder="Search architecture notes..."
+            onChange={(event) => onChange({ search: event.target.value })}
+          />
+        </div>
+        <div className="min-w-0">
+          <label
+            htmlFor="architecture-notes-type-filter"
+            className="mb-1.5 block text-xs font-medium text-gray-600 dark:text-gray-300"
+          >
+            Note Type
+          </label>
+          <Select
+            id="architecture-notes-type-filter"
+            sizing="sm"
+            value={filters.type}
+            onChange={(event) =>
+              onChange({
+                type: event.target.value as ArchitectureNoteType | "",
+              })
+            }
+          >
+            <option value="">All Types</option>
+            {architectureNoteTypes.map((type) => (
+              <option key={type} value={type}>
+                {type}
+              </option>
+            ))}
+          </Select>
+        </div>
+        <div className="min-w-0">
+          <label
+            htmlFor="architecture-notes-tag-filter"
+            className="mb-1.5 block text-xs font-medium text-gray-600 dark:text-gray-300"
+          >
+            Tag
+          </label>
+          <Select
+            id="architecture-notes-tag-filter"
+            sizing="sm"
+            value={filters.tag}
+            onChange={(event) => onChange({ tag: event.target.value })}
+          >
+            <option value="">All Tags</option>
+            {availableTags.map((tag) => (
+              <option key={tag} value={tag}>
+                {tag}
+              </option>
+            ))}
+          </Select>
+        </div>
+        <div className="min-w-0">
+          <label
+            htmlFor="architecture-notes-sort"
+            className="mb-1.5 block text-xs font-medium text-gray-600 dark:text-gray-300"
+          >
+            Sort
+          </label>
+          <Select
+            id="architecture-notes-sort"
+            sizing="sm"
+            value={filters.sort}
+            onChange={(event) =>
+              onChange({ sort: event.target.value as ArchitectureNoteSort })
+            }
+          >
+            {architectureNoteSortOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </Select>
+        </div>
+        {hasActiveFilters ? (
+          <Button
+            color="light"
+            size="xs"
+            className="justify-self-start whitespace-nowrap xl:mb-0.5"
+            onClick={onClear}
+          >
+            Clear Filters
+          </Button>
+        ) : null}
+      </div>
+    </section>
   );
 }
 
@@ -263,22 +444,32 @@ function NoteTemplates({
 
 function NotesList({
   notes,
+  totalNotes,
+  hasResultFilters,
   selectedNoteId,
   onNew,
   onSelect,
+  onClearFilters,
 }: {
   notes: EditableArchitectureNote[];
+  totalNotes: number;
+  hasResultFilters: boolean;
   selectedNoteId: string | null;
   onNew: () => void;
   onSelect: (note: EditableArchitectureNote) => void;
+  onClearFilters: () => void;
 }) {
+  const noteCount = `${notes.length} ${notes.length === 1 ? "note" : "notes"}`;
+
   return (
     <aside className="min-w-0 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-950">
       <div className="flex items-center justify-between gap-3">
         <div>
           <h2 className="font-semibold text-gray-950 dark:text-white">Notes</h2>
           <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            {notes.length} {notes.length === 1 ? "note" : "notes"}
+            {hasResultFilters
+              ? `${notes.length} of ${totalNotes} notes`
+              : noteCount}
           </p>
         </div>
         <Button color="blue" size="xs" onClick={onNew}>
@@ -327,11 +518,25 @@ function NotesList({
             );
           })}
         </div>
-      ) : (
+      ) : totalNotes === 0 ? (
         <p className="mt-4 rounded-lg border border-dashed border-gray-300 bg-white p-4 text-sm leading-6 text-gray-600 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300">
           No saved notes yet. Create one to begin capturing architecture
           context.
         </p>
+      ) : (
+        <div className="mt-4 rounded-lg border border-dashed border-gray-300 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
+          <p className="text-sm leading-6 text-gray-600 dark:text-gray-300">
+            No architecture notes match your current search or filters.
+          </p>
+          <Button
+            color="light"
+            size="xs"
+            className="mt-3"
+            onClick={onClearFilters}
+          >
+            Clear Filters
+          </Button>
+        </div>
       )}
     </aside>
   );
