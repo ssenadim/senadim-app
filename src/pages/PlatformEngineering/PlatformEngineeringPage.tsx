@@ -5,18 +5,40 @@ import { usePageTitle } from "../../hooks/usePageTitle";
 
 export function PlatformEngineeringPage() {
   usePageTitle("Platform Engineering");
+  const availableTools = platformTools.filter(
+    (tool) => tool.status === "available",
+  );
+  const plannedTools = platformTools.filter(
+    (tool) => tool.status === "coming-soon",
+  );
 
   return (
     <PageShell
       eyebrow="Platform Engineering Tools"
       title="Platform Engineering"
-      description="Operational calculators and configuration generators for platform teams."
+      description="Plan workload capacity, resource limits, and runtime memory with practical calculators and copy-ready configuration for platform teams."
     >
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {platformTools.map((tool) => (
+      <div className="grid gap-4 md:grid-cols-2">
+        {availableTools.map((tool) => (
           <ToolCard key={tool.title} tool={tool} />
         ))}
       </div>
+      {plannedTools.length > 0 ? (
+        <section
+          aria-labelledby="planned-platform-tools"
+          className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900/60"
+        >
+          <h2
+            id="planned-platform-tools"
+            className="text-sm font-semibold text-gray-700 dark:text-gray-200"
+          >
+            Planned tools
+          </h2>
+          <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
+            {plannedTools.map((tool) => tool.title).join(", ")} — coming soon.
+          </p>
+        </section>
+      ) : null}
     </PageShell>
   );
 }

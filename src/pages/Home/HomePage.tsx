@@ -18,7 +18,7 @@ const featuredDeveloperToolNames = [
 
 const featuredToolNames = [
   "PlantUML Viewer",
-  "Container Platform Calculator Suite",
+  "OpenShift Calculator Suite",
   "JVM Memory Calculator",
   "JWT Decoder",
   "Timestamp Converter",
@@ -61,26 +61,28 @@ export function HomePage() {
     ...architectureDesignTools,
     ...platformTools,
     ...developerTools,
-  ].filter((tool) => featuredToolNames.includes(tool.title)).sort(
-    (firstTool, secondTool) =>
-      featuredToolNames.indexOf(firstTool.title) -
-      featuredToolNames.indexOf(secondTool.title),
-  );
+  ]
+    .filter((tool) => featuredToolNames.includes(tool.title))
+    .sort(
+      (firstTool, secondTool) =>
+        featuredToolNames.indexOf(firstTool.title) -
+        featuredToolNames.indexOf(secondTool.title),
+    );
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-12 px-4 py-8 sm:px-6 lg:px-8">
-      <section className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-8">
+      <section className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm sm:p-8 dark:border-gray-800 dark:bg-gray-900">
         <div className="max-w-4xl">
-          <p className="text-sm font-semibold uppercase text-cyan-700 dark:text-cyan-300">
+          <p className="text-sm font-semibold text-cyan-700 uppercase dark:text-cyan-300">
             Architecture / Platform Engineering / Developer Productivity
           </p>
-          <h1 className="mt-4 text-4xl font-bold text-gray-950 dark:text-white sm:text-5xl">
+          <h1 className="mt-4 text-4xl font-bold text-gray-950 sm:text-5xl dark:text-white">
             Freeshot
           </h1>
           <p className="mt-5 max-w-3xl text-base leading-7 text-gray-600 dark:text-gray-300">
             Freeshot provides architecture, platform engineering and developer
             productivity tools for modern software teams.
           </p>
-          <ul className="mt-6 grid max-w-4xl gap-2 text-sm text-gray-700 dark:text-gray-200 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="mt-6 grid max-w-4xl gap-2 text-sm text-gray-700 sm:grid-cols-2 lg:grid-cols-3 dark:text-gray-200">
             {[
               "PlantUML Architecture Templates",
               "C4 Architecture Modeling",
@@ -108,10 +110,10 @@ export function HomePage() {
         </div>
       </section>
 
-      <section className="rounded-lg border border-cyan-200 bg-cyan-50 p-6 shadow-sm dark:border-cyan-900 dark:bg-cyan-950/40 sm:p-7">
+      <section className="rounded-lg border border-cyan-200 bg-cyan-50 p-6 shadow-sm sm:p-7 dark:border-cyan-900 dark:bg-cyan-950/40">
         <div className="grid gap-6 lg:grid-cols-[1fr_0.75fr] lg:items-center">
           <div>
-            <p className="text-sm font-semibold uppercase text-cyan-700 dark:text-cyan-300">
+            <p className="text-sm font-semibold text-cyan-700 uppercase dark:text-cyan-300">
               Featured Tool
             </p>
             <h2 className="mt-3 text-3xl font-bold text-gray-950 dark:text-white">
@@ -238,7 +240,10 @@ export function HomePage() {
         />
         <RoadmapCard
           title="Coming Soon"
-          items={["Event Bus Calculator", "Additional Platform Engineering utilities"]}
+          items={[
+            "Event Bus Calculator",
+            "Additional Platform Engineering utilities",
+          ]}
         />
       </section>
     </div>
@@ -268,9 +273,12 @@ function FeaturedSectionCard({
       <p className="text-sm leading-6 text-gray-600 dark:text-gray-300">
         {description}
       </p>
-      <ul className="grid gap-2 text-sm text-gray-700 dark:text-gray-200 sm:grid-cols-2">
+      <ul className="grid gap-2 text-sm text-gray-700 sm:grid-cols-2 dark:text-gray-200">
         {examples.map((example) => (
-          <li key={example} className="rounded-lg bg-gray-50 px-3 py-2 dark:bg-gray-900">
+          <li
+            key={example}
+            className="rounded-lg bg-gray-50 px-3 py-2 dark:bg-gray-900"
+          >
             {example}
           </li>
         ))}

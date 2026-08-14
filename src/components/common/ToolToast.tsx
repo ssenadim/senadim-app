@@ -23,7 +23,11 @@ export function ToolToast({ toast }: ToolToastProps) {
   }
 
   return (
-    <div className="fixed bottom-5 right-5 z-50 max-w-sm">
+    <div
+      role="status"
+      aria-live="polite"
+      className="fixed right-5 bottom-5 z-50 max-w-sm"
+    >
       <Toast
         key={toast.id}
         className={`border shadow-lg ${getToastClasses(toast.tone)}`}

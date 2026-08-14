@@ -1,6 +1,6 @@
 import { Button } from "flowbite-react";
+import { useId, type ReactNode } from "react";
 import { Link } from "react-router-dom";
-import type { ReactNode } from "react";
 import type { ToolBreadcrumbItem, ToolExample } from "../../types/toolPage";
 import { SectionHeader } from "../common/SectionHeader";
 
@@ -41,7 +41,7 @@ interface ToolNotesProps {
 
 function ToolSection({ title, description, children }: ToolSectionProps) {
   return (
-    <section className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-900 sm:p-6">
+    <section className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm sm:p-6 dark:border-gray-700 dark:bg-gray-900">
       {title ? <SectionHeader title={title} description={description} /> : null}
       <div className={title ? "mt-5" : undefined}>{children}</div>
     </section>
@@ -78,7 +78,7 @@ export function ToolHeader({
       </nav>
 
       <header className="max-w-4xl">
-        <h1 className="text-3xl font-bold text-gray-950 dark:text-white sm:text-4xl">
+        <h1 className="text-3xl font-bold text-gray-950 sm:text-4xl dark:text-white">
           {title}
         </h1>
         <p className="mt-4 text-base leading-7 text-gray-600 dark:text-gray-300">
@@ -97,14 +97,25 @@ export function ToolDescription({
   onToggle,
   toggleLabel,
 }: ToolDescriptionProps) {
+  const contentId = useId();
+
   if (isCollapsible) {
     return (
       <section>
-        <Button color="light" size="sm" onClick={onToggle}>
+        <Button
+          color="light"
+          size="sm"
+          onClick={onToggle}
+          aria-expanded={isVisible}
+          aria-controls={contentId}
+        >
           {isVisible ? "\u25BC" : "\u25B6"} {toggleLabel ?? title}
         </Button>
         {isVisible ? (
-          <div className="mt-4 rounded-lg border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-900 sm:p-6">
+          <div
+            id={contentId}
+            className="mt-4 rounded-lg border border-gray-200 bg-white p-5 shadow-sm sm:p-6 dark:border-gray-700 dark:bg-gray-900"
+          >
             <div className="space-y-4">
               <h2 className="text-xl font-semibold text-gray-950 dark:text-white">
                 {title}
@@ -148,25 +159,33 @@ export function ToolExamples({
   onToggle,
   onExampleSelect,
 }: ToolExamplesProps) {
+  const contentId = useId();
+
   return (
     <section className="flex flex-col gap-5">
       <SectionHeader
         title="Tool Examples"
         description="Use these known values to verify the tool behavior quickly."
         action={
-          <Button color="light" size="sm" onClick={onToggle}>
+          <Button
+            color="light"
+            size="sm"
+            onClick={onToggle}
+            aria-expanded={isVisible}
+            aria-controls={contentId}
+          >
             {isVisible ? "Hide Examples" : "Show Examples"}
           </Button>
         }
       />
       {isVisible ? (
-        <div className="grid items-stretch gap-4 md:grid-cols-2">
+        <div id={contentId} className="grid items-stretch gap-4 md:grid-cols-2">
           {examples.map((example) => (
             <div
               key={example.title}
               className="min-w-0 rounded-lg border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-900"
             >
-              <h2 className="max-w-full break-words whitespace-normal text-lg font-semibold leading-7 text-gray-950 dark:text-white">
+              <h2 className="max-w-full text-lg leading-7 font-semibold break-words whitespace-normal text-gray-950 dark:text-white">
                 {example.title}
               </h2>
               {example.description ? (
@@ -176,7 +195,11 @@ export function ToolExamples({
                   </p>
                   {onExampleSelect ? (
                     <div className="mt-4">
-                      <Button color="light" size="sm" onClick={() => onExampleSelect(example)}>
+                      <Button
+                        color="light"
+                        size="sm"
+                        onClick={() => onExampleSelect(example)}
+                      >
                         Use Template
                       </Button>
                     </div>
@@ -186,19 +209,31 @@ export function ToolExamples({
                 <>
                   {onExampleSelect ? (
                     <div className="mt-3">
-                      <Button color="light" size="xs" onClick={() => onExampleSelect(example)}>
+                      <Button
+                        color="light"
+                        size="xs"
+                        onClick={() => onExampleSelect(example)}
+                      >
                         Use Example
                       </Button>
                     </div>
                   ) : null}
                   <div className="mt-4 grid gap-3">
                     <div>
-                      <p className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">{example.inputLabel}</p>
-                      <pre className="mt-2 overflow-x-auto rounded-lg bg-gray-50 p-3 text-sm text-gray-800 dark:bg-gray-950 dark:text-gray-200">{example.input}</pre>
+                      <p className="text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
+                        {example.inputLabel}
+                      </p>
+                      <pre className="mt-2 overflow-x-auto rounded-lg bg-gray-50 p-3 text-sm text-gray-800 dark:bg-gray-950 dark:text-gray-200">
+                        {example.input}
+                      </pre>
                     </div>
                     <div>
-                      <p className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">{example.outputLabel}</p>
-                      <pre className="mt-2 overflow-x-auto rounded-lg bg-gray-50 p-3 text-sm text-gray-800 dark:bg-gray-950 dark:text-gray-200">{example.output}</pre>
+                      <p className="text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
+                        {example.outputLabel}
+                      </p>
+                      <pre className="mt-2 overflow-x-auto rounded-lg bg-gray-50 p-3 text-sm text-gray-800 dark:bg-gray-950 dark:text-gray-200">
+                        {example.output}
+                      </pre>
                     </div>
                   </div>
                 </>
@@ -217,20 +252,31 @@ export function ToolNotes({
   isVisible = true,
   onToggle,
 }: ToolNotesProps) {
+  const contentId = useId();
+
   return (
     <section className="flex flex-col gap-5">
       <SectionHeader
         title="Tool Notes"
         action={
           isCollapsible ? (
-            <Button color="light" size="sm" onClick={onToggle}>
+            <Button
+              color="light"
+              size="sm"
+              onClick={onToggle}
+              aria-expanded={isVisible}
+              aria-controls={contentId}
+            >
               {isVisible ? "Hide Notes" : "Show Notes"}
             </Button>
           ) : undefined
         }
       />
       {isVisible ? (
-        <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-900 sm:p-6">
+        <div
+          id={contentId}
+          className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm sm:p-6 dark:border-gray-700 dark:bg-gray-900"
+        >
           {children}
         </div>
       ) : null}

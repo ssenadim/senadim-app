@@ -3,24 +3,25 @@ import { routePaths } from "../utils/routes";
 
 export const platformTools: DeveloperTool[] = [
   {
-    title: "Container Platform Calculator Suite",
+    title: "OpenShift Calculator Suite",
     description:
-      "Sizing and capacity planning tools for container platform workloads.",
-    category: "Container Platform",
+      "Capacity, resource, autoscaling, memory, and storage sizing for OpenShift workloads.",
+    category: "OpenShift",
     path: routePaths.containerPlatformCalculator,
     status: "available",
   },
   {
     title: "JVM Memory Calculator",
     description:
-      "Calculate recommended JVM memory settings for containerized Java applications.",
-    category: "Java",
+      "Size heap, metaspace, native memory, and safety buffer for JVM application containers.",
+    category: "JVM",
     path: routePaths.jvmMemoryCalculator,
     status: "available",
   },
   {
     title: "Event Bus Calculator",
-    description: "Plan event bus capacity, partitions, throughput, and retention.",
+    description:
+      "Plan event bus capacity, partitions, throughput, and retention.",
     category: "Messaging",
     status: "coming-soon",
   },
