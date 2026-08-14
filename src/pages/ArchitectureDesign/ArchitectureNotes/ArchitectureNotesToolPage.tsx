@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Badge, Button, Select, TextInput, Textarea } from "flowbite-react";
+import { useNavigate } from "react-router-dom";
 import { ToolToast } from "../../../components/common/ToolToast";
 import { ToolPageLayout } from "../../../components/layout/ToolPageLayout";
 import { architectureNoteTemplates } from "../../../data/architectureNoteTemplates";
@@ -14,9 +15,12 @@ import {
 import type { ToastMessage, ToastTone } from "../../../types/toast";
 import {
   addUniqueTag,
+  buildArchitectureNoteMarkdown,
+  createArchitectureNoteAdrHandoff,
   createArchitectureNote,
   createArchitectureNoteFromTemplate,
   filterAndSortArchitectureNotes,
+  getArchitectureNoteFilename,
   getArchitectureNoteTags,
   hasNoteChanges,
   loadArchitectureNotes,
@@ -60,6 +64,7 @@ function formatNoteDate(value: string) {
 
 export function ArchitectureNotesToolPage() {
   usePageTitle("Architecture Notes");
+  const navigate = useNavigate();
 
   const [notes, setNotes] = useState<EditableArchitectureNote[]>(() =>
     loadArchitectureNotes(window.localStorage),
@@ -212,6 +217,44 @@ export function ArchitectureNotesToolPage() {
     }
   }
 
+  async function copyMarkdown() {
+    if (!savedSelection) return;
+
+    try {
+      await navigator.clipboard.writeText(
+        buildArchitectureNoteMarkdown(savedSelection),
+      );
+      showToast("success", "Architecture note markdown copied.");
+    } catch {
+      showToast("failure", "Copy failed. Please copy the note manually.");
+    }
+  }
+
+  function downloadMarkdown() {
+    if (!savedSelection) return;
+
+    const markdown = buildArchitectureNoteMarkdown(savedSelection);
+    const blob = new Blob([markdown], {
+      type: "text/markdown;charset=utf-8",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = getArchitectureNoteFilename(savedSelection.title);
+    link.click();
+    URL.revokeObjectURL(url);
+    showToast("success", "Architecture note markdown downloaded.");
+  }
+
+  function createAdrFromNote() {
+    if (!savedSelection) return;
+
+    navigate(routePaths.adrGenerator, {
+      state: createArchitectureNoteAdrHandoff(savedSelection),
+    });
+  }
+
   return (
     <ToolPageLayout
       title="Architecture Notes"
@@ -259,7 +302,10 @@ export function ArchitectureNotesToolPage() {
                 onTagInputChange={setTagInput}
                 onAddTag={addTag}
                 onChange={updateDraft}
+                onCopyMarkdown={copyMarkdown}
+                onCreateAdr={createAdrFromNote}
                 onDelete={deleteNote}
+                onDownloadMarkdown={downloadMarkdown}
                 onSave={saveNote}
               />
             ) : (
@@ -550,7 +596,10 @@ function NoteEditor({
   onTagInputChange,
   onAddTag,
   onChange,
+  onCopyMarkdown,
+  onCreateAdr,
   onDelete,
+  onDownloadMarkdown,
   onSave,
 }: {
   draft: EditableArchitectureNote;
@@ -560,7 +609,10 @@ function NoteEditor({
   onTagInputChange: (value: string) => void;
   onAddTag: () => void;
   onChange: (patch: Partial<EditableArchitectureNote>) => void;
+  onCopyMarkdown: () => void;
+  onCreateAdr: () => void;
   onDelete: () => void;
+  onDownloadMarkdown: () => void;
   onSave: () => void;
 }) {
   return (
@@ -579,10 +631,10 @@ function NoteEditor({
           </div>
           <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
             Preview updates as you type. Changes are saved only when you select
-            Save.
+            Save. Export and ADR handoff use the last saved version.
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex max-w-full flex-wrap gap-2">
           <Button color="blue" size="sm" onClick={onSave}>
             Save
           </Button>
@@ -593,6 +645,30 @@ function NoteEditor({
             onClick={onDelete}
           >
             Delete
+          </Button>
+          <Button
+            color="light"
+            size="sm"
+            disabled={!isExisting}
+            onClick={onCopyMarkdown}
+          >
+            Copy Markdown
+          </Button>
+          <Button
+            color="light"
+            size="sm"
+            disabled={!isExisting}
+            onClick={onDownloadMarkdown}
+          >
+            Download .md
+          </Button>
+          <Button
+            color="light"
+            size="sm"
+            disabled={!isExisting}
+            onClick={onCreateAdr}
+          >
+            Create ADR from Note
           </Button>
         </div>
       </div>

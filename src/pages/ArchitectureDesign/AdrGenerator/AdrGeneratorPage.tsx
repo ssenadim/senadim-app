@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { Alert, Button, Select, TextInput, Textarea } from "flowbite-react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { HelpTooltip } from "../../../components/common/HelpTooltip";
 import { ToolToast } from "../../../components/common/ToolToast";
 import { ToolPageLayout } from "../../../components/layout/ToolPageLayout";
 import { usePageTitle } from "../../../hooks/usePageTitle";
 import type { ToolExample } from "../../../types/toolPage";
 import type { ToastMessage, ToastTone } from "../../../types/toast";
+import { readArchitectureNoteAdrHandoff } from "../../../utils/architectureNotes";
 import { routePaths } from "../../../utils/routes";
 
 type AdrStatus =
@@ -108,7 +110,13 @@ function createForm({
   negativeConsequences = "",
 }: Omit<
   AdrForm,
-  "number" | "status" | "decisionDate" | "author" | "stakeholders" | "tags" | "negativeConsequences"
+  | "number"
+  | "status"
+  | "decisionDate"
+  | "author"
+  | "stakeholders"
+  | "tags"
+  | "negativeConsequences"
 > & {
   author?: string;
   negativeConsequences?: string;
@@ -142,7 +150,11 @@ const templateGroups: AdrTemplateGroup[] = [
         form: createForm({
           title: "Adopt Centralized Authentication Strategy",
           drivers: ["Security", "Compliance", "Developer Experience"],
-          stakeholders: ["Architecture Team", "Security Team", "Development Team"],
+          stakeholders: [
+            "Architecture Team",
+            "Security Team",
+            "Development Team",
+          ],
           tags: "identity, oidc, authentication",
           context:
             "Multiple applications need consistent authentication, session handling, token validation and auditability across web and API channels.",
@@ -161,7 +173,11 @@ const templateGroups: AdrTemplateGroup[] = [
         form: createForm({
           title: "Introduce API Gateway for External APIs",
           drivers: ["Security", "Maintainability", "Observability"],
-          stakeholders: ["Architecture Team", "Platform Team", "Development Team"],
+          stakeholders: [
+            "Architecture Team",
+            "Platform Team",
+            "Development Team",
+          ],
           tags: "api, gateway, integration",
           context:
             "Backend services expose APIs with inconsistent routing, authentication and observability patterns.",
@@ -180,7 +196,11 @@ const templateGroups: AdrTemplateGroup[] = [
         form: createForm({
           title: "Use Application Database as Primary Relational Store",
           drivers: ["Maintainability", "Cost", "Reliability"],
-          stakeholders: ["Architecture Team", "Development Team", "Operations Team"],
+          stakeholders: [
+            "Architecture Team",
+            "Development Team",
+            "Operations Team",
+          ],
           tags: "data, persistence, relational",
           context:
             "The application requires transactional consistency, relational queries and operationally familiar database technology.",
@@ -200,7 +220,11 @@ const templateGroups: AdrTemplateGroup[] = [
           title: "Adopt Event Driven Architecture for Domain Events",
           status: "Proposed",
           drivers: ["Scalability", "Availability", "Reliability"],
-          stakeholders: ["Architecture Team", "Development Team", "Operations Team"],
+          stakeholders: [
+            "Architecture Team",
+            "Development Team",
+            "Operations Team",
+          ],
           tags: "events, async, integration",
           context:
             "Several services need to react to business changes without tight synchronous coupling.",
@@ -220,7 +244,11 @@ const templateGroups: AdrTemplateGroup[] = [
           title: "Structure the Platform as Domain-Oriented Microservices",
           status: "Proposed",
           drivers: ["Scalability", "Maintainability", "Operational Simplicity"],
-          stakeholders: ["Architecture Team", "Platform Team", "Development Team"],
+          stakeholders: [
+            "Architecture Team",
+            "Platform Team",
+            "Development Team",
+          ],
           tags: "microservices, domain, platform",
           context:
             "The platform contains several business domains with different release cycles and ownership boundaries.",
@@ -244,7 +272,11 @@ const templateGroups: AdrTemplateGroup[] = [
         form: createForm({
           title: "Adopt an Enterprise Identity Service",
           drivers: ["Security", "Compliance", "Reliability"],
-          stakeholders: ["Architecture Team", "Security Team", "Operations Team"],
+          stakeholders: [
+            "Architecture Team",
+            "Security Team",
+            "Operations Team",
+          ],
           tags: "identity, access-management, security",
           context:
             "The platform requires centralized identity and access management for web applications, APIs and service integrations.",
@@ -263,7 +295,11 @@ const templateGroups: AdrTemplateGroup[] = [
         form: createForm({
           title: "Standardize on OAuth2 and OpenID Connect Provider",
           drivers: ["Security", "Compliance", "Portability"],
-          stakeholders: ["Architecture Team", "Security Team", "Development Team"],
+          stakeholders: [
+            "Architecture Team",
+            "Security Team",
+            "Development Team",
+          ],
           tags: "oauth2, oidc, authorization",
           context:
             "Applications and APIs need a shared protocol for delegated authorization and identity claims.",
@@ -416,11 +452,10 @@ function buildAdrMarkdown(form: AdrForm) {
     form.stakeholders.length > 0
       ? form.stakeholders.map((stakeholder) => `* ${stakeholder}`).join("\n")
       : "* Not specified";
-  const tags =
-    form.tags
-      .split(",")
-      .map((tag) => tag.trim())
-      .filter(Boolean);
+  const tags = form.tags
+    .split(",")
+    .map((tag) => tag.trim())
+    .filter(Boolean);
   const tagLine =
     tags.length > 0
       ? tags.map((tag) => `\`${tag}\``).join(", ")
@@ -433,7 +468,9 @@ function buildAdrMarkdown(form: AdrForm) {
     "",
     `**Decision Date:** ${form.decisionDate || getTodayDate()}`,
     "",
-    form.author.trim() ? `**Author:** ${form.author.trim()}` : "**Author:** Not specified",
+    form.author.trim()
+      ? `**Author:** ${form.author.trim()}`
+      : "**Author:** Not specified",
     "",
     "**Stakeholders**",
     "",
@@ -463,23 +500,67 @@ function buildAdrMarkdown(form: AdrForm) {
     "",
     "### Positive",
     "",
-    form.consequences.trim() || "Describe expected benefits and positive outcomes.",
+    form.consequences.trim() ||
+      "Describe expected benefits and positive outcomes.",
     "",
     "### Negative",
     "",
-    form.negativeConsequences.trim() || "Describe trade-offs, risks and follow-up responsibilities.",
+    form.negativeConsequences.trim() ||
+      "Describe trade-offs, risks and follow-up responsibilities.",
   ].join("\n");
 }
 
 export function AdrGeneratorPage() {
   usePageTitle("ADR Generator");
+  const location = useLocation();
+  const navigate = useNavigate();
+  const noteHandoff = useMemo(
+    () => readArchitectureNoteAdrHandoff(location.state),
+    [location.state],
+  );
 
-  const [form, setForm] = useState<AdrForm>(templateGroups[1].templates[0].form);
-  const [selectedTemplate, setSelectedTemplate] = useState(
-    templateGroups[1].templates[0].title,
+  const [form, setForm] = useState<AdrForm>(() =>
+    noteHandoff
+      ? {
+          ...emptyForm,
+          title: noteHandoff.title,
+          tags: noteHandoff.tags.join(", "),
+          context: noteHandoff.context,
+        }
+      : templateGroups[1].templates[0].form,
+  );
+  const [selectedTemplate, setSelectedTemplate] = useState(() =>
+    noteHandoff ? "" : templateGroups[1].templates[0].title,
   );
   const [errorMessage, setErrorMessage] = useState("");
-  const [toast, setToast] = useState<ToastMessage | null>(null);
+  const [toast, setToast] = useState<ToastMessage | null>(() =>
+    noteHandoff
+      ? {
+          id: Date.now(),
+          tone: "info",
+          text: "Architecture note details added. Complete the ADR decision fields.",
+        }
+      : null,
+  );
+
+  useEffect(() => {
+    if (!noteHandoff) return;
+
+    navigate(
+      {
+        pathname: location.pathname,
+        search: location.search,
+        hash: location.hash,
+      },
+      { replace: true, state: null },
+    );
+  }, [
+    location.hash,
+    location.pathname,
+    location.search,
+    navigate,
+    noteHandoff,
+  ]);
 
   useEffect(() => {
     if (!toast) return;
@@ -523,9 +604,12 @@ export function AdrGeneratorPage() {
 
   function validateForm() {
     if (!form.title.trim()) return "Title is required to generate an ADR.";
-    if (!form.context.trim()) return "Context is required to explain the decision background.";
-    if (!form.decision.trim()) return "Decision is required to capture what was chosen.";
-    if (!form.consequences.trim()) return "Consequences are required to document the impact.";
+    if (!form.context.trim())
+      return "Context is required to explain the decision background.";
+    if (!form.decision.trim())
+      return "Decision is required to capture what was chosen.";
+    if (!form.consequences.trim())
+      return "Consequences are required to document the impact.";
     return "";
   }
 
@@ -655,7 +739,9 @@ export function AdrGeneratorPage() {
                     <TextInput
                       id="adr-title"
                       value={form.title}
-                      onChange={(event) => updateField("title", event.target.value)}
+                      onChange={(event) =>
+                        updateField("title", event.target.value)
+                      }
                       placeholder="Adopt an Enterprise Identity Service"
                     />
                   </div>
@@ -669,7 +755,10 @@ export function AdrGeneratorPage() {
                       id="adr-number"
                       value={form.number}
                       onChange={(event) =>
-                        updateField("number", formatAdrNumber(event.target.value))
+                        updateField(
+                          "number",
+                          formatAdrNumber(event.target.value),
+                        )
                       }
                       placeholder="001"
                     />
@@ -683,7 +772,9 @@ export function AdrGeneratorPage() {
                     <Select
                       id="adr-status"
                       value={form.status}
-                      onChange={(event) => updateField("status", event.target.value)}
+                      onChange={(event) =>
+                        updateField("status", event.target.value)
+                      }
                     >
                       {statusOptions.map((status) => (
                         <option key={status} value={status}>
@@ -719,7 +810,9 @@ export function AdrGeneratorPage() {
                     <TextInput
                       id="adr-author"
                       value={form.author}
-                      onChange={(event) => updateField("author", event.target.value)}
+                      onChange={(event) =>
+                        updateField("author", event.target.value)
+                      }
                       placeholder="Architecture Team"
                     />
                   </div>
@@ -763,7 +856,9 @@ export function AdrGeneratorPage() {
                   <TextInput
                     id="adr-tags"
                     value={form.tags}
-                    onChange={(event) => updateField("tags", event.target.value)}
+                    onChange={(event) =>
+                      updateField("tags", event.target.value)
+                    }
                     placeholder="identity, api, platform"
                   />
                 </div>
@@ -829,7 +924,9 @@ export function AdrGeneratorPage() {
                   id="adr-negative-consequences"
                   label="Negative Consequences"
                   value={form.negativeConsequences}
-                  onChange={(value) => updateField("negativeConsequences", value)}
+                  onChange={(value) =>
+                    updateField("negativeConsequences", value)
+                  }
                   help="Document trade-offs, risks and follow-up responsibilities."
                 />
 
@@ -883,10 +980,16 @@ export function AdrGeneratorPage() {
       notes={
         <ul className="list-disc space-y-2 pl-5 text-sm text-gray-600 dark:text-gray-300">
           <li>Keep ADRs short enough for teams to read during reviews.</li>
-          <li>Document the context and trade-offs, not only the final choice.</li>
-          <li>Use clear statuses so teams know whether a decision is still active.</li>
+          <li>
+            Document the context and trade-offs, not only the final choice.
+          </li>
+          <li>
+            Use clear statuses so teams know whether a decision is still active.
+          </li>
           <li>Prefer one important decision per ADR.</li>
-          <li>Link ADRs from related architecture diagrams and platform standards.</li>
+          <li>
+            Link ADRs from related architecture diagrams and platform standards.
+          </li>
         </ul>
       }
       notesCollapsible
@@ -906,7 +1009,7 @@ function TemplateGroup({
 }) {
   return (
     <div>
-      <p className="mb-2 text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
+      <p className="mb-2 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
         {group.category}
       </p>
       <div className="flex flex-wrap gap-2">

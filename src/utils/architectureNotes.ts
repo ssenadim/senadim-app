@@ -7,6 +7,13 @@ import {
 
 export const architectureNotesStorageKey = "freeshot.architectureNotes.v1";
 
+export interface ArchitectureNoteAdrHandoff {
+  source: "architecture-note";
+  title: string;
+  context: string;
+  tags: string[];
+}
+
 const noteTypeSet = new Set<string>(architectureNoteTypes);
 
 export function createArchitectureNote(
@@ -114,6 +121,83 @@ export function storeArchitectureNotes(
   storage.setItem(architectureNotesStorageKey, JSON.stringify(notes));
 }
 
+export function buildArchitectureNoteMarkdown(
+  note: EditableArchitectureNote,
+): string {
+  const title = note.title.trim() || "Architecture Note";
+  const content = removeLeadingDocumentHeading(note.content.trim());
+  const lines = [
+    `# ${escapeMarkdownInline(title)}`,
+    "",
+    `**Type:** ${note.type}`,
+    `**Created:** ${formatMarkdownDate(note.createdAt)}`,
+    `**Updated:** ${formatMarkdownDate(note.updatedAt)}`,
+  ];
+
+  if (note.tags.length > 0) {
+    lines.push(
+      "",
+      `**Tags:** ${note.tags.map(escapeMarkdownInline).join(", ")}`,
+    );
+  }
+
+  if (content) {
+    lines.push("", "---", "", content);
+  }
+
+  return `${lines.join("\n")}\n`;
+}
+
+export function getArchitectureNoteFilename(title: string): string {
+  const slug = title
+    .trim()
+    .toLowerCase()
+    .replace(/\u0131/g, "i")
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80)
+    .replace(/-+$/g, "");
+
+  return slug ? `${slug}.md` : "architecture-note.md";
+}
+
+export function createArchitectureNoteAdrHandoff(
+  note: EditableArchitectureNote,
+): ArchitectureNoteAdrHandoff {
+  return {
+    source: "architecture-note",
+    title: note.title,
+    context: note.content,
+    tags: [...note.tags],
+  };
+}
+
+export function readArchitectureNoteAdrHandoff(
+  value: unknown,
+): ArchitectureNoteAdrHandoff | null {
+  if (!value || typeof value !== "object") return null;
+
+  const handoff = value as Record<string, unknown>;
+  if (
+    handoff.source !== "architecture-note" ||
+    typeof handoff.title !== "string" ||
+    typeof handoff.context !== "string" ||
+    !Array.isArray(handoff.tags) ||
+    !handoff.tags.every((tag) => typeof tag === "string")
+  ) {
+    return null;
+  }
+
+  return {
+    source: "architecture-note",
+    title: handoff.title,
+    context: handoff.context,
+    tags: [...handoff.tags],
+  };
+}
+
 export function getArchitectureNoteTags(notes: EditableArchitectureNote[]) {
   const tagsByNormalizedValue = new Map<string, string>();
 
@@ -193,6 +277,24 @@ function compareText(left: string, right: string) {
     left.localeCompare(right, undefined, { sensitivity: "base" }) ||
     left.localeCompare(right)
   );
+}
+
+function formatMarkdownDate(value: string) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime())
+    ? "Unknown"
+    : date.toISOString().slice(0, 10);
+}
+
+function removeLeadingDocumentHeading(content: string) {
+  const heading = content.match(/^#[ \t]+.+?[ \t]*#*[ \t]*(?:\r?\n|$)/);
+  if (!heading) return content;
+
+  return content.slice(heading[0].length).replace(/^\r?\n/, "");
+}
+
+function escapeMarkdownInline(value: string) {
+  return value.replace(/([\\`*_[\]<>#])/g, "\\$1");
 }
 
 function isEditableArchitectureNote(
