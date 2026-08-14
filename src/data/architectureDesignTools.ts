@@ -18,6 +18,14 @@ export const architectureDesignTools: DeveloperTool[] = [
     status: "available",
   },
   {
+    title: "Architecture Notes",
+    description:
+      "Capture lightweight system context, integration details and open questions locally.",
+    category: "Documentation",
+    path: routePaths.architectureNotesTool,
+    status: "available",
+  },
+  {
     title: "Threat Modeling Helper",
     description:
       "Capture the project context needed to prepare a threat model.",

@@ -1,0 +1,94 @@
+model = "gpt-5.6-sol"
+model_reasoning_effort = "high"
+service_tier = "default"
+sandbox_mode = "workspace-write"
+approval_policy = "on-request"
+approvals_reviewer = "auto_review"
+
+notify = [ "C:\\Users\\user\\AppData\\Local\\OpenAI\\Codex\\runtimes\\cua_node\\f1bf3cd3a5929acd\\bin\\node_modules\\@oai\\sky\\bin\\windows\\codex-computer-use.exe", "turn-ended" ]
+
+[marketplaces.openai-bundled]
+last_updated = "2026-08-07T19:52:07Z"
+source_type = "local"
+source = '\\?\C:\Users\user\.codex\.tmp\bundled-marketplaces\openai-bundled'
+
+[marketplaces.openai-primary-runtime]
+last_updated = "2026-08-14T18:26:20Z"
+source_type = "local"
+source = '\\?\C:\Users\user\.cache\codex-runtimes\codex-primary-runtime\plugins\openai-primary-runtime'
+
+[features]
+js_repl = false
+
+[mcp_servers.node_repl]
+args = []
+command = 'C:\Users\user\AppData\Local\OpenAI\Codex\runtimes\cua_node\f1bf3cd3a5929acd\bin\node_repl.exe'
+startup_timeout_sec = 120
+
+[mcp_servers.node_repl.env]
+NODE_REPL_NATIVE_PIPE_CONNECT_TIMEOUT_MS = "1000"
+NODE_REPL_NODE_MODULE_DIRS = 'C:\Users\user\AppData\Local\OpenAI\Codex\runtimes\cua_node\f1bf3cd3a5929acd\bin\node_modules'
+NODE_REPL_NODE_PATH = 'C:\Users\user\AppData\Local\OpenAI\Codex\runtimes\cua_node\f1bf3cd3a5929acd\bin\node.exe'
+NODE_REPL_TRUSTED_CODE_PATHS = 'C:\Users\user\.codex;C:\Users\user\AppData\Local\OpenAI\Codex\runtimes\cua_node\f1bf3cd3a5929acd\bin\node_modules'
+CODEX_HOME = 'C:\Users\user\.codex'
+NODE_REPL_TRUSTED_BROWSER_CLIENT_SHA256S = "e7f98a8ce324234ed7f3be8fa39ba54b26e2e8fc79feed2470dcd0871af4a5b3"
+BROWSER_USE_AVAILABLE_BACKENDS = "chrome,iab"
+NODE_REPL_INSTRUCTIONS_USE_CASE_BROWSER = "Control the in-app browser in conjunction with the Browser Plugin."
+NODE_REPL_INSTRUCTIONS_USE_CASE_CHROME = "Control the Chrome browser in conjunction with the Chrome Plugin. Prefer this method of controlling Chrome over alternatives (such as Computer Use) unless the user explicitly mentions an alternative."
+BROWSER_USE_CODEX_APP_BUILD_FLAVOR = "prod"
+BROWSER_USE_CODEX_APP_VERSION = "26.803.41515"
+SKY_CUA_NATIVE_PIPE = "1"
+SKY_CUA_NATIVE_PIPE_DIRECTORY = '\\.\pipe\codex-computer-use-15874d64-0038-4f6e-8f36-fe3134865cf4'
+CODEX_CLI_PATH = 'C:\Users\user\AppData\Local\OpenAI\Codex\bin\cfac6bda2d141e07\codex.exe'
+
+[desktop]
+conversationDetailMode = "STEPS_COMMANDS"
+ambient-suggestions-enabled = true
+followUpQueueMode = "queue"
+
+[windows]
+sandbox = "elevated"
+
+[projects.'c:\users\user\documents\codex\2026-06-15\ka-token-m-var']
+trust_level = "trusted"
+
+[projects.'c:\users\user\documents\codex\2026-06-26\tok']
+trust_level = "trusted"
+
+[projects.'c:\users\user\documents\codex\2026-07-15\jwt-decoder-claim-tooltip-ve-layout']
+trust_level = "trusted"
+
+[projects.'d:\senadimcom\senadim-app']
+trust_level = "trusted"
+
+[projects.'c:\users\user\documents\gamecenter']
+trust_level = "trusted"
+
+[plugins."visualize@openai-bundled"]
+enabled = true
+
+[plugins."documents@openai-primary-runtime"]
+enabled = true
+
+[plugins."pdf@openai-primary-runtime"]
+enabled = true
+
+[plugins."spreadsheets@openai-primary-runtime"]
+enabled = true
+
+[plugins."presentations@openai-primary-runtime"]
+enabled = true
+
+[plugins."template-creator@openai-primary-runtime"]
+enabled = true
+
+[plugins."browser@openai-bundled"]
+enabled = true
+
+[plugins."sites@openai-bundled"]
+enabled = true
+
+[shell_environment_policy.set]
+BROWSER_USE_AVAILABLE_BACKENDS = "chrome,iab"
+NODE_REPL_TRUSTED_BROWSER_CLIENT_SHA256S = "e7f98a8ce324234ed7f3be8fa39ba54b26e2e8fc79feed2470dcd0871af4a5b3"
+NODE_REPL_TRUSTED_CODE_PATHS = 'C:\Users\user\.codex;C:\Users\user\AppData\Local\OpenAI\Codex\runtimes\cua_node\f1bf3cd3a5929acd\bin\node_modules'

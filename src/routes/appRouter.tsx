@@ -2,6 +2,7 @@ import { createBrowserRouter } from "react-router-dom";
 import { AppLayout } from "../components/layout/AppLayout";
 import { AboutPage } from "../pages/About/AboutPage";
 import { AdrGeneratorPage } from "../pages/ArchitectureDesign/AdrGenerator/AdrGeneratorPage";
+import { ArchitectureNotesToolPage } from "../pages/ArchitectureDesign/ArchitectureNotes/ArchitectureNotesToolPage";
 import { ArchitectureDesignPage } from "../pages/ArchitectureDesign/ArchitectureDesignPage";
 import { PlantUmlViewerPage } from "../pages/ArchitectureDesign/PlantUmlViewer/PlantUmlViewerPage";
 import { ThreatModelingHelperPage } from "../pages/ArchitectureDesign/ThreatModelingHelper/ThreatModelingHelperPage";
@@ -40,6 +41,10 @@ export const appRouter = createBrowserRouter(
           path: routePaths.adrGenerator,
           element: <AdrGeneratorPage />,
         },
+        {
+          path: routePaths.architectureNotesTool,
+          element: <ArchitectureNotesToolPage />,
+        },
         { path: routePaths.developerTools, element: <DeveloperToolsPage /> },
         {
           path: routePaths.threatModelingHelper,
@@ -51,13 +56,19 @@ export const appRouter = createBrowserRouter(
         { path: routePaths.dataCompareTool, element: <DataCompareToolPage /> },
         { path: routePaths.timestampTool, element: <TimestampToolPage /> },
         { path: routePaths.jwtDecoderTool, element: <JwtDecoderToolPage /> },
-        { path: routePaths.hashGeneratorTool, element: <HashGeneratorToolPage /> },
+        {
+          path: routePaths.hashGeneratorTool,
+          element: <HashGeneratorToolPage />,
+        },
         { path: routePaths.regexTesterTool, element: <RegexTesterToolPage /> },
         {
           path: routePaths.urlEncoderDecoderTool,
           element: <UrlEncoderDecoderToolPage />,
         },
-        { path: routePaths.pkceGeneratorTool, element: <PkceGeneratorToolPage /> },
+        {
+          path: routePaths.pkceGeneratorTool,
+          element: <PkceGeneratorToolPage />,
+        },
         {
           path: routePaths.architectureNotes,
           element: <ArchitectureNotesPage />,
