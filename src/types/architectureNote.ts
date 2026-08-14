@@ -20,3 +20,12 @@ export interface EditableArchitectureNote {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface ArchitectureNoteTemplate {
+  name: string;
+  description: string;
+  title: string;
+  type: ArchitectureNoteType;
+  suggestedTags: readonly string[];
+  content: string;
+}

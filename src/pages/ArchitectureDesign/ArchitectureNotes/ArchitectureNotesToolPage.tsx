@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Badge, Button, Select, TextInput, Textarea } from "flowbite-react";
 import { ToolToast } from "../../../components/common/ToolToast";
 import { ToolPageLayout } from "../../../components/layout/ToolPageLayout";
+import { architectureNoteTemplates } from "../../../data/architectureNoteTemplates";
 import { usePageTitle } from "../../../hooks/usePageTitle";
 import {
   architectureNoteTypes,
@@ -12,6 +13,7 @@ import type { ToastMessage, ToastTone } from "../../../types/toast";
 import {
   addUniqueTag,
   createArchitectureNote,
+  createArchitectureNoteFromTemplate,
   hasNoteChanges,
   loadArchitectureNotes,
   prepareNoteForSave,
@@ -19,6 +21,7 @@ import {
   upsertArchitectureNote,
 } from "../../../utils/architectureNotes";
 import { routePaths } from "../../../utils/routes";
+import { MarkdownPreview } from "./MarkdownPreview";
 
 function createNoteId() {
   return globalThis.crypto?.randomUUID?.() ?? `architecture-note-${Date.now()}`;
@@ -71,6 +74,14 @@ export function ArchitectureNotesToolPage() {
   function startNewNote() {
     setSelectedNoteId(null);
     setDraft(createArchitectureNote(createNoteId()));
+    setTagInput("");
+  }
+
+  function startNoteFromTemplate(
+    template: (typeof architectureNoteTemplates)[number],
+  ) {
+    setSelectedNoteId(null);
+    setDraft(createArchitectureNoteFromTemplate(createNoteId(), template));
     setTagInput("");
   }
 
@@ -167,28 +178,31 @@ export function ArchitectureNotesToolPage() {
       }
       inputTitle={null}
       inputs={
-        <div className="grid min-w-0 gap-5 lg:grid-cols-[minmax(15rem,0.36fr)_minmax(0,1fr)]">
-          <NotesList
-            notes={notes}
-            selectedNoteId={selectedNoteId}
-            onNew={startNewNote}
-            onSelect={selectNote}
-          />
-          {draft ? (
-            <NoteEditor
-              draft={draft}
-              isExisting={Boolean(savedSelection)}
-              isDirty={isDirty}
-              tagInput={tagInput}
-              onTagInputChange={setTagInput}
-              onAddTag={addTag}
-              onChange={updateDraft}
-              onDelete={deleteNote}
-              onSave={saveNote}
+        <div className="grid min-w-0 gap-5">
+          <NoteTemplates onUseTemplate={startNoteFromTemplate} />
+          <div className="grid min-w-0 gap-5 lg:grid-cols-[minmax(15rem,0.36fr)_minmax(0,1fr)]">
+            <NotesList
+              notes={notes}
+              selectedNoteId={selectedNoteId}
+              onNew={startNewNote}
+              onSelect={selectNote}
             />
-          ) : (
-            <EmptyState onCreate={startNewNote} />
-          )}
+            {draft ? (
+              <NoteEditor
+                draft={draft}
+                isExisting={Boolean(savedSelection)}
+                isDirty={isDirty}
+                tagInput={tagInput}
+                onTagInputChange={setTagInput}
+                onAddTag={addTag}
+                onChange={updateDraft}
+                onDelete={deleteNote}
+                onSave={saveNote}
+              />
+            ) : (
+              <EmptyState onCreate={startNewNote} />
+            )}
+          </div>
         </div>
       }
       examples={[]}
@@ -201,6 +215,49 @@ export function ArchitectureNotesToolPage() {
       notesCollapsible
       toast={<ToolToast toast={toast} />}
     />
+  );
+}
+
+function NoteTemplates({
+  onUseTemplate,
+}: {
+  onUseTemplate: (template: (typeof architectureNoteTemplates)[number]) => void;
+}) {
+  return (
+    <section className="min-w-0 rounded-lg border border-gray-200 bg-white p-4 sm:p-5 dark:border-gray-700 dark:bg-gray-900">
+      <div>
+        <h2 className="font-semibold text-gray-950 dark:text-white">
+          Architecture Note Templates
+        </h2>
+        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+          Start a new unsaved note with a practical Markdown structure.
+        </p>
+      </div>
+      <div className="mt-4 grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {architectureNoteTemplates.map((template) => (
+          <article
+            key={template.name}
+            className="flex min-w-0 flex-col rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-950"
+          >
+            <h3 className="text-sm font-semibold text-gray-950 dark:text-white">
+              {template.name}
+            </h3>
+            <p className="mt-1 flex-1 text-xs leading-5 text-gray-600 dark:text-gray-300">
+              {template.description}
+            </p>
+            <Button
+              color="light"
+              size="xs"
+              className="mt-3 self-start"
+              onClick={() => onUseTemplate(template)}
+              aria-label={`Use ${template.name} template`}
+            >
+              Use Template
+            </Button>
+          </article>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -316,7 +373,8 @@ function NoteEditor({
             )}
           </div>
           <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            Markdown text is supported; preview is not included in this sprint.
+            Preview updates as you type. Changes are saved only when you select
+            Save.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -421,21 +479,29 @@ function NoteEditor({
             ))}
           </div>
         ) : null}
-        <div className="min-w-0 sm:col-span-2">
-          <label
-            htmlFor="architecture-note-content"
-            className="mb-2 block text-sm font-semibold text-gray-900 dark:text-white"
-          >
-            Content
-          </label>
-          <Textarea
-            id="architecture-note-content"
-            rows={18}
-            className="w-full max-w-full font-mono"
-            value={draft.content}
-            onChange={(event) => onChange({ content: event.target.value })}
-            placeholder="Capture system context, integration details, constraints, risks or open questions using Markdown..."
-          />
+        <div className="grid min-w-0 gap-4 sm:col-span-2 lg:grid-cols-2">
+          <div className="min-w-0">
+            <label
+              htmlFor="architecture-note-content"
+              className="mb-2 block text-sm font-semibold text-gray-900 dark:text-white"
+            >
+              Markdown Editor
+            </label>
+            <Textarea
+              id="architecture-note-content"
+              rows={18}
+              className="min-h-80 w-full max-w-full resize-y font-mono"
+              value={draft.content}
+              onChange={(event) => onChange({ content: event.target.value })}
+              placeholder="Capture system context, integration details, constraints, risks or open questions using Markdown..."
+            />
+          </div>
+          <div className="min-w-0">
+            <h3 className="mb-2 text-sm font-semibold text-gray-900 dark:text-white">
+              Markdown Preview
+            </h3>
+            <MarkdownPreview content={draft.content} />
+          </div>
         </div>
       </div>
       <dl className="mt-5 grid gap-2 border-t border-gray-200 pt-4 text-xs text-gray-500 sm:grid-cols-2 dark:border-gray-700 dark:text-gray-400">

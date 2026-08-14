@@ -1,5 +1,6 @@
 import {
   architectureNoteTypes,
+  type ArchitectureNoteTemplate,
   type EditableArchitectureNote,
 } from "../types/architectureNote";
 
@@ -19,6 +20,20 @@ export function createArchitectureNote(
     content: "",
     createdAt: now,
     updatedAt: now,
+  };
+}
+
+export function createArchitectureNoteFromTemplate(
+  id: string,
+  template: ArchitectureNoteTemplate,
+  now = new Date().toISOString(),
+): EditableArchitectureNote {
+  return {
+    ...createArchitectureNote(id, now),
+    title: template.title,
+    type: template.type,
+    tags: [...template.suggestedTags],
+    content: template.content,
   };
 }
 
