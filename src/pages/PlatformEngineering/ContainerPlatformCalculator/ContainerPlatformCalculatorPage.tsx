@@ -1,4 +1,4 @@
-import { useMemo, useState, type KeyboardEvent } from "react";
+import { useMemo, useState, type KeyboardEvent, type ReactNode } from "react";
 import { Button, Select, TextInput } from "flowbite-react";
 import { HelpTooltip } from "../../../components/common/HelpTooltip";
 import { ToolToast } from "../../../components/common/ToolToast";
@@ -25,9 +25,9 @@ const examples: ToolExample[] = [
   {
     title: "Container Memory Example",
     inputLabel: "Inputs",
-    input: "Heap: 2048 MB\nMetaspace: 256 MB\nNative: 256 MB\nBuffer: 20%",
+    input: "Heap: 2048 MiB\nMetaspace: 256 MiB\nNative: 256 MiB\nBuffer: 20%",
     outputLabel: "Result",
-    output: "3072 MB",
+    output: "3072 MiB (3.0 GiB)",
   },
 ];
 
@@ -56,9 +56,9 @@ const pvcExamples: ToolExample[] = [
     title: "PVC Growth Example",
     inputLabel: "Inputs",
     input:
-      "Daily Growth: 2 GB\nRetention: 90 Days\nBuffer: 20%\nCompression: Enabled",
+      "Daily Growth: 2 GiB/day\nRetention: 90 days\nBuffer: 20%\nCompression: Enabled",
     outputLabel: "Recommended PVC",
-    output: "110 Gi",
+    output: "110 GiB",
   },
 ];
 
@@ -116,12 +116,12 @@ export function ContainerPlatformCalculatorPage() {
   const generatedOutputs = useMemo(() => {
     const memoryGi = Math.ceil(calculation.total / 1024);
     const properties = `JAVA_OPTS=-Xms${heap}m -Xmx${heap}m`;
-    const environment = `JAVA_HEAP_MB=${heap}\nCONTAINER_MEMORY_MB=${calculation.total}`;
+    const environment = `JAVA_HEAP_MIB=${heap}\nCONTAINER_MEMORY_MIB=${calculation.total}`;
     const json = JSON.stringify(
       {
-        heapMb: heap,
-        recommendedMemoryMb: calculation.total,
-        recommendedMemoryGi: memoryGi,
+        heapMiB: heap,
+        recommendedMemoryMiB: calculation.total,
+        recommendedMemoryGiB: memoryGi,
       },
       null,
       2,
@@ -135,8 +135,8 @@ export function ContainerPlatformCalculatorPage() {
   const isPvc = activeTab === "PVC Size";
   const isCapacityPlanning = activeTab === "Capacity Planning";
   const isCapacityPlanningValid =
-    isNumberInRange(requestsPerSecond, 0) &&
-    isNumberInRange(averageResponseTime, 0) &&
+    isNumberInRange(requestsPerSecond, 0.01) &&
+    isNumberInRange(averageResponseTime, 1) &&
     isNumberInRange(capacityTargetCpu, 1, 100) &&
     isNumberInRange(podCpuCapacity, 1);
   const isContainerMemoryValid =
@@ -152,7 +152,7 @@ export function ContainerPlatformCalculatorPage() {
     Number.isInteger(minReplicas) &&
     Number.isInteger(maxReplicas);
   const isPvcValid =
-    isNumberInRange(dailyGrowth, 0) &&
+    isNumberInRange(dailyGrowth, 0.01) &&
     isNumberInRange(retentionDays, 1) &&
     Number.isInteger(retentionDays) &&
     isNumberInRange(growthBuffer, 0, 100);
@@ -213,16 +213,16 @@ export function ContainerPlatformCalculatorPage() {
   const pvcOutputs = useMemo(() => {
     const json = JSON.stringify(
       {
-        dailyGrowthGb: dailyGrowth,
+        dailyGrowthGiB: dailyGrowth,
         retentionDays,
         growthBufferPercent: growthBuffer,
         compressionEnabled: compressionEnabled === "Yes",
-        recommendedPvcGi: pvcCalculation.recommended,
+        recommendedPvcGiB: pvcCalculation.recommended,
       },
       null,
       2,
     );
-    const properties = `DAILY_GROWTH_GB=${dailyGrowth}\nRETENTION_DAYS=${retentionDays}\nGROWTH_BUFFER_PERCENT=${growthBuffer}\nPVC_SIZE_GI=${pvcCalculation.recommended}`;
+    const properties = `DAILY_GROWTH_GIB=${dailyGrowth}\nRETENTION_DAYS=${retentionDays}\nGROWTH_BUFFER_PERCENT=${growthBuffer}\nPVC_SIZE_GIB=${pvcCalculation.recommended}`;
     const yaml = `apiVersion: v1\nkind: PersistentVolumeClaim\nspec:\n  resources:\n    requests:\n      storage: "${pvcCalculation.recommended}Gi"`;
 
     return { json, properties, yaml };
@@ -452,7 +452,7 @@ export function ContainerPlatformCalculatorPage() {
           <div
             role="tablist"
             aria-label="OpenShift calculator"
-            className="flex flex-wrap gap-2"
+            className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap"
           >
             {tabs.map((tab, index) => (
               <button
@@ -466,9 +466,9 @@ export function ContainerPlatformCalculatorPage() {
                 onClick={() => setActiveTab(tab)}
                 onKeyDown={(event) => handleTabKey(event, index)}
                 className={[
-                  "rounded-lg border px-3 py-2 text-sm font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-600",
+                  "min-w-0 rounded-lg border px-3 py-2 text-sm font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-600",
                   activeTab === tab
-                    ? "border-cyan-600 bg-cyan-50 text-cyan-800 dark:border-cyan-500 dark:bg-cyan-950 dark:text-cyan-200"
+                    ? "border-cyan-600 bg-cyan-50 text-cyan-800 shadow-sm ring-1 ring-cyan-600 dark:border-cyan-500 dark:bg-cyan-950 dark:text-cyan-200 dark:ring-cyan-500"
                     : "border-gray-200 bg-white text-gray-700 hover:border-cyan-300 hover:text-cyan-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200",
                 ].join(" ")}
               >
@@ -486,21 +486,26 @@ export function ContainerPlatformCalculatorPage() {
               <div className="grid gap-4 md:grid-cols-2">
                 <NumberField
                   id="requests-per-second"
-                  label="Requests Per Second (RPS)"
+                  label="Request Rate"
+                  unit="req/s"
                   value={requestsPerSecond}
                   onChange={setRequestsPerSecond}
                   tooltip="Expected requests per second."
+                  min={0.01}
                 />
                 <NumberField
                   id="average-response-time"
-                  label="Average Response Time (ms)"
+                  label="Average Response Time"
+                  unit="ms"
                   value={averageResponseTime}
                   onChange={setAverageResponseTime}
                   tooltip="Average request processing time."
+                  min={1}
                 />
                 <NumberField
                   id="capacity-target-cpu"
-                  label="Target CPU Utilization (%)"
+                  label="Target CPU Utilization"
+                  unit="%"
                   value={capacityTargetCpu}
                   onChange={setCapacityTargetCpu}
                   tooltip="Desired CPU utilization threshold."
@@ -509,7 +514,8 @@ export function ContainerPlatformCalculatorPage() {
                 />
                 <NumberField
                   id="pod-cpu-capacity"
-                  label="Pod CPU Capacity (millicores)"
+                  label="Pod CPU Capacity"
+                  unit="millicores"
                   value={podCpuCapacity}
                   onChange={setPodCpuCapacity}
                   tooltip="Available CPU capacity per pod."
@@ -520,7 +526,8 @@ export function ContainerPlatformCalculatorPage() {
               <div className="space-y-5">
                 <NumberField
                   id="heap-size"
-                  label="Heap Size (MB)"
+                  label="Heap Size"
+                  unit="MiB"
                   value={heap}
                   onChange={setHeap}
                   tooltip="Maximum JVM heap size (-Xmx)."
@@ -546,21 +553,24 @@ export function ContainerPlatformCalculatorPage() {
                   >
                     <NumberField
                       id="metaspace"
-                      label="Metaspace (MB)"
+                      label="Metaspace"
+                      unit="MiB"
                       value={metaspace}
                       onChange={setMetaspace}
                       tooltip="Memory used for class metadata."
                     />
                     <NumberField
                       id="native-memory"
-                      label="Native Memory (MB)"
+                      label="Native Memory"
+                      unit="MiB"
                       value={nativeMemory}
                       onChange={setNativeMemory}
                       tooltip="Thread stacks, direct buffers and JVM native allocations."
                     />
                     <NumberField
                       id="safety-buffer"
-                      label="Safety Buffer (%)"
+                      label="Safety Buffer"
+                      unit="%"
                       value={bufferPercent}
                       onChange={setBufferPercent}
                       tooltip="Additional headroom to avoid OOM kills."
@@ -574,6 +584,7 @@ export function ContainerPlatformCalculatorPage() {
                 <SelectField
                   id="application-type"
                   label="Application Type"
+                  tooltip="Runtime profile used for the starting resource recommendation."
                   value={applicationType}
                   options={["Java", ".NET", "Node.js", "Other"]}
                   onChange={(value) =>
@@ -583,6 +594,7 @@ export function ContainerPlatformCalculatorPage() {
                 <SelectField
                   id="expected-load"
                   label="Expected Load"
+                  tooltip="Expected workload intensity for the selected runtime."
                   value={expectedLoad}
                   options={["Low", "Medium", "High"]}
                   onChange={(value) => setExpectedLoad(value as ExpectedLoad)}
@@ -592,7 +604,8 @@ export function ContainerPlatformCalculatorPage() {
               <div className="grid gap-4 md:grid-cols-2">
                 <NumberField
                   id="current-cpu"
-                  label="Current Average CPU Utilization (%)"
+                  label="Current Average CPU Utilization"
+                  unit="%"
                   value={currentCpu}
                   onChange={setCurrentCpu}
                   tooltip="Observed average CPU utilization."
@@ -600,7 +613,8 @@ export function ContainerPlatformCalculatorPage() {
                 />
                 <NumberField
                   id="target-cpu"
-                  label="Target CPU Utilization (%)"
+                  label="Target CPU Utilization"
+                  unit="%"
                   value={targetCpu}
                   onChange={setTargetCpu}
                   tooltip="Desired CPU utilization threshold."
@@ -610,6 +624,7 @@ export function ContainerPlatformCalculatorPage() {
                 <NumberField
                   id="min-replicas"
                   label="Minimum Replicas"
+                  unit="pods"
                   value={minReplicas}
                   onChange={setMinReplicas}
                   tooltip="Minimum number of pods."
@@ -619,6 +634,7 @@ export function ContainerPlatformCalculatorPage() {
                 <NumberField
                   id="max-replicas"
                   label="Maximum Replicas"
+                  unit="pods"
                   value={maxReplicas}
                   onChange={setMaxReplicas}
                   tooltip="Maximum number of pods."
@@ -635,14 +651,17 @@ export function ContainerPlatformCalculatorPage() {
               <div className="grid gap-4 md:grid-cols-2">
                 <NumberField
                   id="daily-growth"
-                  label="Daily Growth (GB)"
+                  label="Daily Growth"
+                  unit="GiB/day"
                   value={dailyGrowth}
                   onChange={setDailyGrowth}
                   tooltip="Average storage increase per day."
+                  min={0.01}
                 />
                 <NumberField
                   id="retention-days"
-                  label="Retention Days"
+                  label="Retention"
+                  unit="days"
                   value={retentionDays}
                   onChange={setRetentionDays}
                   tooltip="Number of days data should be retained."
@@ -651,7 +670,8 @@ export function ContainerPlatformCalculatorPage() {
                 />
                 <NumberField
                   id="growth-buffer"
-                  label="Growth Buffer (%)"
+                  label="Safety Buffer"
+                  unit="%"
                   value={growthBuffer}
                   onChange={setGrowthBuffer}
                   tooltip="Additional storage capacity for unexpected growth."
@@ -660,15 +680,13 @@ export function ContainerPlatformCalculatorPage() {
                 <SelectField
                   id="compression-enabled"
                   label="Compression Enabled"
+                  tooltip="Apply the existing 50% compression assumption to retained storage."
                   value={compressionEnabled}
                   options={["Yes", "No"]}
                   onChange={(value) =>
                     setCompressionEnabled(value as CompressionEnabled)
                   }
                 />
-                <p className="text-sm text-gray-600 md:col-span-2 dark:text-gray-300">
-                  Compression assumes an estimated 50% storage reduction.
-                </p>
               </div>
             )}
           </div>
@@ -679,20 +697,29 @@ export function ContainerPlatformCalculatorPage() {
           <InvalidOutputState />
         ) : activeTab === "Capacity Planning" ? (
           <div className="space-y-6">
-            <div className="grid gap-4 md:grid-cols-3">
+            <PrimaryRecommendation
+              label="Recommended Replica Capacity"
+              value={`${capacityCalculation.recommendedPods} ${capacityCalculation.recommendedPods === 1 ? "pod" : "pods"}`}
+              description={`Sized for ${capacityTargetCpu}% target CPU utilization, leaving ${100 - capacityTargetCpu}% utilization headroom per pod.`}
+            />
+            <SupportingSection title="Supporting Calculations">
               <MetricBox
                 label="Concurrent Requests"
                 value={capacityCalculation.concurrentRequests.toString()}
               />
               <MetricBox
                 label="Required CPU Capacity"
-                value={`${capacityCalculation.requiredCpu}m`}
+                value={`${capacityCalculation.requiredCpu} millicores`}
               />
               <MetricBox
-                label="Recommended Pod Count"
-                value={capacityCalculation.recommendedPods.toString()}
+                label="Effective CPU per Pod"
+                value={`${Math.round(podCpuCapacity * (capacityTargetCpu / 100))} millicores`}
               />
-            </div>
+              <MetricBox
+                label="Utilization Headroom"
+                value={`${100 - capacityTargetCpu}%`}
+              />
+            </SupportingSection>
             <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
               <h2 className="text-lg font-semibold text-gray-950 dark:text-white">
                 Calculation Breakdown
@@ -717,19 +744,7 @@ export function ContainerPlatformCalculatorPage() {
                 />
               </div>
             </div>
-            <section>
-              <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <h2 className="text-lg font-semibold text-gray-950 dark:text-white">
-                  Copy-ready Configuration Outputs
-                </h2>
-                <Button
-                  color="light"
-                  size="sm"
-                  onClick={copyAllCapacityOutputs}
-                >
-                  Copy All Outputs
-                </Button>
-              </div>
+            <ConfigurationSection onCopyAll={copyAllCapacityOutputs}>
               <div className="grid gap-4 lg:grid-cols-2">
                 <GeneratedOutput
                   title="OpenShift YAML"
@@ -749,37 +764,34 @@ export function ContainerPlatformCalculatorPage() {
                   }
                 />
               </div>
-            </section>
+            </ConfigurationSection>
           </div>
         ) : activeTab === "PVC Size" ? (
           <div className="space-y-6">
-            <div className="grid gap-4 md:grid-cols-4">
+            <PrimaryRecommendation
+              label="Recommended PVC Size"
+              value={`${pvcCalculation.recommended} GiB`}
+              description={`Includes ${retentionDays} days of retention and a ${growthBuffer}% safety buffer${compressionEnabled === "Yes" ? " after the 50% compression assumption" : ""}.`}
+            />
+            <SupportingSection title="Supporting Calculations">
               <MetricBox
-                label="Base Storage"
-                value={`${pvcCalculation.baseStorage} Gi`}
+                label="Daily Growth"
+                value={`${pvcCalculation.baseStorage} GiB/day`}
               />
               <MetricBox
-                label="Retention Storage"
-                value={`${pvcCalculation.retentionStorage} Gi`}
+                label="Retention Requirement"
+                value={`${pvcCalculation.retentionStorage} GiB`}
               />
               <MetricBox
-                label="Buffer"
-                value={`${pvcCalculation.buffer.toFixed(1)} Gi`}
+                label="After Compression"
+                value={`${pvcCalculation.adjustedStorage.toFixed(1)} GiB`}
               />
               <MetricBox
-                label="Recommended PVC Size"
-                value={`${pvcCalculation.recommended} Gi`}
+                label="Safety Buffer"
+                value={`${pvcCalculation.buffer.toFixed(1)} GiB`}
               />
-            </div>
-            <section>
-              <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <h2 className="text-lg font-semibold text-gray-950 dark:text-white">
-                  Copy-ready Configuration Outputs
-                </h2>
-                <Button color="light" size="sm" onClick={copyAllPvcOutputs}>
-                  Copy All Outputs
-                </Button>
-              </div>
+            </SupportingSection>
+            <ConfigurationSection onCopyAll={copyAllPvcOutputs}>
               <div className="grid gap-4 lg:grid-cols-2">
                 <GeneratedOutput
                   title="OpenShift YAML"
@@ -799,33 +811,22 @@ export function ContainerPlatformCalculatorPage() {
                   }
                 />
               </div>
-            </section>
+            </ConfigurationSection>
           </div>
         ) : activeTab === "HPA" ? (
           <div className="space-y-6">
-            <div className="grid gap-4 md:grid-cols-4">
+            <PrimaryRecommendation
+              label="Calculated Scaling Recommendation"
+              value={hpaRecommendation.title}
+              description={hpaRecommendation.description}
+            />
+            <SupportingSection title="Utilization and Replica Bounds">
+              <MetricBox label="Current CPU" value={`${currentCpu}%`} />
               <MetricBox label="Target CPU" value={`${targetCpu}%`} />
               <MetricBox label="Min Replicas" value={minReplicas.toString()} />
               <MetricBox label="Max Replicas" value={maxReplicas.toString()} />
-              <MetricBox
-                label="Recommendation"
-                value={hpaRecommendation.title}
-              />
-            </div>
-            <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
-              <p className="text-sm text-gray-700 dark:text-gray-200">
-                {hpaRecommendation.description}
-              </p>
-            </div>
-            <section>
-              <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <h2 className="text-lg font-semibold text-gray-950 dark:text-white">
-                  Copy-ready Configuration Outputs
-                </h2>
-                <Button color="light" size="sm" onClick={copyAllHpaOutputs}>
-                  Copy All Outputs
-                </Button>
-              </div>
+            </SupportingSection>
+            <ConfigurationSection onCopyAll={copyAllHpaOutputs}>
               <div className="grid gap-4 lg:grid-cols-2">
                 <GeneratedOutput
                   title="OpenShift YAML"
@@ -838,31 +839,36 @@ export function ContainerPlatformCalculatorPage() {
                   onCopy={() => void copyText(hpaOutputs.json, "JSON")}
                 />
               </div>
-            </section>
+            </ConfigurationSection>
           </div>
         ) : activeTab === "Pod Resources" ? (
           <div className="space-y-6">
-            <div className="grid gap-4 md:grid-cols-4">
-              <MetricBox label="CPU Request" value={podResources.cpuRequest} />
-              <MetricBox label="CPU Limit" value={podResources.cpuLimit} />
-              <MetricBox
-                label="Memory Request"
-                value={podResources.memoryRequest}
-              />
-              <MetricBox
-                label="Memory Limit"
-                value={podResources.memoryLimit}
-              />
-            </div>
-            <section>
-              <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <h2 className="text-lg font-semibold text-gray-950 dark:text-white">
-                  Copy-ready Configuration Outputs
+            <section aria-labelledby="pod-resource-recommendation-title">
+              <div className="mb-4">
+                <p className="text-xs font-semibold tracking-wide text-cyan-700 uppercase dark:text-cyan-300">
+                  Primary Recommendation
+                </p>
+                <h2
+                  id="pod-resource-recommendation-title"
+                  className="mt-1 text-xl font-bold text-gray-950 dark:text-white"
+                >
+                  {applicationType} · {expectedLoad} load
                 </h2>
-                <Button color="light" size="sm" onClick={copyAllPodOutputs}>
-                  Copy All Outputs
-                </Button>
               </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <ResourceRecommendationCard
+                  resource="CPU"
+                  request={formatCpuDisplay(podResources.cpuRequest)}
+                  limit={formatCpuDisplay(podResources.cpuLimit)}
+                />
+                <ResourceRecommendationCard
+                  resource="Memory"
+                  request={formatMemoryDisplay(podResources.memoryRequest)}
+                  limit={formatMemoryDisplay(podResources.memoryLimit)}
+                />
+              </div>
+            </section>
+            <ConfigurationSection onCopyAll={copyAllPodOutputs}>
               <div className="grid gap-4 lg:grid-cols-2">
                 <GeneratedOutput
                   title="OpenShift YAML"
@@ -875,51 +881,40 @@ export function ContainerPlatformCalculatorPage() {
                   onCopy={() => void copyText(podOutputs.json, "JSON")}
                 />
               </div>
-            </section>
+            </ConfigurationSection>
           </div>
         ) : activeTab === "Container Memory" ? (
           <div className="space-y-6">
-            <div className="grid gap-5 lg:grid-cols-[0.8fr_1.2fr]">
-              <div className="rounded-lg border border-cyan-200 bg-cyan-50 p-5 dark:border-cyan-900 dark:bg-cyan-950/40">
-                <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">
-                  Recommended Container Memory
-                </p>
-                <p className="mt-2 text-4xl font-bold text-gray-950 dark:text-white">
-                  {calculation.total} MB
-                </p>
-                <p className="mt-1 text-lg font-semibold text-cyan-800 dark:text-cyan-200">
-                  {calculation.totalGb.toFixed(1)} GB
-                </p>
-              </div>
-              <div className="rounded-lg border border-gray-200 p-5 dark:border-gray-700">
+            <PrimaryRecommendation
+              label="Recommended Container Memory"
+              value={`${calculation.total} MiB`}
+              description={`${calculation.totalGb.toFixed(1)} GiB including the configured ${bufferPercent}% safety buffer.`}
+            />
+            <section aria-labelledby="memory-breakdown-title">
+              <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
                 <h2 className="text-lg font-semibold text-gray-950 dark:text-white">
-                  Calculation Breakdown
+                  <span id="memory-breakdown-title">Memory Breakdown</span>
                 </h2>
-                <div className="mt-4 grid gap-3 text-sm text-gray-700 dark:text-gray-200">
-                  <BreakdownRow label="Heap" value={`${heap} MB`} />
-                  <BreakdownRow label="Metaspace" value={`${metaspace} MB`} />
-                  <BreakdownRow label="Native" value={`${nativeMemory} MB`} />
+                <div className="mt-4 grid gap-2 text-sm text-gray-700 dark:text-gray-200">
+                  <BreakdownRow label="Heap" value={`${heap} MiB`} />
+                  <BreakdownRow label="Metaspace" value={`${metaspace} MiB`} />
                   <BreakdownRow
-                    label="Buffer"
-                    value={`${calculation.buffer} MB`}
+                    label="Native Memory"
+                    value={`${nativeMemory} MiB`}
                   />
                   <BreakdownRow
-                    label="Result"
-                    value={`${calculation.total} MB`}
+                    label="Safety Buffer"
+                    value={`${calculation.buffer} MiB`}
+                  />
+                  <BreakdownRow
+                    label="Total Container Memory"
+                    value={`${calculation.total} MiB`}
                     strong
                   />
                 </div>
               </div>
-            </div>
-            <section>
-              <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <h2 className="text-lg font-semibold text-gray-950 dark:text-white">
-                  Copy-ready Configuration Outputs
-                </h2>
-                <Button color="light" size="sm" onClick={copyAllOutputs}>
-                  Copy All Outputs
-                </Button>
-              </div>
+            </section>
+            <ConfigurationSection onCopyAll={copyAllOutputs}>
               <div className="grid gap-4 lg:grid-cols-2">
                 <GeneratedOutput
                   title="Properties"
@@ -949,7 +944,7 @@ export function ContainerPlatformCalculatorPage() {
                   onCopy={() => void copyText(generatedOutputs.yaml, "YAML")}
                 />
               </div>
-            </section>
+            </ConfigurationSection>
           </div>
         ) : undefined
       }
@@ -1010,6 +1005,7 @@ export function ContainerPlatformCalculatorPage() {
 interface NumberFieldProps {
   id: string;
   label: string;
+  unit: string;
   value: number;
   onChange: (value: number) => void;
   tooltip: string;
@@ -1022,6 +1018,7 @@ interface NumberFieldProps {
 function NumberField({
   id,
   label,
+  unit,
   value,
   onChange,
   tooltip,
@@ -1036,21 +1033,30 @@ function NumberField({
 
   return (
     <div>
-      <div className="mb-2 flex items-center gap-2">
+      <div className="mb-2 flex min-h-6 flex-wrap items-center gap-2">
         <label
           htmlFor={id}
           className="text-sm font-semibold text-gray-900 dark:text-white"
         >
           {label}
         </label>
+        <span className="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-xs font-semibold text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+          {unit}
+        </span>
         <HelpTooltip title={label} description={tooltip} />
+        <span className="ml-auto text-xs text-gray-500 dark:text-gray-400">
+          Required
+        </span>
       </div>
       <TextInput
         id={id}
         type="number"
+        required
         min={min}
         max={max}
         step={integer ? 1 : "any"}
+        inputMode={integer ? "numeric" : "decimal"}
+        placeholder={`Enter ${label.toLowerCase()}`}
         value={Number.isNaN(value) ? "" : value}
         onChange={(event) =>
           onChange(
@@ -1061,6 +1067,7 @@ function NumberField({
         }
         aria-invalid={Boolean(error)}
         aria-describedby={error ? errorId : undefined}
+        color={error ? "failure" : "gray"}
       />
       {error ? (
         <p
@@ -1137,9 +1144,14 @@ function GeneratedOutput({
   value: string;
   onCopy: () => void;
 }) {
+  const copyLabel = title === "OpenShift YAML" ? "YAML" : title;
+
   return (
-    <div className="min-w-0 rounded-lg border border-gray-200 p-4 dark:border-gray-700">
-      <div className="mb-3 flex items-center justify-between gap-3">
+    <section
+      aria-label={`${title} configuration`}
+      className="min-w-0 overflow-hidden rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+    >
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <h3 className="text-sm font-semibold text-gray-950 dark:text-white">
           {title}
         </h3>
@@ -1147,15 +1159,20 @@ function GeneratedOutput({
           color="light"
           size="xs"
           onClick={onCopy}
-          aria-label={`Copy ${title}`}
+          className="shrink-0 whitespace-nowrap"
         >
-          Copy
+          Copy {copyLabel}
         </Button>
       </div>
-      <pre className="max-w-full overflow-x-auto rounded-lg bg-gray-50 p-3 text-sm whitespace-pre text-gray-900 dark:bg-gray-950 dark:text-gray-100">
+      <pre
+        role="region"
+        aria-label={`${title} code`}
+        tabIndex={0}
+        className="w-full max-w-full overflow-x-auto rounded-lg bg-gray-50 p-3 text-sm whitespace-pre text-gray-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-600 dark:bg-gray-950 dark:text-gray-100"
+      >
         {value}
       </pre>
-    </div>
+    </section>
   );
 }
 
@@ -1174,26 +1191,35 @@ function InvalidOutputState() {
 function SelectField({
   id,
   label,
+  tooltip,
   value,
   options,
   onChange,
 }: {
   id: string;
   label: string;
+  tooltip: string;
   value: string;
   options: string[];
   onChange: (value: string) => void;
 }) {
   return (
     <div>
-      <label
-        htmlFor={id}
-        className="mb-2 block text-sm font-semibold text-gray-900 dark:text-white"
-      >
-        {label}
-      </label>
+      <div className="mb-2 flex min-h-6 flex-wrap items-center gap-2">
+        <label
+          htmlFor={id}
+          className="text-sm font-semibold text-gray-900 dark:text-white"
+        >
+          {label}
+        </label>
+        <HelpTooltip title={label} description={tooltip} />
+        <span className="ml-auto text-xs text-gray-500 dark:text-gray-400">
+          Required
+        </span>
+      </div>
       <Select
         id={id}
+        required
         value={value}
         onChange={(event) => onChange(event.target.value)}
       >
@@ -1207,17 +1233,134 @@ function SelectField({
   );
 }
 
+function PrimaryRecommendation({
+  label,
+  value,
+  description,
+}: {
+  label: string;
+  value: string;
+  description: string;
+}) {
+  return (
+    <section
+      aria-label={label}
+      className="rounded-xl border border-cyan-300 bg-cyan-50 p-5 shadow-sm dark:border-cyan-800 dark:bg-cyan-950/40"
+    >
+      <p className="text-xs font-semibold tracking-wide text-cyan-700 uppercase dark:text-cyan-300">
+        Primary Recommendation
+      </p>
+      <h2 className="mt-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
+        {label}
+      </h2>
+      <p className="mt-1 text-3xl font-bold break-words text-gray-950 sm:text-4xl dark:text-white">
+        {value}
+      </p>
+      <p className="mt-3 max-w-3xl text-sm leading-6 text-gray-700 dark:text-gray-200">
+        {description}
+      </p>
+    </section>
+  );
+}
+
+function SupportingSection({
+  title,
+  children,
+}: {
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <section>
+      <h2 className="mb-3 text-lg font-semibold text-gray-950 dark:text-white">
+        {title}
+      </h2>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{children}</div>
+    </section>
+  );
+}
+
+function ConfigurationSection({
+  onCopyAll,
+  children,
+}: {
+  onCopyAll: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <section>
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h2 className="text-lg font-semibold text-gray-950 dark:text-white">
+          Copy-ready Configuration
+        </h2>
+        <Button color="light" size="sm" onClick={onCopyAll}>
+          Copy All Formats
+        </Button>
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function ResourceRecommendationCard({
+  resource,
+  request,
+  limit,
+}: {
+  resource: string;
+  request: string;
+  limit: string;
+}) {
+  return (
+    <div className="min-w-0 rounded-xl border border-cyan-300 bg-cyan-50 p-4 dark:border-cyan-800 dark:bg-cyan-950/40">
+      <h3 className="text-base font-bold text-gray-950 dark:text-white">
+        {resource}
+      </h3>
+      <dl className="mt-3 grid grid-cols-2 gap-3">
+        <div>
+          <dt className="text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">
+            Request
+          </dt>
+          <dd className="mt-1 text-xl font-bold break-words text-gray-950 dark:text-white">
+            {request}
+          </dd>
+        </div>
+        <div className="border-l border-cyan-200 pl-3 dark:border-cyan-800">
+          <dt className="text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">
+            Limit
+          </dt>
+          <dd className="mt-1 text-xl font-bold break-words text-gray-950 dark:text-white">
+            {limit}
+          </dd>
+        </div>
+      </dl>
+    </div>
+  );
+}
+
 function MetricBox({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-cyan-200 bg-cyan-50 p-4 dark:border-cyan-900 dark:bg-cyan-950/40">
+    <div className="min-w-0 rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
       <p className="text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
         {label}
       </p>
-      <p className="mt-2 text-xl font-bold text-gray-950 dark:text-white">
+      <p className="mt-2 text-xl font-bold break-words text-gray-950 dark:text-white">
         {value}
       </p>
     </div>
   );
+}
+
+function formatCpuDisplay(value: string) {
+  return value.endsWith("m")
+    ? `${value.slice(0, -1)} millicores`
+    : `${value} ${value === "1" ? "core" : "cores"}`;
+}
+
+function formatMemoryDisplay(value: string) {
+  return value.endsWith("Mi")
+    ? `${value.slice(0, -2)} MiB`
+    : `${value.slice(0, -2)} GiB`;
 }
 
 function calculatePodResources(
