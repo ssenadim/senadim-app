@@ -15,7 +15,7 @@ export function TopNavigation({ onOpenSidebar }: TopNavigationProps) {
             type="button"
             aria-label="Open navigation"
             onClick={onOpenSidebar}
-            className="rounded-lg p-2 text-gray-600 hover:bg-gray-100 hover:text-gray-950 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white lg:hidden"
+            className="rounded-lg p-2 text-gray-600 hover:bg-gray-100 hover:text-gray-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-600 lg:hidden dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white dark:focus-visible:outline-cyan-400"
           >
             <svg
               className="size-6"
@@ -36,13 +36,18 @@ export function TopNavigation({ onOpenSidebar }: TopNavigationProps) {
             <p className="text-sm font-semibold text-gray-950 dark:text-white">
               Freeshot
             </p>
-            <p className="hidden text-xs text-gray-500 dark:text-gray-400 sm:block">
+            <p className="hidden text-xs text-gray-500 sm:block dark:text-gray-400">
               Practical developer utilities and architecture notes
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button as={Link} to={routePaths.developerTools} color="light" size="sm">
+          <Button
+            as={Link}
+            to={routePaths.developerTools}
+            color="light"
+            size="sm"
+          >
             Explore tools
           </Button>
           <DarkThemeToggle />

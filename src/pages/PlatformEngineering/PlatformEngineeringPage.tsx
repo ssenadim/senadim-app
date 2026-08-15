@@ -18,11 +18,16 @@ export function PlatformEngineeringPage() {
       title="Platform Engineering"
       description="Plan workload capacity, resource limits, and runtime memory with practical calculators and copy-ready configuration for platform teams."
     >
-      <div className="grid gap-4 md:grid-cols-2">
-        {availableTools.map((tool) => (
-          <ToolCard key={tool.title} tool={tool} />
-        ))}
-      </div>
+      <section aria-labelledby="available-platform-tools">
+        <h2 id="available-platform-tools" className="sr-only">
+          Available tools
+        </h2>
+        <div className="grid items-stretch gap-4 md:grid-cols-2">
+          {availableTools.map((tool) => (
+            <ToolCard key={tool.title} tool={tool} />
+          ))}
+        </div>
+      </section>
       {plannedTools.length > 0 ? (
         <section
           aria-labelledby="planned-platform-tools"

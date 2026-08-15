@@ -128,45 +128,103 @@ export function UrlEncoderDecoderToolPage() {
             It is frequently used in APIs, redirects, OAuth flows and query
             parameters.
           </p>
-          <p>
-            Spaces, ampersands and other reserved characters are encoded.
-          </p>
+          <p>Spaces, ampersands and other reserved characters are encoded.</p>
         </div>
       }
       inputs={
         <div className="space-y-5">
           <div>
             <div className="mb-2 flex items-center gap-2">
-              <label htmlFor="url-input" className="text-sm font-semibold text-gray-900 dark:text-white">
+              <label
+                htmlFor="url-input"
+                className="text-sm font-semibold text-gray-900 dark:text-white"
+              >
                 Input Text
               </label>
-              <HelpTooltip title="Input" description="Paste a URL, query string or text value." exampleInput="hello world" exampleOutput="hello%20world" />
+              <HelpTooltip
+                title="Input"
+                description="Paste a URL, query string or text value."
+                exampleInput="hello world"
+                exampleOutput="hello%20world"
+              />
             </div>
-            <Textarea id="url-input" rows={8} value={inputText} onChange={(event) => setInputText(event.target.value)} placeholder="Paste URL, query string, redirect URL or text value..." className="font-mono" />
-            <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">Character Count: {inputText.length}</p>
+            <Textarea
+              id="url-input"
+              rows={8}
+              value={inputText}
+              onChange={(event) => setInputText(event.target.value)}
+              placeholder="Paste URL, query string, redirect URL or text value..."
+              className="font-mono"
+              aria-invalid={Boolean(error)}
+              aria-describedby={error ? "url-input-error" : undefined}
+            />
+            <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
+              Character Count: {inputText.length}
+            </p>
           </div>
-          {error ? <p className="text-sm font-semibold text-red-600 dark:text-red-300">{error}</p> : null}
+          {error ? (
+            <p
+              id="url-input-error"
+              role="alert"
+              className="text-sm font-semibold text-red-600 dark:text-red-300"
+            >
+              {error}
+            </p>
+          ) : null}
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-            <Button color="blue" onClick={runEncode}>Encode</Button>
-            <Button color="green" onClick={runDecode}>Decode</Button>
-            <Button color="light" onClick={swapValues}>Swap Input / Output</Button>
-            <Button color="light" onClick={() => void copyResult()}>Copy Result</Button>
-            <Button color="gray" onClick={clearAll}>Clear</Button>
+            <Button color="blue" onClick={runEncode}>
+              Encode
+            </Button>
+            <Button color="green" onClick={runDecode}>
+              Decode
+            </Button>
+            <Button color="light" onClick={swapValues}>
+              Swap Input / Output
+            </Button>
+            <Button color="light" onClick={() => void copyResult()}>
+              Copy Result
+            </Button>
+            <Button color="gray" onClick={clearAll}>
+              Clear
+            </Button>
           </div>
         </div>
       }
       outputs={
         <div>
           <div className="mb-2 flex items-center gap-2">
-            <span className="text-sm font-semibold text-gray-900 dark:text-white">
+            <label
+              htmlFor="url-output"
+              className="text-sm font-semibold text-gray-900 dark:text-white"
+            >
               Result
-            </span>
-            <HelpTooltip title="Output" description="Encoded or decoded result." exampleInput="hello world" exampleOutput="hello%20world" />
-            <HelpTooltip title="Encoding" description="Convert reserved URL characters into URL-safe format." exampleInput="a b" exampleOutput="a%20b" />
+            </label>
+            <HelpTooltip
+              title="Output"
+              description="Encoded or decoded result."
+              exampleInput="hello world"
+              exampleOutput="hello%20world"
+            />
+            <HelpTooltip
+              title="Encoding"
+              description="Convert reserved URL characters into URL-safe format."
+              exampleInput="a b"
+              exampleOutput="a%20b"
+            />
           </div>
-          <Textarea rows={8} value={outputText} readOnly placeholder="Encoded or decoded result will appear here..." className="font-mono" />
-          <div className="mt-3 grid gap-2 text-sm text-gray-600 dark:text-gray-300 sm:grid-cols-2">
-            <p>Encoded Length: {outputText ? encodeURIComponent(outputText).length : 0}</p>
+          <Textarea
+            id="url-output"
+            rows={8}
+            value={outputText}
+            readOnly
+            placeholder="Encoded or decoded result will appear here..."
+            className="font-mono"
+          />
+          <div className="mt-3 grid gap-2 text-sm text-gray-600 sm:grid-cols-2 dark:text-gray-300">
+            <p>
+              Encoded Length:{" "}
+              {outputText ? encodeURIComponent(outputText).length : 0}
+            </p>
             <p>Decoded Length: {outputText.length}</p>
           </div>
         </div>

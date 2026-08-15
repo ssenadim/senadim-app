@@ -718,7 +718,7 @@ function NoteEditor({
             onClick={onDownloadMarkdown}
             aria-describedby="architecture-note-saved-actions-description"
           >
-            Download .md
+            Download Markdown
           </Button>
           <Button
             color="light"

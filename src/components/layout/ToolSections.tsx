@@ -185,9 +185,9 @@ export function ToolExamples({
               key={example.title}
               className="min-w-0 rounded-lg border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-900"
             >
-              <h2 className="max-w-full text-lg leading-7 font-semibold break-words whitespace-normal text-gray-950 dark:text-white">
+              <h3 className="max-w-full text-lg leading-7 font-semibold break-words whitespace-normal text-gray-950 dark:text-white">
                 {example.title}
-              </h2>
+              </h3>
               {example.description ? (
                 <>
                   <p className="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">

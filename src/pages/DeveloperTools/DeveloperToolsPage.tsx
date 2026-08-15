@@ -12,11 +12,16 @@ export function DeveloperToolsPage() {
       title="Developer Tools"
       description="A curated set of practical utilities planned for Freeshot. These cards define the product surface before implementation begins."
     >
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {developerTools.map((tool) => (
-          <ToolCard key={tool.title} tool={tool} />
-        ))}
-      </div>
+      <section aria-labelledby="developer-tools-catalog">
+        <h2 id="developer-tools-catalog" className="sr-only">
+          Available developer tools
+        </h2>
+        <div className="grid items-stretch gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {developerTools.map((tool) => (
+            <ToolCard key={tool.title} tool={tool} />
+          ))}
+        </div>
+      </section>
     </PageShell>
   );
 }

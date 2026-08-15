@@ -46,7 +46,7 @@ export function ToolCard({ tool }: ToolCardProps) {
   return (
     <Link
       to={tool.path}
-      className="block h-full rounded-lg outline-cyan-600 focus:outline-2 focus:outline-offset-2"
+      className="block h-full rounded-lg outline-cyan-600 focus-visible:outline-2 focus-visible:outline-offset-2 dark:outline-cyan-400"
       aria-label={`Open ${tool.title}`}
     >
       {card}

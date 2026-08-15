@@ -125,7 +125,10 @@ export function DataCompareToolPage() {
       await navigator.clipboard.writeText(summary);
       showToast("success", "Differences copied.");
     } catch {
-      showToast("failure", "Copy failed. Please copy the differences manually.");
+      showToast(
+        "failure",
+        "Copy failed. Please copy the differences manually.",
+      );
     }
   }
 
@@ -154,7 +157,10 @@ export function DataCompareToolPage() {
         <div className="space-y-5">
           <div>
             <div className="mb-2 flex items-center gap-2">
-              <span className="text-sm font-semibold text-gray-900 dark:text-white">
+              <span
+                id="compare-format-label"
+                className="text-sm font-semibold text-gray-900 dark:text-white"
+              >
                 Format
               </span>
               <HelpTooltip
@@ -164,22 +170,30 @@ export function DataCompareToolPage() {
                 exampleOutput="Structured JSON comparison"
               />
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div
+              className="flex flex-wrap gap-2"
+              role="group"
+              aria-labelledby="compare-format-label"
+            >
               {compareFormats.map((item) => (
                 <button
                   key={item.value}
                   type="button"
+                  aria-pressed={format === item.value}
                   onClick={() => {
                     setFormat(item.value);
                     setResult(null);
                   }}
                   className={[
-                    "rounded-lg border px-3 py-2 text-sm font-semibold transition",
+                    "inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-600 dark:focus-visible:outline-cyan-400",
                     format === item.value
                       ? "border-cyan-600 bg-cyan-50 text-cyan-800 dark:border-cyan-500 dark:bg-cyan-950 dark:text-cyan-200"
                       : "border-gray-200 bg-white text-gray-700 hover:border-cyan-300 hover:text-cyan-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:border-cyan-700 dark:hover:text-cyan-300",
                   ].join(" ")}
                 >
+                  {format === item.value ? (
+                    <span aria-hidden="true">✓</span>
+                  ) : null}
                   {item.label}
                 </button>
               ))}
@@ -323,7 +337,7 @@ export function DataCompareToolPage() {
             </p>
           ) : (
             <div className="space-y-4">
-              <div className="flex flex-col gap-3 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-950 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-col gap-3 rounded-lg border border-gray-200 bg-gray-50 p-4 sm:flex-row sm:items-center sm:justify-between dark:border-gray-700 dark:bg-gray-950">
                 <div>
                   <p className="text-lg font-bold text-gray-950 dark:text-white">
                     {result.isIdentical
@@ -386,12 +400,7 @@ interface OptionCheckboxProps {
   onChange: () => void;
 }
 
-function OptionCheckbox({
-  id,
-  label,
-  checked,
-  onChange,
-}: OptionCheckboxProps) {
+function OptionCheckbox({ id, label, checked, onChange }: OptionCheckboxProps) {
   return (
     <label
       htmlFor={id}

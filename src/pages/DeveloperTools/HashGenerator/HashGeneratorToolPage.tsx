@@ -106,7 +106,10 @@ export function HashGeneratorToolPage() {
         <div className="space-y-5">
           <div>
             <div className="mb-2 flex items-center gap-2">
-              <span className="text-sm font-semibold text-gray-900 dark:text-white">
+              <span
+                id="hash-algorithm-label"
+                className="text-sm font-semibold text-gray-900 dark:text-white"
+              >
                 Algorithm
               </span>
               <HelpTooltip
@@ -116,22 +119,30 @@ export function HashGeneratorToolPage() {
                 exampleOutput="64 character hash"
               />
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div
+              className="flex flex-wrap gap-2"
+              role="group"
+              aria-labelledby="hash-algorithm-label"
+            >
               {hashAlgorithms.map((item) => (
                 <button
                   key={item.value}
                   type="button"
+                  aria-pressed={algorithm === item.value}
                   onClick={() => {
                     setAlgorithm(item.value);
                     setHash("");
                   }}
                   className={[
-                    "rounded-lg border px-3 py-2 text-sm font-semibold transition",
+                    "inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-600 dark:focus-visible:outline-cyan-400",
                     algorithm === item.value
                       ? "border-cyan-600 bg-cyan-50 text-cyan-800 dark:border-cyan-500 dark:bg-cyan-950 dark:text-cyan-200"
                       : "border-gray-200 bg-white text-gray-700 hover:border-cyan-300 hover:text-cyan-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200",
                   ].join(" ")}
                 >
+                  {algorithm === item.value ? (
+                    <span aria-hidden="true">✓</span>
+                  ) : null}
                   {item.label}
                 </button>
               ))}
@@ -139,7 +150,10 @@ export function HashGeneratorToolPage() {
           </div>
           <div>
             <div className="mb-2 flex items-center gap-2">
-              <label htmlFor="hash-input" className="text-sm font-semibold text-gray-900 dark:text-white">
+              <label
+                htmlFor="hash-input"
+                className="text-sm font-semibold text-gray-900 dark:text-white"
+              >
                 Input Text
               </label>
               <HelpTooltip
@@ -161,7 +175,11 @@ export function HashGeneratorToolPage() {
               Characters: {inputText.length} | Bytes: {getByteCount(inputText)}
             </p>
           </div>
-          {error ? <p className="text-sm font-semibold text-red-600 dark:text-red-300">{error}</p> : null}
+          {error ? (
+            <p className="text-sm font-semibold text-red-600 dark:text-red-300">
+              {error}
+            </p>
+          ) : null}
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <Button color="blue" onClick={() => void handleGenerate()}>
               Generate Hash

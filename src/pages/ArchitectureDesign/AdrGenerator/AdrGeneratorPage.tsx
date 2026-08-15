@@ -717,7 +717,7 @@ export function AdrGeneratorPage() {
           {errorMessage ? <Alert color="failure">{errorMessage}</Alert> : null}
 
           <div className="grid gap-5 xl:grid-cols-[minmax(0,0.48fr)_minmax(0,0.52fr)]">
-            <section>
+            <section className="min-w-0">
               <div className="mb-4 flex items-center gap-2">
                 <h2 className="text-sm font-semibold text-gray-900 dark:text-white">
                   ADR Details
@@ -820,7 +820,10 @@ export function AdrGeneratorPage() {
 
                 <div>
                   <div className="mb-2 flex items-center gap-2">
-                    <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                    <p
+                      id="adr-stakeholders-label"
+                      className="text-sm font-semibold text-gray-900 dark:text-white"
+                    >
                       Stakeholders
                     </p>
                     <HelpTooltip
@@ -828,19 +831,27 @@ export function AdrGeneratorPage() {
                       description="Select teams that should review, own or be informed about this decision."
                     />
                   </div>
-                  <div className="flex flex-wrap gap-2">
+                  <div
+                    className="flex flex-wrap gap-2"
+                    role="group"
+                    aria-labelledby="adr-stakeholders-label"
+                  >
                     {stakeholderOptions.map((stakeholder) => (
                       <button
                         key={stakeholder}
                         type="button"
+                        aria-pressed={form.stakeholders.includes(stakeholder)}
                         onClick={() => toggleStakeholder(stakeholder)}
                         className={[
-                          "rounded-lg border px-3 py-2 text-sm font-medium transition",
+                          "inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-600 dark:focus-visible:outline-cyan-400",
                           form.stakeholders.includes(stakeholder)
                             ? "border-cyan-500 bg-cyan-50 text-cyan-800 dark:border-cyan-400 dark:bg-cyan-950 dark:text-cyan-200"
                             : "border-gray-200 bg-white text-gray-700 hover:border-cyan-300 hover:text-cyan-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:border-cyan-700 dark:hover:text-cyan-300",
                         ].join(" ")}
                       >
+                        {form.stakeholders.includes(stakeholder) ? (
+                          <span aria-hidden="true">✓</span>
+                        ) : null}
                         {stakeholder}
                       </button>
                     ))}
@@ -865,7 +876,10 @@ export function AdrGeneratorPage() {
 
                 <div>
                   <div className="mb-2 flex items-center gap-2">
-                    <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                    <p
+                      id="adr-drivers-label"
+                      className="text-sm font-semibold text-gray-900 dark:text-white"
+                    >
                       Decision Drivers
                     </p>
                     <HelpTooltip
@@ -873,19 +887,27 @@ export function AdrGeneratorPage() {
                       description="Select the architectural forces that shaped this decision."
                     />
                   </div>
-                  <div className="flex flex-wrap gap-2">
+                  <div
+                    className="flex flex-wrap gap-2"
+                    role="group"
+                    aria-labelledby="adr-drivers-label"
+                  >
                     {decisionDrivers.map((driver) => (
                       <button
                         key={driver}
                         type="button"
+                        aria-pressed={form.drivers.includes(driver)}
                         onClick={() => toggleDriver(driver)}
                         className={[
-                          "rounded-lg border px-3 py-2 text-sm font-medium transition",
+                          "inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-600 dark:focus-visible:outline-cyan-400",
                           form.drivers.includes(driver)
                             ? "border-cyan-500 bg-cyan-50 text-cyan-800 dark:border-cyan-400 dark:bg-cyan-950 dark:text-cyan-200"
                             : "border-gray-200 bg-white text-gray-700 hover:border-cyan-300 hover:text-cyan-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:border-cyan-700 dark:hover:text-cyan-300",
                         ].join(" ")}
                       >
+                        {form.drivers.includes(driver) ? (
+                          <span aria-hidden="true">✓</span>
+                        ) : null}
                         {driver}
                       </button>
                     ))}
@@ -938,7 +960,7 @@ export function AdrGeneratorPage() {
                     Copy Markdown
                   </Button>
                   <Button color="light" onClick={handleDownloadMarkdown}>
-                    Download .md
+                    Download Markdown
                   </Button>
                   <Button color="light" onClick={handleClear}>
                     Clear
@@ -947,7 +969,7 @@ export function AdrGeneratorPage() {
               </div>
             </section>
 
-            <section className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-950">
+            <section className="min-w-0 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-950">
               <div className="mb-4 flex items-center gap-2">
                 <h2 className="text-sm font-semibold text-gray-900 dark:text-white">
                   Markdown Preview
@@ -960,7 +982,12 @@ export function AdrGeneratorPage() {
                   description="Live markdown preview generated from the ADR details."
                 />
               </div>
-              <pre className="min-h-[36rem] overflow-x-auto rounded-lg bg-white p-4 text-sm text-gray-800 dark:bg-gray-900 dark:text-gray-200">
+              <pre
+                role="region"
+                aria-label="Generated ADR Markdown"
+                tabIndex={0}
+                className="min-h-[36rem] w-full max-w-full overflow-x-auto overscroll-x-contain rounded-lg bg-white p-4 text-sm text-gray-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-600 dark:bg-gray-900 dark:text-gray-200 dark:focus-visible:outline-cyan-400"
+              >
                 {markdown}
               </pre>
               <div className="mt-4 rounded-lg border border-dashed border-gray-300 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
@@ -1012,14 +1039,24 @@ function TemplateGroup({
       <p className="mb-2 text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
         {group.category}
       </p>
-      <div className="flex flex-wrap gap-2">
+      <div
+        className="flex flex-wrap gap-2"
+        role="group"
+        aria-label={`${group.category} ADR templates`}
+      >
         {group.templates.map((template) => (
           <Button
             key={template.title}
             color={selectedTemplate === template.title ? "blue" : "light"}
             size="xs"
+            aria-pressed={selectedTemplate === template.title}
             onClick={() => onSelect(template)}
           >
+            {selectedTemplate === template.title ? (
+              <span className="mr-1" aria-hidden="true">
+                ✓
+              </span>
+            ) : null}
             {template.title}
           </Button>
         ))}

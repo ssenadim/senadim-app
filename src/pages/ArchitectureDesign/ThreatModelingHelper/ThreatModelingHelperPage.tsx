@@ -541,7 +541,7 @@ function ThreatModelReport({
             disabled={!canExport}
             onClick={onDownload}
           >
-            Download .md
+            Download Markdown
           </Button>
         </div>
       </div>

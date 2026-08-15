@@ -18,7 +18,7 @@ export function ArchitectureNotesPage() {
       <div className="grid gap-4 md:grid-cols-3">
         <Link
           to={routePaths.dpopArchitectureNote}
-          className="block h-full rounded-lg outline-cyan-600 focus:outline-2 focus:outline-offset-2"
+          className="block h-full rounded-lg outline-cyan-600 focus-visible:outline-2 focus-visible:outline-offset-2 dark:outline-cyan-400"
         >
           <Card className="h-full cursor-pointer border-gray-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-cyan-300 hover:shadow-lg dark:border-gray-700 dark:bg-gray-800 dark:hover:border-cyan-700">
             <h2 className="text-lg font-semibold text-gray-950 dark:text-white">

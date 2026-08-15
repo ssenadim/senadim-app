@@ -1,5 +1,6 @@
 import { useMemo, useState, type KeyboardEvent, type ReactNode } from "react";
 import { Button, Select, TextInput } from "flowbite-react";
+import { CopyReadyOutput } from "../../../components/common/CopyReadyOutput";
 import { HelpTooltip } from "../../../components/common/HelpTooltip";
 import { ToolToast } from "../../../components/common/ToolToast";
 import { ToolPageLayout } from "../../../components/layout/ToolPageLayout";
@@ -288,78 +289,6 @@ export function ContainerPlatformCalculatorPage() {
     }
   }
 
-  function copyAllOutputs() {
-    const value = [
-      "# Properties",
-      generatedOutputs.properties,
-      "",
-      "# Environment Variables",
-      generatedOutputs.environment,
-      "",
-      "# JSON",
-      generatedOutputs.json,
-      "",
-      "# OpenShift YAML",
-      generatedOutputs.yaml,
-    ].join("\n");
-
-    void copyText(value, "All outputs");
-  }
-
-  function copyAllPodOutputs() {
-    const value = [
-      "# OpenShift YAML",
-      podOutputs.yaml,
-      "",
-      "# JSON",
-      podOutputs.json,
-    ].join("\n");
-
-    void copyText(value, "All pod resource outputs");
-  }
-
-  function copyAllHpaOutputs() {
-    const value = [
-      "# OpenShift YAML",
-      hpaOutputs.yaml,
-      "",
-      "# JSON",
-      hpaOutputs.json,
-    ].join("\n");
-
-    void copyText(value, "All HPA outputs");
-  }
-
-  function copyAllPvcOutputs() {
-    const value = [
-      "# OpenShift YAML",
-      pvcOutputs.yaml,
-      "",
-      "# JSON",
-      pvcOutputs.json,
-      "",
-      "# Properties",
-      pvcOutputs.properties,
-    ].join("\n");
-
-    void copyText(value, "All PVC outputs");
-  }
-
-  function copyAllCapacityOutputs() {
-    const value = [
-      "# OpenShift YAML",
-      capacityOutputs.yaml,
-      "",
-      "# JSON",
-      capacityOutputs.json,
-      "",
-      "# Properties",
-      capacityOutputs.properties,
-    ].join("\n");
-
-    void copyText(value, "All capacity planning outputs");
-  }
-
   function handleTabKey(
     event: KeyboardEvent<HTMLButtonElement>,
     currentIndex: number,
@@ -394,10 +323,10 @@ export function ContainerPlatformCalculatorPage() {
     : isCapacityPlanning
       ? "What is Capacity Planning?"
       : isPvc
-        ? "Why PVC Sizing Matters"
+        ? "Why PVC Sizing Matters?"
         : isPodResources
-          ? "Why Pod Resources Matter"
-          : "Why Container Memory Matters";
+          ? "Why Pod Resources Matter?"
+          : "Why Container Memory Matters?";
 
   return (
     <ToolPageLayout
@@ -415,44 +344,38 @@ export function ContainerPlatformCalculatorPage() {
       overviewToggleLabel={overviewTitle}
       overview={
         isHpa ? (
-          <div className="space-y-3">
-            <p>HPA automatically adjusts pod count.</p>
-            <p>Scaling decisions are based on resource metrics.</p>
-            <p>Proper thresholds improve cost and performance balance.</p>
-          </div>
+          <p>
+            HPA adjusts replica counts from resource metrics. Realistic targets
+            and requests keep scaling predictable.
+          </p>
         ) : isCapacityPlanning ? (
-          <div className="space-y-3">
-            <p>Capacity planning helps estimate infrastructure requirements.</p>
-            <p>Proper sizing improves performance and cost efficiency.</p>
-            <p>Estimates should be validated with production metrics.</p>
-          </div>
+          <p>
+            Estimate pod capacity from traffic, response time, and available pod
+            CPU, then validate the result with production metrics.
+          </p>
         ) : isPvc ? (
-          <div className="space-y-3">
-            <p>Under-sized volumes may cause outages.</p>
-            <p>Over-sized volumes increase costs.</p>
-            <p>Capacity planning improves reliability.</p>
-          </div>
+          <p>
+            Size persistent storage from growth, retention, compression, and
+            headroom to reduce capacity risk.
+          </p>
         ) : isPodResources ? (
-          <div className="space-y-3">
-            <p>Requests reserve resources for scheduled workloads.</p>
-            <p>Limits define maximum usage for containers.</p>
-            <p>Correct sizing improves cluster efficiency.</p>
-          </div>
+          <p>
+            Requests reserve schedulable capacity while limits bound usage.
+            Balanced values improve cluster efficiency.
+          </p>
         ) : (
-          <div className="space-y-3">
-            <p>Container memory should be larger than JVM heap.</p>
-            <p>JVM uses additional memory outside heap.</p>
-            <p>Insufficient limits may cause OOMKilled events.</p>
-            <p>Proper sizing improves stability.</p>
-          </div>
+          <p>
+            Container memory must cover heap, metaspace, native allocations, and
+            safety headroom to reduce out-of-memory terminations.
+          </p>
         )
       }
       inputs={
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
           <div
             role="tablist"
             aria-label="OpenShift calculator"
-            className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap"
+            className="grid w-full max-w-full min-w-0 grid-cols-2 gap-2 sm:flex sm:flex-wrap"
           >
             {tabs.map((tab, index) => (
               <button
@@ -466,13 +389,16 @@ export function ContainerPlatformCalculatorPage() {
                 onClick={() => setActiveTab(tab)}
                 onKeyDown={(event) => handleTabKey(event, index)}
                 className={[
-                  "min-w-0 rounded-lg border px-3 py-2 text-sm font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-600",
+                  "min-w-0 rounded-lg border px-3 py-2 text-center text-sm font-semibold break-words whitespace-normal transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-600 sm:shrink-0",
                   activeTab === tab
                     ? "border-cyan-600 bg-cyan-50 text-cyan-800 shadow-sm ring-1 ring-cyan-600 dark:border-cyan-500 dark:bg-cyan-950 dark:text-cyan-200 dark:ring-cyan-500"
                     : "border-gray-200 bg-white text-gray-700 hover:border-cyan-300 hover:text-cyan-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200",
                 ].join(" ")}
               >
                 {tab}
+                {activeTab === tab ? (
+                  <span className="sr-only"> (active)</span>
+                ) : null}
               </button>
             ))}
           </div>
@@ -481,6 +407,7 @@ export function ContainerPlatformCalculatorPage() {
             id="calculator-input-panel"
             role="tabpanel"
             aria-labelledby={`calculator-tab-${tabs.indexOf(activeTab)}`}
+            className="min-w-0"
           >
             {activeTab === "Capacity Planning" ? (
               <div className="grid gap-4 md:grid-cols-2">
@@ -573,7 +500,7 @@ export function ContainerPlatformCalculatorPage() {
                       unit="%"
                       value={bufferPercent}
                       onChange={setBufferPercent}
-                      tooltip="Additional headroom to avoid OOM kills."
+                      tooltip="Additional headroom to reduce out-of-memory terminations."
                       max={100}
                     />
                   </div>
@@ -642,7 +569,7 @@ export function ContainerPlatformCalculatorPage() {
                   integer
                   validationMessage={
                     Number.isFinite(maxReplicas) && maxReplicas < minReplicas
-                      ? "Maximum Replicas must be greater than or equal to Minimum Replicas."
+                      ? "Maximum Replicas must be at least Minimum Replicas."
                       : undefined
                   }
                 />
@@ -696,7 +623,7 @@ export function ContainerPlatformCalculatorPage() {
         !isActiveTabValid ? (
           <InvalidOutputState />
         ) : activeTab === "Capacity Planning" ? (
-          <div className="space-y-6">
+          <div className="min-w-0 space-y-6">
             <PrimaryRecommendation
               label="Recommended Replica Capacity"
               value={`${capacityCalculation.recommendedPods} ${capacityCalculation.recommendedPods === 1 ? "pod" : "pods"}`}
@@ -744,30 +671,29 @@ export function ContainerPlatformCalculatorPage() {
                 />
               </div>
             </div>
-            <ConfigurationSection onCopyAll={copyAllCapacityOutputs}>
+            <ConfigurationSection>
               <div className="grid gap-4 lg:grid-cols-2">
-                <GeneratedOutput
-                  title="OpenShift YAML"
+                <CopyReadyOutput
+                  formatLabel="OpenShift YAML"
+                  copyLabel="YAML"
                   value={capacityOutputs.yaml}
-                  onCopy={() => void copyText(capacityOutputs.yaml, "YAML")}
+                  onCopy={copyText}
                 />
-                <GeneratedOutput
-                  title="JSON"
+                <CopyReadyOutput
+                  formatLabel="JSON"
                   value={capacityOutputs.json}
-                  onCopy={() => void copyText(capacityOutputs.json, "JSON")}
+                  onCopy={copyText}
                 />
-                <GeneratedOutput
-                  title="Properties"
+                <CopyReadyOutput
+                  formatLabel="Properties"
                   value={capacityOutputs.properties}
-                  onCopy={() =>
-                    void copyText(capacityOutputs.properties, "Properties")
-                  }
+                  onCopy={copyText}
                 />
               </div>
             </ConfigurationSection>
           </div>
         ) : activeTab === "PVC Size" ? (
-          <div className="space-y-6">
+          <div className="min-w-0 space-y-6">
             <PrimaryRecommendation
               label="Recommended PVC Size"
               value={`${pvcCalculation.recommended} GiB`}
@@ -791,30 +717,29 @@ export function ContainerPlatformCalculatorPage() {
                 value={`${pvcCalculation.buffer.toFixed(1)} GiB`}
               />
             </SupportingSection>
-            <ConfigurationSection onCopyAll={copyAllPvcOutputs}>
+            <ConfigurationSection>
               <div className="grid gap-4 lg:grid-cols-2">
-                <GeneratedOutput
-                  title="OpenShift YAML"
+                <CopyReadyOutput
+                  formatLabel="OpenShift YAML"
+                  copyLabel="YAML"
                   value={pvcOutputs.yaml}
-                  onCopy={() => void copyText(pvcOutputs.yaml, "YAML")}
+                  onCopy={copyText}
                 />
-                <GeneratedOutput
-                  title="JSON"
+                <CopyReadyOutput
+                  formatLabel="JSON"
                   value={pvcOutputs.json}
-                  onCopy={() => void copyText(pvcOutputs.json, "JSON")}
+                  onCopy={copyText}
                 />
-                <GeneratedOutput
-                  title="Properties"
+                <CopyReadyOutput
+                  formatLabel="Properties"
                   value={pvcOutputs.properties}
-                  onCopy={() =>
-                    void copyText(pvcOutputs.properties, "Properties")
-                  }
+                  onCopy={copyText}
                 />
               </div>
             </ConfigurationSection>
           </div>
         ) : activeTab === "HPA" ? (
-          <div className="space-y-6">
+          <div className="min-w-0 space-y-6">
             <PrimaryRecommendation
               label="Calculated Scaling Recommendation"
               value={hpaRecommendation.title}
@@ -826,23 +751,24 @@ export function ContainerPlatformCalculatorPage() {
               <MetricBox label="Min Replicas" value={minReplicas.toString()} />
               <MetricBox label="Max Replicas" value={maxReplicas.toString()} />
             </SupportingSection>
-            <ConfigurationSection onCopyAll={copyAllHpaOutputs}>
+            <ConfigurationSection>
               <div className="grid gap-4 lg:grid-cols-2">
-                <GeneratedOutput
-                  title="OpenShift YAML"
+                <CopyReadyOutput
+                  formatLabel="OpenShift YAML"
+                  copyLabel="YAML"
                   value={hpaOutputs.yaml}
-                  onCopy={() => void copyText(hpaOutputs.yaml, "YAML")}
+                  onCopy={copyText}
                 />
-                <GeneratedOutput
-                  title="JSON"
+                <CopyReadyOutput
+                  formatLabel="JSON"
                   value={hpaOutputs.json}
-                  onCopy={() => void copyText(hpaOutputs.json, "JSON")}
+                  onCopy={copyText}
                 />
               </div>
             </ConfigurationSection>
           </div>
         ) : activeTab === "Pod Resources" ? (
-          <div className="space-y-6">
+          <div className="min-w-0 space-y-6">
             <section aria-labelledby="pod-resource-recommendation-title">
               <div className="mb-4">
                 <p className="text-xs font-semibold tracking-wide text-cyan-700 uppercase dark:text-cyan-300">
@@ -868,23 +794,24 @@ export function ContainerPlatformCalculatorPage() {
                 />
               </div>
             </section>
-            <ConfigurationSection onCopyAll={copyAllPodOutputs}>
+            <ConfigurationSection>
               <div className="grid gap-4 lg:grid-cols-2">
-                <GeneratedOutput
-                  title="OpenShift YAML"
+                <CopyReadyOutput
+                  formatLabel="OpenShift YAML"
+                  copyLabel="YAML"
                   value={podOutputs.yaml}
-                  onCopy={() => void copyText(podOutputs.yaml, "YAML")}
+                  onCopy={copyText}
                 />
-                <GeneratedOutput
-                  title="JSON"
+                <CopyReadyOutput
+                  formatLabel="JSON"
                   value={podOutputs.json}
-                  onCopy={() => void copyText(podOutputs.json, "JSON")}
+                  onCopy={copyText}
                 />
               </div>
             </ConfigurationSection>
           </div>
         ) : activeTab === "Container Memory" ? (
-          <div className="space-y-6">
+          <div className="min-w-0 space-y-6">
             <PrimaryRecommendation
               label="Recommended Container Memory"
               value={`${calculation.total} MiB`}
@@ -914,34 +841,28 @@ export function ContainerPlatformCalculatorPage() {
                 </div>
               </div>
             </section>
-            <ConfigurationSection onCopyAll={copyAllOutputs}>
+            <ConfigurationSection>
               <div className="grid gap-4 lg:grid-cols-2">
-                <GeneratedOutput
-                  title="Properties"
+                <CopyReadyOutput
+                  formatLabel="Properties"
                   value={generatedOutputs.properties}
-                  onCopy={() =>
-                    void copyText(generatedOutputs.properties, "Properties")
-                  }
+                  onCopy={copyText}
                 />
-                <GeneratedOutput
-                  title="Environment Variables"
+                <CopyReadyOutput
+                  formatLabel="Environment Variables"
                   value={generatedOutputs.environment}
-                  onCopy={() =>
-                    void copyText(
-                      generatedOutputs.environment,
-                      "Environment variables",
-                    )
-                  }
+                  onCopy={copyText}
                 />
-                <GeneratedOutput
-                  title="JSON"
+                <CopyReadyOutput
+                  formatLabel="JSON"
                   value={generatedOutputs.json}
-                  onCopy={() => void copyText(generatedOutputs.json, "JSON")}
+                  onCopy={copyText}
                 />
-                <GeneratedOutput
-                  title="OpenShift YAML"
+                <CopyReadyOutput
+                  formatLabel="OpenShift YAML"
+                  copyLabel="YAML"
                   value={generatedOutputs.yaml}
-                  onCopy={() => void copyText(generatedOutputs.yaml, "YAML")}
+                  onCopy={copyText}
                 />
               </div>
             </ConfigurationSection>
@@ -1029,6 +950,7 @@ function NumberField({
 }: NumberFieldProps) {
   const error =
     validationMessage ?? getNumberFieldError(value, label, min, max, integer);
+  const descriptionId = `${id}-description`;
   const errorId = `${id}-error`;
 
   return (
@@ -1066,9 +988,14 @@ function NumberField({
           )
         }
         aria-invalid={Boolean(error)}
-        aria-describedby={error ? errorId : undefined}
+        aria-describedby={`${descriptionId}${error ? ` ${errorId}` : ""}`}
         color={error ? "failure" : "gray"}
       />
+      <span id={descriptionId} className="sr-only">
+        {tooltip} Required. Unit: {unit}. Minimum value: {min}.
+        {max === undefined ? "" : ` Maximum value: ${max}.`}
+        {integer ? " Whole numbers only." : ""}
+      </span>
       {error ? (
         <p
           id={errorId}
@@ -1126,53 +1053,16 @@ function BreakdownRow({
   strong?: boolean;
 }) {
   return (
-    <div className="flex items-center justify-between border-b border-gray-200 pb-2 last:border-b-0 dark:border-gray-700">
-      <span>{label}</span>
-      <span className={strong ? "font-bold text-gray-950 dark:text-white" : ""}>
+    <div className="flex min-w-0 flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-gray-200 pb-2 last:border-b-0 dark:border-gray-700">
+      <span className="min-w-0">{label}</span>
+      <span
+        className={`max-w-full min-w-0 text-right break-words ${
+          strong ? "font-bold text-gray-950 dark:text-white" : ""
+        }`}
+      >
         {value}
       </span>
     </div>
-  );
-}
-
-function GeneratedOutput({
-  title,
-  value,
-  onCopy,
-}: {
-  title: string;
-  value: string;
-  onCopy: () => void;
-}) {
-  const copyLabel = title === "OpenShift YAML" ? "YAML" : title;
-
-  return (
-    <section
-      aria-label={`${title} configuration`}
-      className="min-w-0 overflow-hidden rounded-lg border border-gray-200 p-4 dark:border-gray-700"
-    >
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-        <h3 className="text-sm font-semibold text-gray-950 dark:text-white">
-          {title}
-        </h3>
-        <Button
-          color="light"
-          size="xs"
-          onClick={onCopy}
-          className="shrink-0 whitespace-nowrap"
-        >
-          Copy {copyLabel}
-        </Button>
-      </div>
-      <pre
-        role="region"
-        aria-label={`${title} code`}
-        tabIndex={0}
-        className="w-full max-w-full overflow-x-auto rounded-lg bg-gray-50 p-3 text-sm whitespace-pre text-gray-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-600 dark:bg-gray-950 dark:text-gray-100"
-      >
-        {value}
-      </pre>
-    </section>
   );
 }
 
@@ -1182,8 +1072,8 @@ function InvalidOutputState() {
       role="status"
       className="rounded-lg border border-amber-300 bg-amber-50 p-5 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200"
     >
-      Correct the highlighted input values to see recommendations and copy-ready
-      configuration.
+      Review the current tab's input errors to see recommendations and
+      copy-ready configuration.
     </div>
   );
 }
@@ -1203,6 +1093,8 @@ function SelectField({
   options: string[];
   onChange: (value: string) => void;
 }) {
+  const descriptionId = `${id}-description`;
+
   return (
     <div>
       <div className="mb-2 flex min-h-6 flex-wrap items-center gap-2">
@@ -1222,6 +1114,7 @@ function SelectField({
         required
         value={value}
         onChange={(event) => onChange(event.target.value)}
+        aria-describedby={descriptionId}
       >
         {options.map((option) => (
           <option key={option} value={option}>
@@ -1229,6 +1122,9 @@ function SelectField({
           </option>
         ))}
       </Select>
+      <span id={descriptionId} className="sr-only">
+        Required. {tooltip}
+      </span>
     </div>
   );
 }
@@ -1280,23 +1176,12 @@ function SupportingSection({
   );
 }
 
-function ConfigurationSection({
-  onCopyAll,
-  children,
-}: {
-  onCopyAll: () => void;
-  children: ReactNode;
-}) {
+function ConfigurationSection({ children }: { children: ReactNode }) {
   return (
     <section>
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-lg font-semibold text-gray-950 dark:text-white">
-          Copy-ready Configuration
-        </h2>
-        <Button color="light" size="sm" onClick={onCopyAll}>
-          Copy All Formats
-        </Button>
-      </div>
+      <h2 className="mb-4 text-lg font-semibold text-gray-950 dark:text-white">
+        Copy-ready Configuration
+      </h2>
       {children}
     </section>
   );

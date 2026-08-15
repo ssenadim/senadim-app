@@ -12,10 +12,16 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-40 lg:hidden" role="dialog" aria-modal="true">
+    <div
+      className="fixed inset-0 z-40 lg:hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Main navigation"
+    >
       <button
         type="button"
         aria-label="Close navigation"
+        tabIndex={-1}
         className="absolute inset-0 bg-gray-950/50"
         onClick={onClose}
       />
@@ -26,7 +32,7 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
             type="button"
             aria-label="Close navigation"
             onClick={onClose}
-            className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
+            className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-600 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white dark:focus-visible:outline-cyan-400"
           >
             <svg
               className="size-5"

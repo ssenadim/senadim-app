@@ -34,17 +34,41 @@ const examples: ToolExample[] = [
     input: "<user><name>John</name></user>",
     outputLabel: "Output",
     output: "<user>\n  <name>John</name>\n</user>",
-  },  {
+  },
+  {
     title: "Basic HTML Page",
     description: "Simple HTML5 document.",
     inputLabel: "Input",
     input: "<main><h1>Hello</h1><p>Welcome</p></main>",
     outputLabel: "Output",
     output: "<main>\n  <h1>Hello</h1>\n  <p>Welcome</p>\n</main>",
-  },  { title: "Responsive Layout", description: "Modern semantic HTML layout.", inputLabel: "Input", input: "<main><section><article>One</article><article>Two</article></section></main>", outputLabel: "Output", output: "Beautified responsive layout" },
-  { title: "Simple Form", description: "Common HTML form controls.", inputLabel: "Input", input: "<form><label>Email<input type=\"email\"></label><button>Send</button></form>", outputLabel: "Output", output: "Beautified form markup" },
-  { title: "Table Example", description: "Semantic HTML table.", inputLabel: "Input", input: "<table><tr><th>Name</th></tr><tr><td>Alex</td></tr></table>", outputLabel: "Output", output: "Beautified table markup" },
-
+  },
+  {
+    title: "Responsive Layout",
+    description: "Modern semantic HTML layout.",
+    inputLabel: "Input",
+    input:
+      "<main><section><article>One</article><article>Two</article></section></main>",
+    outputLabel: "Output",
+    output: "Beautified responsive layout",
+  },
+  {
+    title: "Simple Form",
+    description: "Common HTML form controls.",
+    inputLabel: "Input",
+    input:
+      '<form><label>Email<input type="email"></label><button>Send</button></form>',
+    outputLabel: "Output",
+    output: "Beautified form markup",
+  },
+  {
+    title: "Table Example",
+    description: "Semantic HTML table.",
+    inputLabel: "Input",
+    input: "<table><tr><th>Name</th></tr><tr><td>Alex</td></tr></table>",
+    outputLabel: "Output",
+    output: "Beautified table markup",
+  },
 ];
 
 export function FormatterToolPage() {
@@ -71,7 +95,12 @@ export function FormatterToolPage() {
   }
 
   function handleFormat() {
-    const result = formatType === "json" ? formatJson(inputText) : formatType === "xml" ? formatXml(inputText) : formatHtml(inputText);
+    const result =
+      formatType === "json"
+        ? formatJson(inputText)
+        : formatType === "xml"
+          ? formatXml(inputText)
+          : formatHtml(inputText);
 
     if (isFormatterFailure(result)) {
       setErrorMessage(result.error);
@@ -86,7 +115,12 @@ export function FormatterToolPage() {
   }
 
   function handleMinify() {
-    const result = formatType === "json" ? minifyJson(inputText) : formatType === "xml" ? minifyXml(inputText) : minifyHtml(inputText);
+    const result =
+      formatType === "json"
+        ? minifyJson(inputText)
+        : formatType === "xml"
+          ? minifyXml(inputText)
+          : minifyHtml(inputText);
 
     if (isFormatterFailure(result)) {
       setErrorMessage(result.error);
@@ -194,11 +228,15 @@ export function FormatterToolPage() {
               onChange={(event) => setInputText(event.target.value)}
               placeholder="Paste JSON, XML, or HTML content here..."
               className="font-mono"
+              aria-invalid={Boolean(errorMessage)}
+              aria-describedby={
+                errorMessage ? "formatter-validation-error" : undefined
+              }
             />
           </div>
 
           {errorMessage ? (
-            <Alert color="failure">
+            <Alert id="formatter-validation-error" color="failure" role="alert">
               <span className="font-semibold">Validation failed.</span>{" "}
               {errorMessage}
             </Alert>
@@ -247,7 +285,18 @@ export function FormatterToolPage() {
         </div>
       }
       examples={examples}
-      onExampleSelect={(example) => { setFormatType(example.title.startsWith("XML") ? "xml" : example.title.startsWith("HTML") ? "html" : "json"); setInputText(example.input); setOutputText(""); setErrorMessage(""); }}
+      onExampleSelect={(example) => {
+        setFormatType(
+          example.title.startsWith("XML")
+            ? "xml"
+            : example.title.startsWith("HTML")
+              ? "html"
+              : "json",
+        );
+        setInputText(example.input);
+        setOutputText("");
+        setErrorMessage("");
+      }}
       notesCollapsible
       notes={
         <ul className="list-disc space-y-2 pl-5 text-sm leading-7 text-gray-600 dark:text-gray-300">

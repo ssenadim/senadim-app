@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { Button, Select, TextInput } from "flowbite-react";
+import { Select, TextInput } from "flowbite-react";
+import { CopyReadyOutput } from "../../../components/common/CopyReadyOutput";
 import { HelpTooltip } from "../../../components/common/HelpTooltip";
 import { ToolToast } from "../../../components/common/ToolToast";
 import { ToolPageLayout } from "../../../components/layout/ToolPageLayout";
@@ -15,12 +16,13 @@ type JvmProfile =
 
 const examples: ToolExample[] = [
   {
-    title: "4096 MB Container Example",
+    title: "4 GiB Container Example",
     inputLabel: "Inputs",
     input:
-      "Application Container Memory: 4096 MB\nRuntime Profile: Heap-Intensive JVM Application",
+      "Container Memory: 4096 MiB\nRuntime Profile: Heap-Intensive JVM Application",
     outputLabel: "Recommended",
-    output: "Heap: 2662 MB\nMetaspace: 410 MB\nNative: 614 MB\nBuffer: 410 MB",
+    output:
+      "Heap: 2662 MiB\nMetaspace: 410 MiB\nNative Memory: 614 MiB\nSafety Buffer: 410 MiB",
   },
 ];
 
@@ -38,6 +40,7 @@ export function JvmMemoryCalculatorPage() {
     () => calculateJvmMemory(containerMemory, profile),
     [containerMemory, profile],
   );
+  const nonHeapNativeMb = result.metaspaceMb + result.nativeMb;
   const outputs = useMemo(() => {
     const javaOpts = `-Xms${result.heapMb}m -Xmx${result.heapMb}m`;
     const properties = `JAVA_OPTS=${javaOpts}\nJVM_HEAP_MB=${result.heapMb}\nJVM_METASPACE_MB=${result.metaspaceMb}`;
@@ -68,27 +71,6 @@ export function JvmMemoryCalculatorPage() {
     }
   }
 
-  function copyAllOutputs() {
-    const value = [
-      "# JAVA_OPTS",
-      outputs.javaOpts,
-      "",
-      "# Properties",
-      outputs.properties,
-      "",
-      "# Environment Variables",
-      outputs.environment,
-      "",
-      "# JSON",
-      outputs.json,
-      "",
-      "# YAML",
-      outputs.yaml,
-    ].join("\n");
-
-    void copyText(value, "All outputs");
-  }
-
   return (
     <ToolPageLayout
       title="JVM Memory Calculator"
@@ -100,38 +82,50 @@ export function JvmMemoryCalculatorPage() {
         },
         { label: "JVM Memory Calculator" },
       ]}
-      overviewTitle="Why JVM Memory Sizing Matters"
+      overviewTitle="Why JVM Memory Sizing Matters?"
       overviewCollapsible
-      overviewToggleLabel="Why JVM Memory Sizing Matters"
+      overviewToggleLabel="Why JVM Memory Sizing Matters?"
       overview={
         <div className="space-y-3">
-          <p>JVM memory is more than heap.</p>
           <p>
-            Container memory must account for metaspace and native allocations.
+            JVM memory includes heap, metaspace, native allocations, and
+            operational headroom.
           </p>
-          <p>Proper sizing reduces OOMKilled events.</p>
+          <p>
+            Keeping these areas within the container limit reduces avoidable
+            out-of-memory terminations.
+          </p>
         </div>
       }
       inputs={
         <div className="grid gap-4 md:grid-cols-2">
           <div>
-            <div className="mb-2 flex items-center gap-2">
+            <div className="mb-2 flex min-h-6 flex-wrap items-center gap-2">
               <label
                 htmlFor="container-memory"
                 className="text-sm font-semibold text-gray-900 dark:text-white"
               >
-                Application Container Memory (MB)
+                Container Memory
               </label>
+              <span className="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-xs font-semibold text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+                MiB
+              </span>
               <HelpTooltip
-                title="Application Container Memory"
-                description="Total runtime memory limit available to the JVM application container."
+                title="Container Memory"
+                description="Total memory limit available to the JVM application, including heap and all runtime overhead."
               />
+              <span className="ml-auto text-xs text-gray-500 dark:text-gray-400">
+                Required
+              </span>
             </div>
             <TextInput
               id="container-memory"
               type="number"
+              required
               min={256}
               step={1}
+              inputMode="numeric"
+              placeholder="e.g. 4096"
               value={Number.isNaN(containerMemory) ? "" : containerMemory}
               onChange={(event) =>
                 setContainerMemory(
@@ -141,10 +135,17 @@ export function JvmMemoryCalculatorPage() {
                 )
               }
               aria-invalid={Boolean(containerMemoryError)}
-              aria-describedby={
-                containerMemoryError ? "container-memory-error" : undefined
-              }
+              aria-describedby={`container-memory-description${
+                containerMemoryError ? " container-memory-error" : ""
+              }`}
+              color={containerMemoryError ? "failure" : "gray"}
             />
+            <p
+              id="container-memory-description"
+              className="mt-2 text-sm text-gray-600 dark:text-gray-300"
+            >
+              Enter a whole number of MiB. Minimum: 256 MiB.
+            </p>
             {containerMemoryError ? (
               <p
                 id="container-memory-error"
@@ -156,14 +157,24 @@ export function JvmMemoryCalculatorPage() {
             ) : null}
           </div>
           <div>
-            <label
-              htmlFor="jvm-profile"
-              className="mb-2 block text-sm font-semibold text-gray-900 dark:text-white"
-            >
-              Runtime Profile
-            </label>
+            <div className="mb-2 flex min-h-6 flex-wrap items-center gap-2">
+              <label
+                htmlFor="jvm-profile"
+                className="text-sm font-semibold text-gray-900 dark:text-white"
+              >
+                Runtime Profile
+              </label>
+              <HelpTooltip
+                title="Runtime Profile"
+                description="Select the generic allocation pattern that most closely matches the JVM application's observed memory use."
+              />
+              <span className="ml-auto text-xs text-gray-500 dark:text-gray-400">
+                Required
+              </span>
+            </div>
             <Select
               id="jvm-profile"
+              required
               value={profile}
               onChange={(event) => setProfile(event.target.value as JvmProfile)}
               aria-describedby="jvm-profile-description"
@@ -193,71 +204,120 @@ export function JvmMemoryCalculatorPage() {
           <InvalidOutputState />
         ) : (
           <div className="min-w-0 space-y-6">
-            <div className="rounded-lg border border-cyan-200 bg-cyan-50 p-5 dark:border-cyan-900 dark:bg-cyan-950/40">
-              <h2 className="text-lg font-semibold text-gray-950 dark:text-white">
-                Recommended Runtime Memory Allocation
-              </h2>
-              <p className="mt-2 text-sm leading-6 text-gray-700 dark:text-gray-200">
-                Allocate {result.heapMb} MB to heap and reserve the remaining
-                runtime memory for metaspace, native memory, and a safety buffer
-                within the {containerMemory} MB application container limit.
+            <section
+              aria-labelledby="primary-recommendation-title"
+              className="rounded-xl border border-cyan-300 bg-cyan-50 p-5 shadow-sm dark:border-cyan-800 dark:bg-cyan-950/40"
+            >
+              <p className="text-xs font-semibold tracking-wide text-cyan-700 uppercase dark:text-cyan-300">
+                Primary Recommendation
               </p>
-            </div>
-            <div className="grid gap-4 md:grid-cols-4">
-              <MetricBox label="Heap Size" value={`${result.heapMb} MB`} />
-              <MetricBox label="Metaspace" value={`${result.metaspaceMb} MB`} />
-              <MetricBox
-                label="Native Memory"
-                value={`${result.nativeMb} MB`}
-              />
-              <MetricBox
-                label="Safety Buffer"
-                value={`${result.bufferMb} MB`}
-              />
-              <MetricBox label="Heap %" value={`${result.heapPercent}%`} />
-              <MetricBox
-                label="Metaspace %"
-                value={`${result.metaspacePercent}%`}
-              />
-              <MetricBox label="Native %" value={`${result.nativePercent}%`} />
-              <MetricBox label="Buffer %" value={`${result.bufferPercent}%`} />
-            </div>
-            <section>
-              <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <h2 className="text-lg font-semibold text-gray-950 dark:text-white">
-                  Copy-ready Configuration Outputs
+              <h2
+                id="primary-recommendation-title"
+                className="mt-2 text-sm font-semibold text-gray-700 dark:text-gray-200"
+              >
+                Recommended Maximum Heap
+              </h2>
+              <p className="mt-1 text-3xl font-bold break-words text-gray-950 sm:text-4xl dark:text-white">
+                {result.heapMb} MiB
+              </p>
+              <p className="mt-3 max-w-3xl text-sm leading-6 text-gray-700 dark:text-gray-200">
+                Keep {nonHeapNativeMb} MiB outside the heap for metaspace and
+                native memory, plus a {result.bufferMb} MiB safety buffer. The
+                heap should not consume the full container limit.
+              </p>
+              <dl className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <SummaryMetric
+                  label="Available Container Memory"
+                  value={`${containerMemory} MiB`}
+                />
+                <SummaryMetric
+                  label="Maximum Heap"
+                  value={`${result.heapMb} MiB`}
+                />
+                <SummaryMetric
+                  label="Non-heap / Native"
+                  value={`${nonHeapNativeMb} MiB`}
+                />
+                <SummaryMetric
+                  label="Safety Margin"
+                  value={`${result.bufferMb} MiB`}
+                />
+              </dl>
+            </section>
+            <section aria-labelledby="memory-breakdown-title">
+              <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+                <h2
+                  id="memory-breakdown-title"
+                  className="text-lg font-semibold text-gray-950 dark:text-white"
+                >
+                  Memory Breakdown
                 </h2>
-                <Button color="light" size="sm" onClick={copyAllOutputs}>
-                  Copy All Outputs
-                </Button>
+                <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
+                  Total runtime memory stays within the configured container
+                  limit.
+                </p>
+                <dl className="mt-4 grid gap-2 text-sm text-gray-700 dark:text-gray-200">
+                  <BreakdownRow
+                    label="Heap"
+                    value={`${result.heapMb} MiB`}
+                    percent={result.heapPercent}
+                  />
+                  <BreakdownRow
+                    label="Metaspace"
+                    value={`${result.metaspaceMb} MiB`}
+                    percent={result.metaspacePercent}
+                  />
+                  <BreakdownRow
+                    label="Native Memory"
+                    value={`${result.nativeMb} MiB`}
+                    percent={result.nativePercent}
+                  />
+                  <BreakdownRow
+                    label="Safety Buffer"
+                    value={`${result.bufferMb} MiB`}
+                    percent={result.bufferPercent}
+                  />
+                  <BreakdownRow
+                    label="Total Container Memory"
+                    value={`${containerMemory} MiB`}
+                    percent={100}
+                    strong
+                  />
+                </dl>
               </div>
+            </section>
+            <section aria-labelledby="configuration-outputs-title">
+              <h2
+                id="configuration-outputs-title"
+                className="mb-4 text-lg font-semibold text-gray-950 dark:text-white"
+              >
+                Copy-ready Configuration
+              </h2>
               <div className="grid gap-4 lg:grid-cols-2">
-                <GeneratedOutput
-                  title="JAVA_OPTS"
+                <CopyReadyOutput
+                  formatLabel="JVM Options"
                   value={outputs.javaOpts}
-                  onCopy={() => void copyText(outputs.javaOpts, "JAVA_OPTS")}
+                  onCopy={copyText}
                 />
-                <GeneratedOutput
-                  title="Properties"
+                <CopyReadyOutput
+                  formatLabel="Properties"
                   value={outputs.properties}
-                  onCopy={() => void copyText(outputs.properties, "Properties")}
+                  onCopy={copyText}
                 />
-                <GeneratedOutput
-                  title="Environment Variables"
+                <CopyReadyOutput
+                  formatLabel="Environment Variables"
                   value={outputs.environment}
-                  onCopy={() =>
-                    void copyText(outputs.environment, "Environment variables")
-                  }
+                  onCopy={copyText}
                 />
-                <GeneratedOutput
-                  title="JSON"
+                <CopyReadyOutput
+                  formatLabel="JSON"
                   value={outputs.json}
-                  onCopy={() => void copyText(outputs.json, "JSON")}
+                  onCopy={copyText}
                 />
-                <GeneratedOutput
-                  title="YAML"
+                <CopyReadyOutput
+                  formatLabel="YAML"
                   value={outputs.yaml}
-                  onCopy={() => void copyText(outputs.yaml, "YAML")}
+                  onCopy={copyText}
                 />
               </div>
             </section>
@@ -268,9 +328,9 @@ export function JvmMemoryCalculatorPage() {
       notesCollapsible
       notes={
         <ul className="list-disc space-y-2 pl-5 text-sm leading-7 text-gray-600 dark:text-gray-300">
-          <li>Actual workloads vary.</li>
-          <li>Monitor production usage.</li>
-          <li>Revisit sizing periodically.</li>
+          <li>Validate the selected profile with observed runtime metrics.</li>
+          <li>Monitor heap, metaspace, and native memory together.</li>
+          <li>Revisit the safety buffer when workload behavior changes.</li>
         </ul>
       }
       toast={<ToolToast toast={toast} />}
@@ -279,8 +339,6 @@ export function JvmMemoryCalculatorPage() {
 }
 
 function calculateJvmMemory(containerMemory: number, profile: JvmProfile) {
-  // Assumptions: identity services keep more native/metaspace headroom, web
-  // applications can allocate more heap, and generic Java uses a balanced split.
   const profiles: Record<
     JvmProfile,
     {
@@ -310,69 +368,106 @@ function calculateJvmMemory(containerMemory: number, profile: JvmProfile) {
     },
   };
   const selected = profiles[profile];
+  const allocationKeys = [
+    "heapMb",
+    "metaspaceMb",
+    "nativeMb",
+    "bufferMb",
+  ] as const;
+  type AllocationKey = (typeof allocationKeys)[number];
+  const rawAllocations: Record<AllocationKey, number> = {
+    heapMb: containerMemory * (selected.heapPercent / 100),
+    metaspaceMb: containerMemory * (selected.metaspacePercent / 100),
+    nativeMb: containerMemory * (selected.nativePercent / 100),
+    bufferMb: containerMemory * (selected.bufferPercent / 100),
+  };
+  const allocations: Record<AllocationKey, number> = {
+    heapMb: Math.floor(rawAllocations.heapMb),
+    metaspaceMb: Math.floor(rawAllocations.metaspaceMb),
+    nativeMb: Math.floor(rawAllocations.nativeMb),
+    bufferMb: Math.floor(rawAllocations.bufferMb),
+  };
+  const allocatedMemory = allocationKeys.reduce(
+    (total, key) => total + allocations[key],
+    0,
+  );
+  const remainderOrder = [...allocationKeys].sort(
+    (left, right) =>
+      rawAllocations[right] -
+      allocations[right] -
+      (rawAllocations[left] - allocations[left]),
+  );
+
+  for (let index = 0; index < containerMemory - allocatedMemory; index += 1) {
+    allocations[remainderOrder[index]] += 1;
+  }
 
   return {
     ...selected,
-    bufferMb: Math.round(containerMemory * (selected.bufferPercent / 100)),
-    heapMb: Math.round(containerMemory * (selected.heapPercent / 100)),
-    metaspaceMb: Math.round(
-      containerMemory * (selected.metaspacePercent / 100),
-    ),
-    nativeMb: Math.round(containerMemory * (selected.nativePercent / 100)),
+    ...allocations,
   };
 }
 
-function MetricBox({ label, value }: { label: string; value: string }) {
+function SummaryMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-cyan-200 bg-cyan-50 p-4 dark:border-cyan-900 dark:bg-cyan-950/40">
-      <p className="text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
+    <div className="min-w-0 rounded-lg border border-cyan-200 bg-white/70 p-3 dark:border-cyan-900 dark:bg-gray-950/40">
+      <dt className="text-xs font-semibold text-gray-600 dark:text-gray-300">
         {label}
-      </p>
-      <p className="mt-2 text-xl font-bold text-gray-950 dark:text-white">
+      </dt>
+      <dd className="mt-1 text-lg font-bold break-words text-gray-950 dark:text-white">
         {value}
-      </p>
+      </dd>
     </div>
   );
 }
 
-function GeneratedOutput({
-  title,
+function BreakdownRow({
+  label,
   value,
-  onCopy,
+  percent,
+  strong,
 }: {
-  title: string;
+  label: string;
   value: string;
-  onCopy: () => void;
+  percent: number;
+  strong?: boolean;
 }) {
   return (
-    <div className="min-w-0 rounded-lg border border-gray-200 p-4 dark:border-gray-700">
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <h3 className="text-sm font-semibold text-gray-950 dark:text-white">
-          {title}
-        </h3>
-        <Button
-          color="light"
-          size="xs"
-          onClick={onCopy}
-          aria-label={`Copy ${title}`}
-        >
-          Copy
-        </Button>
-      </div>
-      <pre className="max-w-full overflow-x-auto rounded-lg bg-gray-50 p-3 text-sm whitespace-pre text-gray-900 dark:bg-gray-950 dark:text-gray-100">
-        {value}
-      </pre>
+    <div className="flex min-w-0 flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-gray-200 pb-2 last:border-b-0 dark:border-gray-700">
+      <dt
+        className={`min-w-0 ${
+          strong ? "font-bold text-gray-950 dark:text-white" : ""
+        }`}
+      >
+        {label}
+      </dt>
+      <dd
+        className={`max-w-full min-w-0 text-right break-words ${
+          strong ? "font-bold text-gray-950 dark:text-white" : ""
+        }`}
+      >
+        {value}{" "}
+        <span className="text-gray-500 dark:text-gray-400">({percent}%)</span>
+      </dd>
     </div>
   );
 }
 
 function getContainerMemoryError(value: number) {
   if (!Number.isFinite(value)) {
-    return "Enter the application container memory in MB.";
+    return "Container memory is required; enter a numeric value in MiB.";
+  }
+
+  if (value <= 0) {
+    return "Container memory must be greater than zero.";
+  }
+
+  if (!Number.isInteger(value)) {
+    return "Container memory must be a whole number of MiB.";
   }
 
   if (value < 256) {
-    return "Application container memory must be at least 256 MB.";
+    return "Container memory must be at least 256 MiB.";
   }
 
   return null;
@@ -384,8 +479,8 @@ function InvalidOutputState() {
       role="status"
       className="rounded-lg border border-amber-300 bg-amber-50 p-5 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200"
     >
-      Enter a valid application container memory value to see recommendations
-      and copy-ready configuration.
+      Correct the highlighted Container Memory value to see recommendations and
+      copy-ready configuration.
     </div>
   );
 }

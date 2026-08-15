@@ -12,11 +12,16 @@ export function ArchitectureDesignPage() {
       title="Architecture & Design"
       description="Tools for software architecture, documentation and design decisions."
     >
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {architectureDesignTools.map((tool) => (
-          <ToolCard key={tool.title} tool={tool} />
-        ))}
-      </div>
+      <section aria-labelledby="architecture-tools-catalog">
+        <h2 id="architecture-tools-catalog" className="sr-only">
+          Available architecture and design tools
+        </h2>
+        <div className="grid items-stretch gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {architectureDesignTools.map((tool) => (
+            <ToolCard key={tool.title} tool={tool} />
+          ))}
+        </div>
+      </section>
     </PageShell>
   );
 }

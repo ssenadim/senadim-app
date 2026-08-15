@@ -31,7 +31,17 @@ const examples: ToolExample[] = [
   },
 ];
 
-const insightClaims = ["iss", "sub", "aud", "azp", "scope", "exp", "iat", "nbf", "jti"];
+const insightClaims = [
+  "iss",
+  "sub",
+  "aud",
+  "azp",
+  "scope",
+  "exp",
+  "iat",
+  "nbf",
+  "jti",
+];
 const headerClaims = ["alg", "typ"];
 const dateClaims = ["exp", "iat", "nbf"];
 const timestampClaimNames = new Set([
@@ -167,7 +177,10 @@ export function JwtDecoderToolPage() {
         <div className="min-w-0 space-y-5">
           <div>
             <div className="mb-2 flex items-center gap-2">
-              <label htmlFor="jwt-input" className="text-sm font-semibold text-gray-900 dark:text-white">
+              <label
+                htmlFor="jwt-input"
+                className="text-sm font-semibold text-gray-900 dark:text-white"
+              >
                 JWT Token
               </label>
               <HelpTooltip
@@ -183,48 +196,99 @@ export function JwtDecoderToolPage() {
               value={token}
               onChange={(event) => setToken(event.target.value)}
               placeholder="Paste JWT token here..."
-              className="w-full max-w-full break-all font-mono"
+              className="w-full max-w-full font-mono break-all"
             />
           </div>
-          {error ? <p className="text-sm font-semibold text-red-600 dark:text-red-300">{error}</p> : null}
+          {error ? (
+            <p className="text-sm font-semibold text-red-600 dark:text-red-300">
+              {error}
+            </p>
+          ) : null}
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-            <Button color="blue" onClick={handleDecode}>Decode</Button>
-            <Button color="light" onClick={() => void copyText(headerJson, "Header copied.")}>Copy Header</Button>
-            <Button color="light" onClick={() => void copyText(payloadJson, "Payload copied.")}>Copy Payload</Button>
-            <Button color="light" onClick={() => void copyText(decodedTokenJson, "Decoded token copied.")}>Copy Decoded Token</Button>
-            <Button color="gray" onClick={clearAll}>Clear</Button>
+            <Button color="blue" onClick={handleDecode}>
+              Decode
+            </Button>
+            <Button
+              color="light"
+              onClick={() => void copyText(headerJson, "Header copied.")}
+            >
+              Copy Header
+            </Button>
+            <Button
+              color="light"
+              onClick={() => void copyText(payloadJson, "Payload copied.")}
+            >
+              Copy Payload
+            </Button>
+            <Button
+              color="light"
+              onClick={() =>
+                void copyText(decodedTokenJson, "Decoded token copied.")
+              }
+            >
+              Copy Decoded Token
+            </Button>
+            <Button color="gray" onClick={clearAll}>
+              Clear
+            </Button>
           </div>
         </div>
       }
       outputs={
         <div className="min-w-0 space-y-6">
-          {decoded ? <StatusPanel status={getTokenStatus(decoded.payload)} /> : null}
+          {decoded ? (
+            <StatusPanel status={getTokenStatus(decoded.payload)} />
+          ) : null}
           <JsonBlock title="Header JSON" value={headerJson} />
           <PayloadJsonBlock title="Payload JSON" value={payloadJson} />
           {decoded ? (
             <section className="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
-              <h2 className="text-lg font-semibold text-gray-950 dark:text-white">JWT Insights</h2>
+              <h2 className="text-lg font-semibold text-gray-950 dark:text-white">
+                JWT Insights
+              </h2>
               <div className="mt-5 grid gap-3 lg:grid-cols-3">
                 {headerClaims.map((claim) => {
                   const value = getStringClaim(decoded.header, claim);
-                  return value ? <ClaimRow key={claim} label={claim} value={value} highlighted /> : null;
+                  return value ? (
+                    <ClaimRow
+                      key={claim}
+                      label={claim}
+                      value={value}
+                      highlighted
+                    />
+                  ) : null;
                 })}
                 {insightClaims.map((claim) => {
                   const value = getStringClaim(decoded.payload, claim);
-                  return value ? <ClaimRow key={claim} label={claim} value={value} highlighted /> : null;
+                  return value ? (
+                    <ClaimRow
+                      key={claim}
+                      label={claim}
+                      value={value}
+                      highlighted
+                    />
+                  ) : null;
                 })}
               </div>
               <div className="mt-5 grid gap-3 lg:grid-cols-3">
                 {dateClaims.map((claim) => {
                   const value = getNumericClaim(decoded.payload, claim);
-                  return value ? <DateClaim key={claim} label={claim} seconds={value} /> : null;
+                  return value ? (
+                    <DateClaim key={claim} label={claim} seconds={value} />
+                  ) : null;
                 })}
               </div>
               {rolesAndScopes.length > 0 ? (
                 <div className="mt-5 rounded-lg border border-cyan-200 bg-cyan-50 p-4 dark:border-cyan-900 dark:bg-cyan-950/40">
-                  <p className="text-sm font-semibold text-gray-900 dark:text-white">Roles & Scopes</p>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                    Roles & Scopes
+                  </p>
                   <div className="mt-2 flex flex-wrap gap-2">
-                    {rolesAndScopes.map((value) => <Badge key={value} color="purple">{value}</Badge>)}
+                    {rolesAndScopes.map((value) => (
+                      <Badge key={value} color="purple">
+                        {value}
+                      </Badge>
+                    ))}
                   </div>
                 </div>
               ) : null}
@@ -232,8 +296,14 @@ export function JwtDecoderToolPage() {
           ) : null}
           {decoded ? (
             <section className="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
-              <h2 className="text-lg font-semibold text-gray-950 dark:text-white">Claim Search</h2>
+              <h2 className="text-lg font-semibold text-gray-950 dark:text-white">
+                Claim Search
+              </h2>
+              <label htmlFor="jwt-claim-search" className="sr-only">
+                Search JWT claims
+              </label>
               <TextInput
+                id="jwt-claim-search"
                 className="mt-3"
                 value={claimSearch}
                 onChange={(event) => setClaimSearch(event.target.value)}
@@ -241,7 +311,11 @@ export function JwtDecoderToolPage() {
               />
               <div className="mt-4 grid gap-2">
                 {matchingClaims.slice(0, 20).map((entry) => (
-                  <ClaimRow key={entry.key} label={entry.key} value={entry.value} />
+                  <ClaimRow
+                    key={entry.key}
+                    label={entry.key}
+                    value={entry.value}
+                  />
                 ))}
               </div>
             </section>
@@ -255,7 +329,9 @@ export function JwtDecoderToolPage() {
       notes={
         <ul className="list-disc space-y-2 pl-5 text-sm leading-7 text-gray-600 dark:text-gray-300">
           <li>JWT decoding does not verify the token signature.</li>
-          <li>Do not paste sensitive production tokens into untrusted tools.</li>
+          <li>
+            Do not paste sensitive production tokens into untrusted tools.
+          </li>
           <li>exp, iat, and nbf are usually Unix timestamps in seconds.</li>
         </ul>
       }
@@ -265,8 +341,20 @@ export function JwtDecoderToolPage() {
 }
 
 function StatusPanel({ status }: { status: string }) {
-  const color = status === "Active" ? "success" : status === "Expired" ? "failure" : "warning";
-  return <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-700"><span className="mr-3 text-sm font-semibold text-gray-900 dark:text-white">Token Status</span><Badge color={color}>{status}</Badge></div>;
+  const color =
+    status === "Active"
+      ? "success"
+      : status === "Expired"
+        ? "failure"
+        : "warning";
+  return (
+    <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+      <span className="mr-3 text-sm font-semibold text-gray-900 dark:text-white">
+        Token Status
+      </span>
+      <Badge color={color}>{status}</Badge>
+    </div>
+  );
 }
 
 function SecurityWarnings({ warnings }: { warnings: JwtWarning[] }) {
@@ -312,12 +400,48 @@ function ClaimRow({
 }) {
   const description = claimDescriptions[label.toLowerCase()];
 
-  return <div className={`rounded-lg p-3 ${highlighted ? "border border-cyan-200 bg-cyan-50 dark:border-cyan-900 dark:bg-cyan-950/40" : "bg-gray-50 dark:bg-gray-950"}`}><div className="flex items-center gap-2"><p className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">{label}</p>{description ? <HelpTooltip title={label} description={description} /> : null}</div><p className="mt-1 break-all font-mono text-sm text-gray-900 dark:text-gray-100">{value}</p></div>;
+  return (
+    <div
+      className={`rounded-lg p-3 ${highlighted ? "border border-cyan-200 bg-cyan-50 dark:border-cyan-900 dark:bg-cyan-950/40" : "bg-gray-50 dark:bg-gray-950"}`}
+    >
+      <div className="flex items-center gap-2">
+        <p className="text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
+          {label}
+        </p>
+        {description ? (
+          <HelpTooltip title={label} description={description} />
+        ) : null}
+      </div>
+      <p className="mt-1 font-mono text-sm break-all text-gray-900 dark:text-gray-100">
+        {value}
+      </p>
+    </div>
+  );
 }
 
 function DateClaim({ label, seconds }: { label: string; seconds: number }) {
   const description = claimDescriptions[label];
-  return <div className="rounded-lg bg-gray-50 p-3 dark:bg-gray-950"><div className="flex items-center gap-2"><p className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">{label}</p>{description ? <HelpTooltip title={label} description={description} /> : null}</div><p className="mt-1 font-mono text-sm text-gray-900 dark:text-gray-100">UTC: {formatJwtDate(seconds, "UTC")}</p><p className="font-mono text-sm text-gray-900 dark:text-gray-100">Europe/Istanbul: {formatJwtDate(seconds, "Europe/Istanbul")}</p><p className="font-mono text-sm text-gray-900 dark:text-gray-100">Local: {formatJwtDate(seconds)}</p></div>;
+  return (
+    <div className="rounded-lg bg-gray-50 p-3 dark:bg-gray-950">
+      <div className="flex items-center gap-2">
+        <p className="text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
+          {label}
+        </p>
+        {description ? (
+          <HelpTooltip title={label} description={description} />
+        ) : null}
+      </div>
+      <p className="mt-1 font-mono text-sm text-gray-900 dark:text-gray-100">
+        UTC: {formatJwtDate(seconds, "UTC")}
+      </p>
+      <p className="font-mono text-sm text-gray-900 dark:text-gray-100">
+        Europe/Istanbul: {formatJwtDate(seconds, "Europe/Istanbul")}
+      </p>
+      <p className="font-mono text-sm text-gray-900 dark:text-gray-100">
+        Local: {formatJwtDate(seconds)}
+      </p>
+    </div>
+  );
 }
 
 function PayloadJsonBlock({ title, value }: { title: string; value: string }) {
@@ -368,7 +492,7 @@ function TimestampAwareJson({ value }: { value: string }) {
             {prefix}
             <span className="group relative cursor-help rounded-sm border-b border-dotted border-cyan-500 text-cyan-800 dark:text-cyan-200">
               {rawValue}
-              <span className="pointer-events-none absolute left-0 top-6 z-30 hidden w-72 whitespace-normal rounded-lg border border-gray-200 bg-white p-3 font-sans text-xs leading-5 text-gray-700 shadow-lg group-hover:block dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200">
+              <span className="pointer-events-none absolute top-6 left-0 z-30 hidden w-72 rounded-lg border border-gray-200 bg-white p-3 font-sans text-xs leading-5 whitespace-normal text-gray-700 shadow-lg group-hover:block dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200">
                 <span className="block font-semibold text-gray-950 dark:text-white">
                   {timestampInfo.utc}
                 </span>
@@ -455,16 +579,28 @@ function formatRelativeTime(date: Date) {
     { label: "hour", seconds: 3_600 },
     { label: "minute", seconds: 60 },
   ];
-  const unit =
-    units.find((candidate) => absSeconds >= candidate.seconds) ??
-    { label: "second", seconds: 1 };
+  const unit = units.find((candidate) => absSeconds >= candidate.seconds) ?? {
+    label: "second",
+    seconds: 1,
+  };
   const amount = Math.max(1, Math.round(absSeconds / unit.seconds));
   const label = amount === 1 ? unit.label : `${unit.label}s`;
 
   if (Math.abs(diffSeconds) < 5) return "now";
-  return diffSeconds > 0 ? `${amount} ${label} from now` : `${amount} ${label} ago`;
+  return diffSeconds > 0
+    ? `${amount} ${label} from now`
+    : `${amount} ${label} ago`;
 }
 
 function JsonBlock({ title, value }: { title: string; value: string }) {
-  return <div><h2 className="mb-2 text-sm font-semibold text-gray-900 dark:text-white">{title}</h2><pre className="min-h-24 max-w-full overflow-x-auto rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm text-gray-900 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100">{value || "-"}</pre></div>;
+  return (
+    <div>
+      <h2 className="mb-2 text-sm font-semibold text-gray-900 dark:text-white">
+        {title}
+      </h2>
+      <pre className="min-h-24 max-w-full overflow-x-auto rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm text-gray-900 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100">
+        {value || "-"}
+      </pre>
+    </div>
+  );
 }
