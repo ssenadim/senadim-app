@@ -455,10 +455,10 @@ function convertJsonToYaml(source: string): ConfigurationConversionResult {
 
   try {
     value = JSON.parse(source) as unknown;
-  } catch {
+  } catch (error) {
     return {
       ok: false,
-      error: "Invalid JSON. Check the syntax and try again.",
+      error: getJsonErrorDetail(error, source),
     };
   }
 
@@ -480,10 +480,10 @@ function convertYamlToJson(source: string): ConfigurationConversionResult {
 
   try {
     value = parse(source, { maxAliasCount: 100 }) as unknown;
-  } catch {
+  } catch (error) {
     return {
       ok: false,
-      error: "Invalid YAML. Check the syntax and indentation and try again.",
+      error: getYamlErrorDetail(error),
     };
   }
 
@@ -507,6 +507,61 @@ function convertYamlToJson(source: string): ConfigurationConversionResult {
         "YAML contains a value or structure that cannot be represented as JSON.",
     };
   }
+}
+
+function getJsonErrorDetail(error: unknown, source: string) {
+  const message = error instanceof Error ? error.message : "";
+  const explicitLocation = message.match(
+    /line\s+(\d+)(?:\s*,)?\s+column\s+(\d+)/i,
+  );
+
+  if (explicitLocation) {
+    return `Check JSON syntax near line ${explicitLocation[1]}, column ${explicitLocation[2]}.`;
+  }
+
+  const positionMatch = message.match(/position\s+(\d+)/i);
+
+  if (positionMatch) {
+    const position = Number(positionMatch[1]);
+
+    if (Number.isInteger(position) && position >= 0) {
+      const { line, column } = getTextLocation(source, position);
+      return `Check JSON syntax near line ${line}, column ${column}.`;
+    }
+  }
+
+  return "Check JSON syntax, quotes, separators, and trailing commas.";
+}
+
+function getYamlErrorDetail(error: unknown) {
+  if (typeof error === "object" && error !== null && "linePos" in error) {
+    const linePositions = (error as { linePos?: unknown }).linePos;
+
+    if (Array.isArray(linePositions)) {
+      const firstPosition = linePositions[0] as
+        | { line?: unknown; col?: unknown }
+        | undefined;
+
+      if (
+        typeof firstPosition?.line === "number" &&
+        typeof firstPosition.col === "number"
+      ) {
+        return `Check YAML syntax near line ${firstPosition.line}, column ${firstPosition.col}.`;
+      }
+    }
+  }
+
+  return "Check YAML syntax and indentation.";
+}
+
+function getTextLocation(source: string, position: number) {
+  const beforePosition = source.slice(0, position);
+  const lines = beforePosition.split(/\r\n|\r|\n/);
+
+  return {
+    line: lines.length,
+    column: (lines[lines.length - 1]?.length ?? 0) + 1,
+  };
 }
 
 function isJsonCompatible(value: unknown, ancestors: Set<object>): boolean {

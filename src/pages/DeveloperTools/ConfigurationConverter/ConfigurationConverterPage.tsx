@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Alert, Button, Checkbox, Select, Textarea } from "flowbite-react";
+import { ToolToast } from "../../../components/common/ToolToast";
 import { ToolPageLayout } from "../../../components/layout/ToolPageLayout";
 import { usePageTitle } from "../../../hooks/usePageTitle";
+import type { ToastMessage, ToastTone } from "../../../types/toast";
 import {
   convertConfiguration,
   getConfigurationFormatLabel,
@@ -10,6 +12,10 @@ import {
   type ConfigurationInputFormat,
   type PropertiesValueTypes,
 } from "../../../utils/configurationConverter";
+import {
+  formatTextStatistics,
+  getConfigurationDownload,
+} from "../../../utils/configurationOutput";
 import { routePaths } from "../../../utils/routes";
 
 const initialJsonExample = `{
@@ -38,6 +44,8 @@ function getOppositeFormat(format: ConfigurationFormat): ConfigurationFormat {
   return format === "json" ? "yaml" : "json";
 }
 
+type ValidationState = "idle" | "valid" | "invalid";
+
 export function ConfigurationConverterPage() {
   usePageTitle("Configuration Converter");
 
@@ -47,16 +55,35 @@ export function ConfigurationConverterPage() {
   const [inputText, setInputText] = useState(initialJsonExample);
   const [outputText, setOutputText] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [validationState, setValidationState] =
+    useState<ValidationState>("idle");
   const [expandDottedKeys, setExpandDottedKeys] = useState(true);
   const [propertiesValueTypes, setPropertiesValueTypes] =
     useState<PropertiesValueTypes>("infer");
+  const [toast, setToast] = useState<ToastMessage | null>(null);
 
   const inputLabel = getConfigurationFormatLabel(inputFormat);
   const outputLabel = getConfigurationFormatLabel(outputFormat);
+  const hasCurrentOutput = validationState === "valid" && outputText.length > 0;
+
+  useEffect(() => {
+    if (!toast) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => setToast(null), 3200);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [toast]);
+
+  function showToast(tone: ToastTone, text: string) {
+    setToast({ id: Date.now(), tone, text });
+  }
 
   function clearResultState() {
     setOutputText("");
     setErrorMessage("");
+    setValidationState("idle");
   }
 
   function handleInputFormatChange(format: ConfigurationInputFormat) {
@@ -103,11 +130,13 @@ export function ConfigurationConverterPage() {
     if (isConfigurationConversionFailure(result)) {
       setOutputText("");
       setErrorMessage(result.error);
+      setValidationState("invalid");
       return;
     }
 
     setErrorMessage("");
     setOutputText(result.value);
+    setValidationState("valid");
   }
 
   function handleSwap() {
@@ -128,6 +157,38 @@ export function ConfigurationConverterPage() {
   function handleClear() {
     setInputText("");
     clearResultState();
+    showToast("info", "Input and output cleared.");
+  }
+
+  async function handleCopyOutput() {
+    if (!hasCurrentOutput) {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(outputText);
+      showToast("success", "Output copied to clipboard.");
+    } catch {
+      showToast("failure", "Copy failed. Please copy the output manually.");
+    }
+  }
+
+  function handleDownloadOutput() {
+    if (!hasCurrentOutput) {
+      return;
+    }
+
+    const download = getConfigurationDownload(outputText, outputFormat);
+    const blob = new Blob([download.content], { type: download.mimeType });
+    const objectUrl = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = objectUrl;
+    anchor.download = download.fileName;
+    document.body.append(anchor);
+    anchor.click();
+    anchor.remove();
+    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 0);
+    showToast("success", `${download.fileName} downloaded.`);
   }
 
   return (
@@ -277,13 +338,23 @@ export function ConfigurationConverterPage() {
             </Button>
           </div>
 
-          {errorMessage ? (
+          {validationState === "valid" ? (
+            <p
+              role="status"
+              aria-live="polite"
+              className="text-sm font-semibold text-emerald-700 dark:text-emerald-300"
+            >
+              Valid {inputLabel}
+            </p>
+          ) : null}
+
+          {validationState === "invalid" && errorMessage ? (
             <Alert
               id="configuration-converter-validation-error"
               color="failure"
               role="alert"
             >
-              <span className="font-semibold">Conversion failed.</span>{" "}
+              <span className="font-semibold">Invalid {inputLabel}.</span>{" "}
               {errorMessage}
             </Alert>
           ) : null}
@@ -315,15 +386,42 @@ export function ConfigurationConverterPage() {
                     : undefined
                 }
               />
+              <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                {formatTextStatistics(inputText)}
+              </p>
             </div>
 
             <div className="min-w-0">
-              <label
-                htmlFor="configuration-converter-output"
-                className="mb-2 block text-sm font-semibold text-gray-900 dark:text-white"
-              >
-                Output ({outputLabel})
-              </label>
+              <div className="mb-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <label
+                  htmlFor="configuration-converter-output"
+                  className="text-sm font-semibold text-gray-900 dark:text-white"
+                >
+                  Output ({outputLabel})
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    color="light"
+                    size="xs"
+                    onClick={handleCopyOutput}
+                    disabled={!hasCurrentOutput}
+                    aria-describedby="configuration-converter-output-actions-note"
+                  >
+                    Copy Output
+                  </Button>
+                  <Button
+                    type="button"
+                    color="light"
+                    size="xs"
+                    onClick={handleDownloadOutput}
+                    disabled={!hasCurrentOutput}
+                    aria-describedby="configuration-converter-output-actions-note"
+                  >
+                    Download Output
+                  </Button>
+                </div>
+              </div>
               <Textarea
                 id="configuration-converter-output"
                 rows={16}
@@ -334,6 +432,19 @@ export function ConfigurationConverterPage() {
                 spellCheck={false}
                 wrap="off"
               />
+              {outputText ? (
+                <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                  {formatTextStatistics(outputText)}
+                </p>
+              ) : null}
+              <p
+                id="configuration-converter-output-actions-note"
+                className="mt-2 text-xs text-gray-500 dark:text-gray-400"
+              >
+                {hasCurrentOutput
+                  ? "Actions use the current converted output only."
+                  : "Convert the current input to enable output actions."}
+              </p>
             </div>
           </div>
         </div>
@@ -353,6 +464,7 @@ export function ConfigurationConverterPage() {
           </li>
         </ul>
       }
+      toast={<ToolToast toast={toast} />}
     />
   );
 }
