@@ -16,12 +16,14 @@ const featuredDeveloperToolNames = [
   "Regex Tester",
 ];
 
-const featuredToolNames = [
-  "JWT Decoder",
-  "OpenShift Calculator Suite",
-  "JVM Memory Calculator",
-  "ADR Generator",
-];
+const recentToolNames = ["Mermaid Viewer", "Configuration Converter"];
+
+const recentToolDescriptions: Record<string, string> = {
+  "Mermaid Viewer":
+    "Create and preview Mermaid diagrams using practical templates with SVG and PNG export.",
+  "Configuration Converter":
+    "Convert application configuration between JSON, YAML and Java-style Properties formats.",
+};
 
 const featuredCapabilities = [
   {
@@ -56,16 +58,16 @@ export function HomePage() {
   const featuredDeveloperTools = developerTools.filter((tool) =>
     featuredDeveloperToolNames.includes(tool.title),
   );
-  const featuredTools = [
-    ...architectureDesignTools,
-    ...platformTools,
-    ...developerTools,
-  ]
-    .filter((tool) => featuredToolNames.includes(tool.title))
+  const recentTools = [...architectureDesignTools, ...developerTools]
+    .filter((tool) => recentToolNames.includes(tool.title))
+    .map((tool) => ({
+      ...tool,
+      description: recentToolDescriptions[tool.title] ?? tool.description,
+    }))
     .sort(
       (firstTool, secondTool) =>
-        featuredToolNames.indexOf(firstTool.title) -
-        featuredToolNames.indexOf(secondTool.title),
+        recentToolNames.indexOf(firstTool.title) -
+        recentToolNames.indexOf(secondTool.title),
     );
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-12 px-4 py-8 sm:px-6 lg:px-8">
@@ -199,11 +201,11 @@ export function HomePage() {
 
       <section className="flex flex-col gap-5">
         <SectionHeader
-          title="Featured Tools"
-          description="A focused set of architecture, platform engineering and developer productivity tools."
+          title="Recently Added"
+          description="The latest tools for architecture diagramming and application configuration workflows."
         />
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {featuredTools.map((tool) => (
+        <div className="grid min-w-0 gap-4 sm:grid-cols-2">
+          {recentTools.map((tool) => (
             <ToolCard key={tool.title} tool={tool} />
           ))}
         </div>
