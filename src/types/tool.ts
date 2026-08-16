@@ -1,3 +1,5 @@
+export type ToolHighlight = "New" | "Popular" | "Recommended";
+
 export interface DeveloperTool {
   title: string;
   description: string;

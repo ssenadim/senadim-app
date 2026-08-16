@@ -1,4 +1,4 @@
-import { Alert, Button, Spinner, Textarea } from "flowbite-react";
+import { Alert, Badge, Button, Spinner, Textarea } from "flowbite-react";
 import mermaid from "mermaid";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ToolToast } from "../../../components/common/ToolToast";
@@ -55,14 +55,24 @@ function getRenderError(error: unknown) {
   const detail = error.message.replace(/\s+/g, " ").trim();
   if (!detail) return genericRenderError;
 
-  const conciseDetail =
-    detail.length > 240 ? `${detail.slice(0, 237)}...` : detail;
-  return `${genericRenderError} Mermaid reported: ${conciseDetail}`;
+  const lineReference = detail.match(
+    /(?:parse|syntax|lexical) error(?: on)? line \d+/i,
+  )?.[0];
+
+  if (lineReference) {
+    return `${genericRenderError} Mermaid reported a ${lineReference.toLowerCase()}.`;
+  }
+
+  if (/no diagram type detected/i.test(detail)) {
+    return `${genericRenderError} Mermaid could not detect a supported diagram type.`;
+  }
+
+  return genericRenderError;
 }
 
 function PreviewState({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-[24rem] items-center justify-center rounded-lg border border-dashed border-gray-300 bg-white p-6 text-center text-sm text-gray-600 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300">
+    <div className="flex min-h-72 items-center justify-center rounded-lg border border-dashed border-gray-300 bg-white p-6 text-center text-sm text-gray-600 sm:min-h-80 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300">
       <div className="flex max-w-md flex-col items-center gap-3">
         {children}
       </div>
@@ -72,13 +82,22 @@ function PreviewState({ children }: { children: React.ReactNode }) {
 
 function TemplateCard({
   template,
+  isSelected,
   onSelect,
 }: {
   template: MermaidTemplate;
+  isSelected: boolean;
   onSelect: (template: MermaidTemplate) => void;
 }) {
   return (
-    <article className="flex min-w-0 flex-col rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
+    <article
+      className={[
+        "flex min-w-0 flex-col rounded-lg border bg-white p-4 transition dark:bg-gray-900",
+        isSelected
+          ? "border-cyan-400 ring-1 ring-cyan-200 dark:border-cyan-600 dark:ring-cyan-900"
+          : "border-gray-200 dark:border-gray-700",
+      ].join(" ")}
+    >
       <h3 className="text-sm font-semibold text-gray-950 dark:text-white">
         {template.name}
       </h3>
@@ -87,15 +106,45 @@ function TemplateCard({
       </p>
       <div className="mt-3">
         <Button
-          color="light"
+          color={isSelected ? "blue" : "light"}
           size="xs"
           aria-label={`Use ${template.name} template`}
+          aria-pressed={isSelected}
           onClick={() => onSelect(template)}
         >
+          {isSelected ? (
+            <span className="mr-1" aria-hidden="true">
+              ✓
+            </span>
+          ) : null}
           Use Template
         </Button>
       </div>
     </article>
+  );
+}
+
+function RenderStatusBadge({
+  status,
+  hasSource,
+}: {
+  status: RenderStatus;
+  hasSource: boolean;
+}) {
+  if (status === "success") {
+    return <Badge color="success">Current Preview</Badge>;
+  }
+
+  if (status === "failure") {
+    return <Badge color="failure">Needs Attention</Badge>;
+  }
+
+  if (status === "rendering") {
+    return <Badge color="info">Rendering</Badge>;
+  }
+
+  return (
+    <Badge color="gray">{hasSource ? "Not Rendered" : "Empty Source"}</Badge>
   );
 }
 
@@ -308,17 +357,34 @@ export function MermaidViewerPage() {
             className="min-w-0 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-950"
             aria-labelledby="mermaid-templates-heading"
           >
-            <h2
-              id="mermaid-templates-heading"
-              className="text-sm font-semibold text-gray-900 dark:text-white"
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div>
+                <h2
+                  id="mermaid-templates-heading"
+                  className="text-sm font-semibold text-gray-900 dark:text-white"
+                >
+                  Mermaid Templates
+                </h2>
+                <p
+                  id="mermaid-templates-guidance"
+                  className="mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400"
+                >
+                  Choose a starting point to load and render it immediately.
+                </p>
+              </div>
+              <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                {mermaidTemplates.length} templates
+              </span>
+            </div>
+            <div
+              className="mt-3 grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6"
+              aria-describedby="mermaid-templates-guidance"
             >
-              Mermaid Templates
-            </h2>
-            <div className="mt-3 grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {mermaidTemplates.map((template) => (
                 <TemplateCard
                   key={template.id}
                   template={template}
+                  isSelected={selectedTemplateId === template.id}
                   onSelect={handleTemplateSelect}
                 />
               ))}
@@ -363,7 +429,7 @@ export function MermaidViewerPage() {
               <div className="mt-4 flex flex-wrap items-center gap-2">
                 <Button
                   color="blue"
-                  disabled={status === "rendering"}
+                  disabled={status === "rendering" || !source.trim()}
                   onClick={() => void renderDiagram(source)}
                 >
                   {status === "rendering" ? "Rendering..." : "Render Diagram"}
@@ -384,12 +450,18 @@ export function MermaidViewerPage() {
               aria-busy={status === "rendering"}
             >
               <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                <h2
-                  id="mermaid-preview-heading"
-                  className="text-sm font-semibold text-gray-900 dark:text-white"
-                >
-                  Diagram Preview
-                </h2>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2
+                    id="mermaid-preview-heading"
+                    className="text-sm font-semibold text-gray-900 dark:text-white"
+                  >
+                    Diagram Preview
+                  </h2>
+                  <RenderStatusBadge
+                    status={status}
+                    hasSource={Boolean(source.trim())}
+                  />
+                </div>
                 <div className="flex max-w-full flex-wrap items-center gap-2">
                   <Button
                     color="light"
