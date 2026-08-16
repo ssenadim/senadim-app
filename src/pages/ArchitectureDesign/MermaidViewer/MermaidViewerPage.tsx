@@ -5,7 +5,9 @@ import { ToolToast } from "../../../components/common/ToolToast";
 import { ToolPageLayout } from "../../../components/layout/ToolPageLayout";
 import {
   defaultMermaidTemplate,
+  mermaidTemplateCategories,
   mermaidTemplates,
+  type MermaidTemplateCategory,
   type MermaidTemplate,
 } from "../../../data/mermaidTemplates";
 import { usePageTitle } from "../../../hooks/usePageTitle";
@@ -24,6 +26,7 @@ const genericRenderError =
 type RenderStatus = "idle" | "rendering" | "success" | "failure";
 type ExportFormat = "svg" | "png";
 type MermaidTheme = "default" | "dark";
+type TemplateCategoryFilter = "All Templates" | MermaidTemplateCategory;
 
 let renderSequence = 0;
 
@@ -156,6 +159,8 @@ export function MermaidViewerPage() {
   const [selectedTemplateId, setSelectedTemplateId] = useState(
     defaultMermaidTemplate.id,
   );
+  const [activeTemplateCategory, setActiveTemplateCategory] =
+    useState<TemplateCategoryFilter>("All Templates");
   const [renderedSvg, setRenderedSvg] = useState("");
   const [status, setStatus] = useState<RenderStatus>("idle");
   const [error, setError] = useState("");
@@ -172,6 +177,12 @@ export function MermaidViewerPage() {
   const selectedTemplateName =
     mermaidTemplates.find((template) => template.id === selectedTemplateId)
       ?.name ?? "";
+  const visibleTemplates =
+    activeTemplateCategory === "All Templates"
+      ? mermaidTemplates
+      : mermaidTemplates.filter(
+          (template) => template.category === activeTemplateCategory,
+        );
   const canExportDiagram = status === "success" && Boolean(renderedSvg);
 
   useEffect(() => {
@@ -357,37 +368,71 @@ export function MermaidViewerPage() {
             className="min-w-0 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-950"
             aria-labelledby="mermaid-templates-heading"
           >
-            <div className="flex flex-wrap items-start justify-between gap-2">
-              <div>
-                <h2
-                  id="mermaid-templates-heading"
-                  className="text-sm font-semibold text-gray-900 dark:text-white"
-                >
-                  Mermaid Templates
-                </h2>
-                <p
-                  id="mermaid-templates-guidance"
-                  className="mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400"
-                >
-                  Choose a starting point to load and render it immediately.
-                </p>
+            <div className="flex min-w-0 flex-col gap-3">
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div>
+                  <h2
+                    id="mermaid-templates-heading"
+                    className="text-sm font-semibold text-gray-900 dark:text-white"
+                  >
+                    Mermaid Templates
+                  </h2>
+                  <p
+                    id="mermaid-templates-guidance"
+                    className="mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400"
+                  >
+                    Choose a starting point to load and render it immediately.
+                  </p>
+                </div>
+                <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                  {visibleTemplates.length} template
+                  {visibleTemplates.length === 1 ? "" : "s"}
+                </span>
               </div>
-              <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                {mermaidTemplates.length} templates
-              </span>
-            </div>
-            <div
-              className="mt-3 grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6"
-              aria-describedby="mermaid-templates-guidance"
-            >
-              {mermaidTemplates.map((template) => (
-                <TemplateCard
-                  key={template.id}
-                  template={template}
-                  isSelected={selectedTemplateId === template.id}
-                  onSelect={handleTemplateSelect}
-                />
-              ))}
+
+              <div
+                className="flex max-w-full gap-2 overflow-x-auto pb-1"
+                role="group"
+                aria-label="Filter Mermaid templates by category"
+              >
+                {(["All Templates", ...mermaidTemplateCategories] as const).map(
+                  (category) => {
+                    const isActive = activeTemplateCategory === category;
+
+                    return (
+                      <Button
+                        key={category}
+                        color={isActive ? "blue" : "light"}
+                        size="xs"
+                        className="shrink-0"
+                        aria-pressed={isActive}
+                        onClick={() => setActiveTemplateCategory(category)}
+                      >
+                        {isActive ? (
+                          <span className="mr-1" aria-hidden="true">
+                            ✓
+                          </span>
+                        ) : null}
+                        {category}
+                      </Button>
+                    );
+                  },
+                )}
+              </div>
+
+              <div
+                className="grid max-h-[26rem] min-w-0 gap-3 overflow-y-auto overscroll-contain pr-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                aria-describedby="mermaid-templates-guidance"
+              >
+                {visibleTemplates.map((template) => (
+                  <TemplateCard
+                    key={template.id}
+                    template={template}
+                    isSelected={selectedTemplateId === template.id}
+                    onSelect={handleTemplateSelect}
+                  />
+                ))}
+              </div>
             </div>
           </section>
 
