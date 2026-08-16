@@ -10,6 +10,14 @@ export const architectureDesignTools: DeveloperTool[] = [
     status: "available",
   },
   {
+    title: "Mermaid Viewer",
+    description:
+      "Create and preview Mermaid diagrams directly in your browser.",
+    category: "Diagramming",
+    path: routePaths.mermaidViewer,
+    status: "available",
+  },
+  {
     title: "ADR Generator",
     description:
       "Create Architecture Decision Records using a structured template.",

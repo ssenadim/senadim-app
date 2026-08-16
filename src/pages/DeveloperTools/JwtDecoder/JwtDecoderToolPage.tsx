@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Badge, Button, TextInput, Textarea } from "flowbite-react";
+import { Link } from "react-router-dom";
 import { HelpTooltip } from "../../../components/common/HelpTooltip";
 import { ToolToast } from "../../../components/common/ToolToast";
 import { ToolPageLayout } from "../../../components/layout/ToolPageLayout";
@@ -119,7 +120,7 @@ export function JwtDecoderToolPage() {
 
   async function copyText(value: string, message: string) {
     if (!value) {
-      showToast("info", "There is nothing to copy yet.");
+      showToast("info", "Decode a JWT before copying.");
       return;
     }
 
@@ -157,7 +158,7 @@ export function JwtDecoderToolPage() {
       title="JWT Decoder"
       description="Decode JWT header and payload claims for debugging authentication, authorization, and token lifetime issues."
       breadcrumbs={[
-        { label: "Developer Tools", path: routePaths.developerTools },
+        { label: "Developer Productivity", path: routePaths.developerTools },
         { label: "JWT Decoder" },
       ]}
       overviewTitle="What is JWT?"
@@ -333,6 +334,17 @@ export function JwtDecoderToolPage() {
             Do not paste sensitive production tokens into untrusted tools.
           </li>
           <li>exp, iat, and nbf are usually Unix timestamps in seconds.</li>
+          <li>
+            Testing an authorization-code client? Generate its verifier and
+            challenge with the{" "}
+            <Link
+              to={routePaths.pkceGeneratorTool}
+              className="font-medium text-cyan-700 hover:underline dark:text-cyan-300"
+            >
+              PKCE Generator
+            </Link>
+            .
+          </li>
         </ul>
       }
       toast={<ToolToast toast={toast} />}

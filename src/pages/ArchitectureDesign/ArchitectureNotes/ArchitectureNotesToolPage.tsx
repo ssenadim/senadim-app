@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Badge, Button, Select, TextInput, Textarea } from "flowbite-react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ToolToast } from "../../../components/common/ToolToast";
 import { ToolPageLayout } from "../../../components/layout/ToolPageLayout";
 import { architectureNoteTemplates } from "../../../data/architectureNoteTemplates";
@@ -263,13 +263,20 @@ export function ArchitectureNotesToolPage() {
         { label: "Architecture & Design", path: routePaths.architectureDesign },
         { label: "Architecture Notes" },
       ]}
-      overviewTitle="Lightweight architecture documentation"
+      overviewTitle="What are Architecture Notes?"
       overviewCollapsible
-      overviewToggleLabel="About Architecture Notes"
+      overviewToggleLabel="What are Architecture Notes?"
       overview={
         <p>
-          Notes stay in this browser and support Markdown text. Use the ADR
-          Generator when a formal decision record is required.
+          Notes stay in this browser and support Markdown text. When a design
+          choice becomes durable, continue the workflow in the{" "}
+          <Link
+            to={routePaths.adrGenerator}
+            className="font-medium text-cyan-700 hover:underline dark:text-cyan-300"
+          >
+            ADR Generator
+          </Link>{" "}
+          to create a formal decision record.
         </p>
       }
       inputTitle={null}

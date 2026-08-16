@@ -5,7 +5,7 @@ import { usePageTitle } from "../../hooks/usePageTitle";
 import { routePaths } from "../../utils/routes";
 
 export function DpopNotePage() {
-  usePageTitle("DPoP");
+  usePageTitle("DPoP Architecture Note");
 
   return (
     <PageShell
@@ -49,10 +49,16 @@ export function DpopNotePage() {
             </h2>
             <ul className="mt-2 list-disc space-y-2 pl-5">
               <li>The client creates or uses an asymmetric key pair.</li>
-              <li>The authorization request includes proof of the public key.</li>
-              <li>The authorization server issues a DPoP-bound access token.</li>
+              <li>
+                The authorization request includes proof of the public key.
+              </li>
+              <li>
+                The authorization server issues a DPoP-bound access token.
+              </li>
               <li>Each API request includes a signed DPoP proof JWT.</li>
-              <li>The resource server validates the proof and token binding.</li>
+              <li>
+                The resource server validates the proof and token binding.
+              </li>
             </ul>
           </section>
 
@@ -61,9 +67,13 @@ export function DpopNotePage() {
               Practical notes
             </h2>
             <ul className="mt-2 list-disc space-y-2 pl-5">
-              <li>DPoP is useful for public clients such as SPA and mobile apps.</li>
+              <li>
+                DPoP is useful for public clients such as SPA and mobile apps.
+              </li>
               <li>It is not a replacement for TLS.</li>
-              <li>Clock skew and replay protection must be handled carefully.</li>
+              <li>
+                Clock skew and replay protection must be handled carefully.
+              </li>
               <li>Resource servers need DPoP validation support.</li>
             </ul>
           </section>

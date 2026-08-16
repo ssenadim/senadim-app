@@ -4,7 +4,7 @@ import { platformTools } from "../../data/platformTools";
 import { usePageTitle } from "../../hooks/usePageTitle";
 
 export function PlatformEngineeringPage() {
-  usePageTitle("Platform Engineering");
+  usePageTitle("Platform Engineering Tools");
   const availableTools = platformTools.filter(
     (tool) => tool.status === "available",
   );
@@ -14,9 +14,9 @@ export function PlatformEngineeringPage() {
 
   return (
     <PageShell
-      eyebrow="Platform Engineering Tools"
+      eyebrow="Tool catalog"
       title="Platform Engineering"
-      description="Plan workload capacity, resource limits, and runtime memory with practical calculators and copy-ready configuration for platform teams."
+      description="Plan workload capacity, container resources, autoscaling, persistent storage, and JVM memory with practical calculators for platform engineering workflows."
     >
       <section aria-labelledby="available-platform-tools">
         <h2 id="available-platform-tools" className="sr-only">

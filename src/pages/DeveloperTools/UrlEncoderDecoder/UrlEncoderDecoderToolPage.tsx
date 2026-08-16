@@ -112,7 +112,7 @@ export function UrlEncoderDecoderToolPage() {
       title="URL Encoder / Decoder"
       description="Encode and decode URLs, query parameters and special characters."
       breadcrumbs={[
-        { label: "Developer Tools", path: routePaths.developerTools },
+        { label: "Developer Productivity", path: routePaths.developerTools },
         { label: "URL Encoder / Decoder" },
       ]}
       overviewTitle="What is URL Encoding?"

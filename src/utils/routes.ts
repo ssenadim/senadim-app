@@ -16,6 +16,7 @@ export const routePaths = {
   adrGenerator: "/architecture-design/adr-generator",
   architectureNotesTool: "/architecture-design/architecture-notes",
   threatModelingHelper: "/architecture-design/threat-modeling-helper",
+  mermaidViewer: "/architecture-design/mermaid-viewer",
   platformEngineering: "/platform-engineering",
   containerPlatformCalculator:
     "/platform-engineering/container-platform-calculator",

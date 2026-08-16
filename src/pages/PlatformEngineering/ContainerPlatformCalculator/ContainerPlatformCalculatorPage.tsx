@@ -1,5 +1,6 @@
 import { useMemo, useState, type KeyboardEvent, type ReactNode } from "react";
 import { Button, Select, TextInput } from "flowbite-react";
+import { Link } from "react-router-dom";
 import { CopyReadyOutput } from "../../../components/common/CopyReadyOutput";
 import { HelpTooltip } from "../../../components/common/HelpTooltip";
 import { ToolToast } from "../../../components/common/ToolToast";
@@ -75,7 +76,7 @@ const capacityExamples: ToolExample[] = [
 ];
 
 export function ContainerPlatformCalculatorPage() {
-  usePageTitle("OpenShift Calculator Suite");
+  usePageTitle("OpenShift Calculator");
 
   const [activeTab, setActiveTab] =
     useState<CalculatorTab>("Capacity Planning");
@@ -334,7 +335,7 @@ export function ContainerPlatformCalculatorPage() {
       description="Plan capacity, pod resources, autoscaling, runtime memory, and persistent storage for OpenShift workloads."
       breadcrumbs={[
         {
-          label: "Platform Engineering Tools",
+          label: "Platform Engineering",
           path: routePaths.platformEngineering,
         },
         { label: "OpenShift Calculator Suite" },
@@ -915,6 +916,16 @@ export function ContainerPlatformCalculatorPage() {
             <li>Actual requirements depend on workload.</li>
             <li>Monitor memory usage in production.</li>
             <li>Review JVM container awareness settings.</li>
+            <li>
+              Refine heap and non-heap allocation with the{" "}
+              <Link
+                to={routePaths.jvmMemoryCalculator}
+                className="font-medium text-cyan-700 hover:underline dark:text-cyan-300"
+              >
+                JVM Memory Calculator
+              </Link>
+              .
+            </li>
           </ul>
         )
       }

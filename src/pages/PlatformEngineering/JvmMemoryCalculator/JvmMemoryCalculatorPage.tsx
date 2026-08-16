@@ -74,10 +74,10 @@ export function JvmMemoryCalculatorPage() {
   return (
     <ToolPageLayout
       title="JVM Memory Calculator"
-      description="Calculate a practical runtime memory allocation for JVM application containers."
+      description="Size JVM heap, metaspace, native memory, and safety headroom within an application container memory limit."
       breadcrumbs={[
         {
-          label: "Platform Engineering Tools",
+          label: "Platform Engineering",
           path: routePaths.platformEngineering,
         },
         { label: "JVM Memory Calculator" },
@@ -88,12 +88,13 @@ export function JvmMemoryCalculatorPage() {
       overview={
         <div className="space-y-3">
           <p>
-            JVM memory includes heap, metaspace, native allocations, and
-            operational headroom.
+            A containerized JVM uses memory for the heap, metaspace, thread
+            stacks, direct buffers, other native allocations, and operational
+            headroom.
           </p>
           <p>
-            Keeping these areas within the container limit reduces avoidable
-            out-of-memory terminations.
+            Sizing the heap without reserving space for the rest can exceed the
+            container limit and cause avoidable out-of-memory terminations.
           </p>
         </div>
       }

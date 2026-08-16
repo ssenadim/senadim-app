@@ -1,3 +1,5 @@
+import { useEffect, useRef } from "react";
+import type { KeyboardEvent } from "react";
 import { SidebarNavigation } from "../navigation/SidebarNavigation";
 import { BrandMark } from "./BrandMark";
 
@@ -7,6 +9,67 @@ interface MobileSidebarProps {
 }
 
 export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const returnFocusRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    returnFocusRef.current =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
+    closeButtonRef.current?.focus();
+
+    return () => {
+      const returnFocusElement = returnFocusRef.current;
+
+      if (returnFocusElement?.isConnected) {
+        returnFocusElement.focus();
+      }
+
+      returnFocusRef.current = null;
+    };
+  }, [isOpen]);
+
+  const handleDialogKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      onClose();
+      return;
+    }
+
+    if (event.key !== "Tab") {
+      return;
+    }
+
+    const focusableElements = Array.from(
+      event.currentTarget.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]):not([tabindex="-1"]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      ),
+    );
+    const firstFocusableElement = focusableElements[0];
+    const lastFocusableElement =
+      focusableElements[focusableElements.length - 1];
+
+    if (!firstFocusableElement || !lastFocusableElement) {
+      return;
+    }
+
+    if (event.shiftKey && document.activeElement === firstFocusableElement) {
+      event.preventDefault();
+      lastFocusableElement.focus();
+    } else if (
+      !event.shiftKey &&
+      document.activeElement === lastFocusableElement
+    ) {
+      event.preventDefault();
+      firstFocusableElement.focus();
+    }
+  };
+
   if (!isOpen) {
     return null;
   }
@@ -17,6 +80,7 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
       role="dialog"
       aria-modal="true"
       aria-label="Main navigation"
+      onKeyDown={handleDialogKeyDown}
     >
       <button
         type="button"
@@ -29,6 +93,7 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
         <div className="flex items-center justify-between gap-4">
           <BrandMark />
           <button
+            ref={closeButtonRef}
             type="button"
             aria-label="Close navigation"
             onClick={onClose}

@@ -116,7 +116,7 @@ export function RegexTesterToolPage() {
       title="Regex Tester"
       description="Test regular expressions against sample text and inspect matches."
       breadcrumbs={[
-        { label: "Developer Tools", path: routePaths.developerTools },
+        { label: "Developer Productivity", path: routePaths.developerTools },
         { label: "Regex Tester" },
       ]}
       overviewTitle="What is a Regular Expression?"

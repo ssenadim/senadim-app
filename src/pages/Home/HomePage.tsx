@@ -17,18 +17,17 @@ const featuredDeveloperToolNames = [
 ];
 
 const featuredToolNames = [
-  "PlantUML Viewer",
+  "JWT Decoder",
   "OpenShift Calculator Suite",
   "JVM Memory Calculator",
-  "JWT Decoder",
-  "Timestamp Converter",
+  "ADR Generator",
 ];
 
 const featuredCapabilities = [
   {
     title: "Architecture & Design",
     description:
-      "Architecture diagrams, C4 modeling, ISAQB templates and PlantUML tooling.",
+      "Text-based diagramming, C4 modeling, architecture records and design documentation.",
   },
   {
     title: "Platform Engineering",
@@ -73,23 +72,24 @@ export function HomePage() {
       <section className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm sm:p-8 dark:border-gray-800 dark:bg-gray-900">
         <div className="max-w-4xl">
           <p className="text-sm font-semibold text-cyan-700 uppercase dark:text-cyan-300">
-            Architecture / Platform Engineering / Developer Productivity
+            Developer Productivity / Platform Engineering / Architecture &amp;
+            Design
           </p>
           <h1 className="mt-4 text-4xl font-bold text-gray-950 sm:text-5xl dark:text-white">
             Freeshot
           </h1>
           <p className="mt-5 max-w-3xl text-base leading-7 text-gray-600 dark:text-gray-300">
-            Freeshot provides architecture, platform engineering and developer
-            productivity tools for modern software teams.
+            Freeshot is an engineering toolkit for developer productivity,
+            platform engineering, and architecture and design workflows.
           </p>
           <ul className="mt-6 grid max-w-4xl gap-2 text-sm text-gray-700 sm:grid-cols-2 lg:grid-cols-3 dark:text-gray-200">
             {[
-              "PlantUML Architecture Templates",
-              "C4 Architecture Modeling",
+              "Developer Productivity Utilities",
               "Container Platform Capacity Planning",
               "JVM Memory Sizing",
               "JWT & PKCE Tools",
-              "Developer Productivity Utilities",
+              "Architecture Decision Records",
+              "PlantUML & Mermaid Diagramming",
             ].map((capability) => (
               <li
                 key={capability}
@@ -101,50 +101,41 @@ export function HomePage() {
           </ul>
           <div className="mt-7 flex flex-col gap-3 sm:flex-row">
             <Button as={Link} to={routePaths.developerTools} color="blue">
-              Explore Developer Tools
+              Explore Developer Productivity
             </Button>
             <Button as={Link} to={routePaths.platformEngineering} color="light">
-              Explore Platform Engineering Tools
+              Explore Platform Engineering
             </Button>
           </div>
         </div>
       </section>
 
-      <section className="rounded-lg border border-cyan-200 bg-cyan-50 p-6 shadow-sm sm:p-7 dark:border-cyan-900 dark:bg-cyan-950/40">
-        <div className="grid gap-6 lg:grid-cols-[1fr_0.75fr] lg:items-center">
-          <div>
-            <p className="text-sm font-semibold text-cyan-700 uppercase dark:text-cyan-300">
-              Featured Tool
-            </p>
-            <h2 className="mt-3 text-3xl font-bold text-gray-950 dark:text-white">
-              PlantUML Viewer
-            </h2>
-            <p className="mt-4 max-w-3xl text-sm leading-7 text-gray-700 dark:text-gray-200">
-              Create architecture diagrams instantly using reusable templates
-              for ISAQB, OAuth2, PAR, DPoP, container platform and microservice
-              architectures.
-            </p>
-            <div className="mt-6">
-              <Button as={Link} to={routePaths.plantUmlViewer} color="blue">
-                Open PlantUML Viewer
-              </Button>
-            </div>
-          </div>
-          <ul className="grid gap-3 sm:grid-cols-2">
-            {[
-              "C4 Architecture Templates",
-              "ISAQB Architecture Templates",
-              "OAuth2 / PAR / DPoP Flows",
-              "Container Platform Architecture Templates",
-            ].map((highlight) => (
-              <li
-                key={highlight}
-                className="rounded-lg border border-cyan-100 bg-white px-4 py-3 text-sm font-medium text-gray-800 dark:border-cyan-900 dark:bg-gray-900 dark:text-gray-100"
-              >
-                {highlight}
-              </li>
-            ))}
-          </ul>
+      <section className="flex flex-col gap-5">
+        <SectionHeader
+          title="Architecture Diagramming"
+          description="Create and preview text-based diagrams using PlantUML or Mermaid, with practical templates and export capabilities."
+        />
+        <div className="grid items-stretch gap-4 md:grid-cols-2">
+          {[
+            {
+              title: "PlantUML Viewer",
+              description:
+                "Create PlantUML sequence, component, deployment, and C4 architecture diagrams.",
+              category: "Diagramming",
+              path: routePaths.plantUmlViewer,
+              status: "available" as const,
+            },
+            {
+              title: "Mermaid Viewer",
+              description:
+                "Create Mermaid flowcharts, sequence, class, state, and ER diagrams.",
+              category: "Diagramming",
+              path: routePaths.mermaidViewer,
+              status: "available" as const,
+            },
+          ].map((tool) => (
+            <ToolCard key={tool.title} tool={tool} />
+          ))}
         </div>
       </section>
 
@@ -155,12 +146,12 @@ export function HomePage() {
           detail="Architecture and documentation tools"
         />
         <MetricCard
-          label="Platform Engineering Tools"
+          label="Platform Engineering"
           value={`${availablePlatformTools.length}+`}
           detail="Operational calculators"
         />
         <MetricCard
-          label="Developer Tools"
+          label="Developer Productivity"
           value={`${availableDeveloperTools.length}+`}
           detail="Developer productivity utilities"
         />
@@ -169,7 +160,7 @@ export function HomePage() {
       <section className="flex flex-col gap-5">
         <SectionHeader
           title="Featured Capabilities"
-          description="Freeshot is organized around architecture design, platform operations and everyday developer workflows."
+          description="Freeshot connects everyday developer workflows with platform planning and architecture documentation."
         />
         <div className="grid gap-4 md:grid-cols-3">
           {featuredCapabilities.map((capability) => (
@@ -191,17 +182,17 @@ export function HomePage() {
           to={routePaths.architectureDesign}
         />
         <FeaturedSectionCard
-          title="Developer Tools"
+          title="Developer Productivity"
           description="Developer productivity utilities for integration teams, backend engineers and architects."
           examples={featuredDeveloperTools.map((tool) => tool.title)}
-          actionLabel="View Developer Tools"
+          actionLabel="View Developer Productivity"
           to={routePaths.developerTools}
         />
         <FeaturedSectionCard
-          title="Platform Engineering Tools"
+          title="Platform Engineering"
           description="Sizing, capacity planning and operational tooling for container platform workloads."
           examples={availablePlatformTools.map((tool) => tool.title)}
-          actionLabel="View Platform Engineering Tools"
+          actionLabel="View Platform Engineering"
           to={routePaths.platformEngineering}
         />
       </section>

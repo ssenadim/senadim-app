@@ -160,7 +160,7 @@ export function FormatterToolPage() {
       title="Data Formatter"
       description="Format, validate and transform structured data such as JSON, XML and HTML for APIs, integrations, web development and debugging."
       breadcrumbs={[
-        { label: "Developer Tools", path: routePaths.developerTools },
+        { label: "Developer Productivity", path: routePaths.developerTools },
         { label: "Data Formatter" },
       ]}
       overviewTitle="Why Formatting Matters"

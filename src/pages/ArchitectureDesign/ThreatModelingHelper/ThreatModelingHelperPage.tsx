@@ -8,6 +8,7 @@ import {
   Select,
   TextInput,
 } from "flowbite-react";
+import { Link } from "react-router-dom";
 
 import { ToolPageLayout } from "../../../components/layout/ToolPageLayout";
 import { usePageTitle } from "../../../hooks/usePageTitle";
@@ -143,9 +144,16 @@ export function ThreatModelingHelperPage() {
       overviewTitle="1. Project Definition"
       overview={
         <p>
-          Define the project context, then review applicable threats,
+          Define the project context, then review applicable STRIDE threats,
           recommendations, risk details and exportable documentation in one
-          workflow.
+          workflow. Continue with related diagramming and documentation tools in{" "}
+          <Link
+            to={routePaths.architectureDesign}
+            className="font-medium text-cyan-700 hover:underline dark:text-cyan-300"
+          >
+            Architecture &amp; Design
+          </Link>
+          .
         </p>
       }
       inputTitle="Project Information"

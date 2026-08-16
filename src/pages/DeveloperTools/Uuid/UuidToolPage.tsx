@@ -32,7 +32,9 @@ const examples: ToolExample[] = [
 
 function parseQuantity(value: string): UuidQuantity {
   const numericValue = Number(value);
-  const option = uuidQuantityOptions.find((quantity) => quantity === numericValue);
+  const option = uuidQuantityOptions.find(
+    (quantity) => quantity === numericValue,
+  );
 
   return option ?? 1;
 }
@@ -110,7 +112,7 @@ export function UuidToolPage() {
       title="UUID Generator"
       description="Generate UUID v4 identifiers for APIs, databases, distributed systems, and event-driven workflows."
       breadcrumbs={[
-        { label: "Developer Tools", path: routePaths.developerTools },
+        { label: "Developer Productivity", path: routePaths.developerTools },
         { label: "UUID Generator" },
       ]}
       overviewTitle="What is a UUID?"
@@ -152,7 +154,9 @@ export function UuidToolPage() {
             <Select
               id="uuid-quantity"
               value={quantity}
-              onChange={(event) => setQuantity(parseQuantity(event.target.value))}
+              onChange={(event) =>
+                setQuantity(parseQuantity(event.target.value))
+              }
             >
               {uuidQuantityOptions.map((option) => (
                 <option key={option} value={option}>
@@ -213,9 +217,9 @@ export function UuidToolPage() {
                 {uuids.map((uuid) => (
                   <div
                     key={uuid}
-                    className="flex flex-col gap-2 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-950 sm:flex-row sm:items-center sm:justify-between"
+                    className="flex flex-col gap-2 rounded-lg border border-gray-200 bg-gray-50 p-3 sm:flex-row sm:items-center sm:justify-between dark:border-gray-700 dark:bg-gray-950"
                   >
-                    <code className="break-all text-sm text-gray-800 dark:text-gray-200">
+                    <code className="text-sm break-all text-gray-800 dark:text-gray-200">
                       {uuid}
                     </code>
                     <Button

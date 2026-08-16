@@ -137,7 +137,7 @@ export function DataCompareToolPage() {
       title="Data Compare"
       description="Compare JSON, XML, YAML, Java, C# and plain text content with practical noise-reduction options."
       breadcrumbs={[
-        { label: "Developer Tools", path: routePaths.developerTools },
+        { label: "Developer Productivity", path: routePaths.developerTools },
         { label: "Data Compare" },
       ]}
       overviewTitle="What is Data Comparison?"

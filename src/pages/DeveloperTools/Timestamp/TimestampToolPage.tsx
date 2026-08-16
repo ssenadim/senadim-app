@@ -52,7 +52,9 @@ export function TimestampToolPage() {
   const [timestampError, setTimestampError] = useState("");
   const [dateInput, setDateInput] = useState("");
   const [timezone, setTimezone] = useState<TimestampTimezone>("istanbul");
-  const [dateResult, setDateResult] = useState<DateTimestampResult | null>(null);
+  const [dateResult, setDateResult] = useState<DateTimestampResult | null>(
+    null,
+  );
   const [dateError, setDateError] = useState("");
   const [toast, setToast] = useState<ToastMessage | null>(null);
 
@@ -124,7 +126,7 @@ export function TimestampToolPage() {
       title="Timestamp Converter"
       description="Convert Unix timestamps to human-readable dates and convert dates back to Unix timestamps."
       breadcrumbs={[
-        { label: "Developer Tools", path: routePaths.developerTools },
+        { label: "Developer Productivity", path: routePaths.developerTools },
         { label: "Timestamp Converter" },
       ]}
       overviewTitle="What is a Unix Timestamp?"
@@ -161,10 +163,25 @@ export function TimestampToolPage() {
                 </p>
               </div>
               <div className="flex flex-col gap-2 sm:flex-row">
-                <Button color="light" size="sm" onClick={() => void copyText(current.seconds, "Current seconds copied.")}>
+                <Button
+                  color="light"
+                  size="sm"
+                  onClick={() =>
+                    void copyText(current.seconds, "Current seconds copied.")
+                  }
+                >
                   Copy Seconds
                 </Button>
-                <Button color="light" size="sm" onClick={() => void copyText(current.milliseconds, "Current milliseconds copied.")}>
+                <Button
+                  color="light"
+                  size="sm"
+                  onClick={() =>
+                    void copyText(
+                      current.milliseconds,
+                      "Current milliseconds copied.",
+                    )
+                  }
+                >
                   Copy Milliseconds
                 </Button>
                 <Button color="gray" size="sm" onClick={refreshCurrent}>
@@ -180,7 +197,10 @@ export function TimestampToolPage() {
             </h2>
             <div>
               <div className="mb-2 flex items-center gap-2">
-                <label htmlFor="timestamp-input" className="text-sm font-semibold text-gray-900 dark:text-white">
+                <label
+                  htmlFor="timestamp-input"
+                  className="text-sm font-semibold text-gray-900 dark:text-white"
+                >
                   Timestamp Value
                 </label>
                 <HelpTooltip
@@ -206,18 +226,33 @@ export function TimestampToolPage() {
               <Button color="blue" onClick={handleTimestampConvert}>
                 Convert Timestamp
               </Button>
-              <Button color="light" onClick={() => void copyText(timestampResult ? `${timestampResult.utc}\n${timestampResult.local}\n${timestampResult.istanbul}` : "", "Timestamp result copied.")}>
+              <Button
+                color="light"
+                onClick={() =>
+                  void copyText(
+                    timestampResult
+                      ? `${timestampResult.utc}\n${timestampResult.local}\n${timestampResult.istanbul}`
+                      : "",
+                    "Timestamp result copied.",
+                  )
+                }
+              >
                 Copy Result
               </Button>
-              <Button color="gray" onClick={() => {
-                setTimestampInput("");
-                setTimestampResult(null);
-                setTimestampError("");
-              }}>
+              <Button
+                color="gray"
+                onClick={() => {
+                  setTimestampInput("");
+                  setTimestampResult(null);
+                  setTimestampError("");
+                }}
+              >
                 Clear
               </Button>
             </div>
-            {timestampError ? <Alert color="failure">{timestampError}</Alert> : null}
+            {timestampError ? (
+              <Alert color="failure">{timestampError}</Alert>
+            ) : null}
           </section>
 
           <section className="space-y-4">
@@ -226,7 +261,10 @@ export function TimestampToolPage() {
             </h2>
             <div className="grid gap-4 md:grid-cols-[1fr_16rem]">
               <div>
-                <label htmlFor="date-input" className="mb-2 block text-sm font-semibold text-gray-900 dark:text-white">
+                <label
+                  htmlFor="date-input"
+                  className="mb-2 block text-sm font-semibold text-gray-900 dark:text-white"
+                >
                   Date / Time
                 </label>
                 <TextInput
@@ -238,7 +276,10 @@ export function TimestampToolPage() {
               </div>
               <div>
                 <div className="mb-2 flex items-center gap-2">
-                  <label htmlFor="timezone-input" className="text-sm font-semibold text-gray-900 dark:text-white">
+                  <label
+                    htmlFor="timezone-input"
+                    className="text-sm font-semibold text-gray-900 dark:text-white"
+                  >
                     Timezone
                   </label>
                   <HelpTooltip
@@ -265,14 +306,27 @@ export function TimestampToolPage() {
               <Button color="blue" onClick={handleDateConvert}>
                 Convert To Timestamp
               </Button>
-              <Button color="light" onClick={() => void copyText(dateResult ? `${dateResult.seconds}\n${dateResult.milliseconds}` : "", "Date result copied.")}>
+              <Button
+                color="light"
+                onClick={() =>
+                  void copyText(
+                    dateResult
+                      ? `${dateResult.seconds}\n${dateResult.milliseconds}`
+                      : "",
+                    "Date result copied.",
+                  )
+                }
+              >
                 Copy Result
               </Button>
-              <Button color="gray" onClick={() => {
-                setDateInput("");
-                setDateResult(null);
-                setDateError("");
-              }}>
+              <Button
+                color="gray"
+                onClick={() => {
+                  setDateInput("");
+                  setDateResult(null);
+                  setDateError("");
+                }}
+              >
                 Clear
               </Button>
             </div>
@@ -306,7 +360,9 @@ export function TimestampToolPage() {
           <li>Unix timestamps may use seconds or milliseconds.</li>
           <li>UTC is timezone-independent.</li>
           <li>Local time depends on the user's browser settings.</li>
-          <li>JWT exp, iat and nbf claims usually use Unix timestamps in seconds.</li>
+          <li>
+            JWT exp, iat and nbf claims usually use Unix timestamps in seconds.
+          </li>
         </ul>
       }
       toast={<ToolToast toast={toast} />}
@@ -336,10 +392,10 @@ function ResultGroup({ title, rows }: ResultGroupProps) {
       <div className="divide-y divide-gray-200 rounded-lg border border-gray-200 dark:divide-gray-700 dark:border-gray-700">
         {rows.map(([label, value]) => (
           <div key={label} className="p-3">
-            <p className="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
+            <p className="text-xs font-semibold text-gray-500 uppercase dark:text-gray-400">
               {label}
             </p>
-            <p className="mt-1 break-all font-mono text-sm text-gray-900 dark:text-gray-100">
+            <p className="mt-1 font-mono text-sm break-all text-gray-900 dark:text-gray-100">
               {value ?? "-"}
             </p>
           </div>

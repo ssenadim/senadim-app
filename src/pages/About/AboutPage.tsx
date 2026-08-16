@@ -130,7 +130,7 @@ export function AboutPage() {
       <PageShell
         eyebrow="Product Experience"
         title="About Freeshot"
-        description="Freeshot is a modern engineering toolkit designed to simplify everyday work for software engineers, platform engineers and solution architects. It combines practical tools for Developer Productivity, Platform Engineering and Architecture & Design into a single, lightweight web application. Our mission is simple: Help engineering teams spend less time on repetitive tasks and more time building great software."
+        description="Freeshot is an evolving toolkit for practical engineering workflows. It brings Developer Productivity, Platform Engineering, and Architecture & Design tools together for software engineers, platform teams, and architects."
       >
         <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
           <Card className="h-full border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
@@ -195,8 +195,9 @@ export function AboutPage() {
         <section className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
           <CardTitle icon="layers">Product Evolution</CardTitle>
           <p className="mt-4 text-sm leading-7 text-gray-600 dark:text-gray-300">
-            Freeshot has grown through practical engineering needs and
-            continuous user feedback.
+            Freeshot evolves through practical engineering needs and continuous
+            user feedback, adding tools that support connected workflows rather
+            than a single technology or discipline.
           </p>
 
           <ol className="mt-6 grid gap-6 md:grid-cols-3 md:gap-5">

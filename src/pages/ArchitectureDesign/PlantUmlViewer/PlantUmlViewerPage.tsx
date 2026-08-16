@@ -620,7 +620,7 @@ export function PlantUmlViewerPage() {
   return (
     <ToolPageLayout
       title="PlantUML Viewer"
-      description="Render PlantUML diagrams from source code."
+      description="Write and render PlantUML diagrams from text with reusable templates for architecture, sequence, deployment, and C4 modeling workflows."
       breadcrumbs={[
         {
           label: "Architecture & Design",
@@ -633,7 +633,11 @@ export function PlantUmlViewerPage() {
       overviewToggleLabel="What is PlantUML?"
       overview={
         <div className="space-y-3">
-          <p>PlantUML is a text-based diagram language.</p>
+          <p>
+            PlantUML is a text-based diagram language for keeping software
+            diagrams readable, repeatable, and easy to update alongside design
+            documentation.
+          </p>
           <p>
             It can generate sequence, class, component and deployment diagrams.
           </p>

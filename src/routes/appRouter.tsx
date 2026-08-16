@@ -1,30 +1,126 @@
+import { lazy, type ComponentType } from "react";
 import { createBrowserRouter } from "react-router-dom";
 import { AppLayout } from "../components/layout/AppLayout";
 import { AboutPage } from "../pages/About/AboutPage";
-import { AdrGeneratorPage } from "../pages/ArchitectureDesign/AdrGenerator/AdrGeneratorPage";
-import { ArchitectureNotesToolPage } from "../pages/ArchitectureDesign/ArchitectureNotes/ArchitectureNotesToolPage";
-import { ArchitectureDesignPage } from "../pages/ArchitectureDesign/ArchitectureDesignPage";
-import { PlantUmlViewerPage } from "../pages/ArchitectureDesign/PlantUmlViewer/PlantUmlViewerPage";
-import { ThreatModelingHelperPage } from "../pages/ArchitectureDesign/ThreatModelingHelper/ThreatModelingHelperPage";
-import { ArchitectureNotesPage } from "../pages/ArchitectureNotes/ArchitectureNotesPage";
-import { DpopNotePage } from "../pages/ArchitectureNotes/DpopNotePage";
-import { Base64ToolPage } from "../pages/DeveloperTools/Base64/Base64ToolPage";
-import { DataCompareToolPage } from "../pages/DeveloperTools/DataCompare/DataCompareToolPage";
-import { DeveloperToolsPage } from "../pages/DeveloperTools/DeveloperToolsPage";
-import { FormatterToolPage } from "../pages/DeveloperTools/Formatter/FormatterToolPage";
-import { HashGeneratorToolPage } from "../pages/DeveloperTools/HashGenerator/HashGeneratorToolPage";
-import { JwtDecoderToolPage } from "../pages/DeveloperTools/JwtDecoder/JwtDecoderToolPage";
-import { PkceGeneratorToolPage } from "../pages/DeveloperTools/PkceGenerator/PkceGeneratorToolPage";
-import { RegexTesterToolPage } from "../pages/DeveloperTools/RegexTester/RegexTesterToolPage";
-import { TimestampToolPage } from "../pages/DeveloperTools/Timestamp/TimestampToolPage";
-import { UrlEncoderDecoderToolPage } from "../pages/DeveloperTools/UrlEncoderDecoder/UrlEncoderDecoderToolPage";
-import { UuidToolPage } from "../pages/DeveloperTools/Uuid/UuidToolPage";
 import { HomePage } from "../pages/Home/HomePage";
 import { NotFoundPage } from "../pages/NotFound/NotFoundPage";
-import { JvmMemoryCalculatorPage } from "../pages/PlatformEngineering/JvmMemoryCalculator/JvmMemoryCalculatorPage";
-import { ContainerPlatformCalculatorPage } from "../pages/PlatformEngineering/ContainerPlatformCalculator/ContainerPlatformCalculatorPage";
-import { PlatformEngineeringPage } from "../pages/PlatformEngineering/PlatformEngineeringPage";
 import { routePaths } from "../utils/routes";
+import { LazyRoute } from "./LazyRoute";
+
+function lazyPage(loader: () => Promise<ComponentType>) {
+  return lazy(async () => ({ default: await loader() }));
+}
+
+const AdrGeneratorPage = lazyPage(() =>
+  import("../pages/ArchitectureDesign/AdrGenerator/AdrGeneratorPage").then(
+    (module) => module.AdrGeneratorPage,
+  ),
+);
+const ArchitectureNotesToolPage = lazyPage(() =>
+  import("../pages/ArchitectureDesign/ArchitectureNotes/ArchitectureNotesToolPage").then(
+    (module) => module.ArchitectureNotesToolPage,
+  ),
+);
+const ArchitectureDesignPage = lazyPage(() =>
+  import("../pages/ArchitectureDesign/ArchitectureDesignPage").then(
+    (module) => module.ArchitectureDesignPage,
+  ),
+);
+const PlantUmlViewerPage = lazyPage(() =>
+  import("../pages/ArchitectureDesign/PlantUmlViewer/PlantUmlViewerPage").then(
+    (module) => module.PlantUmlViewerPage,
+  ),
+);
+const MermaidViewerPage = lazyPage(() =>
+  import("../pages/ArchitectureDesign/MermaidViewer/MermaidViewerPage").then(
+    (module) => module.MermaidViewerPage,
+  ),
+);
+const ThreatModelingHelperPage = lazyPage(() =>
+  import("../pages/ArchitectureDesign/ThreatModelingHelper/ThreatModelingHelperPage").then(
+    (module) => module.ThreatModelingHelperPage,
+  ),
+);
+const ArchitectureNotesPage = lazyPage(() =>
+  import("../pages/ArchitectureNotes/ArchitectureNotesPage").then(
+    (module) => module.ArchitectureNotesPage,
+  ),
+);
+const DpopNotePage = lazyPage(() =>
+  import("../pages/ArchitectureNotes/DpopNotePage").then(
+    (module) => module.DpopNotePage,
+  ),
+);
+const Base64ToolPage = lazyPage(() =>
+  import("../pages/DeveloperTools/Base64/Base64ToolPage").then(
+    (module) => module.Base64ToolPage,
+  ),
+);
+const DataCompareToolPage = lazyPage(() =>
+  import("../pages/DeveloperTools/DataCompare/DataCompareToolPage").then(
+    (module) => module.DataCompareToolPage,
+  ),
+);
+const DeveloperToolsPage = lazyPage(() =>
+  import("../pages/DeveloperTools/DeveloperToolsPage").then(
+    (module) => module.DeveloperToolsPage,
+  ),
+);
+const FormatterToolPage = lazyPage(() =>
+  import("../pages/DeveloperTools/Formatter/FormatterToolPage").then(
+    (module) => module.FormatterToolPage,
+  ),
+);
+const HashGeneratorToolPage = lazyPage(() =>
+  import("../pages/DeveloperTools/HashGenerator/HashGeneratorToolPage").then(
+    (module) => module.HashGeneratorToolPage,
+  ),
+);
+const JwtDecoderToolPage = lazyPage(() =>
+  import("../pages/DeveloperTools/JwtDecoder/JwtDecoderToolPage").then(
+    (module) => module.JwtDecoderToolPage,
+  ),
+);
+const PkceGeneratorToolPage = lazyPage(() =>
+  import("../pages/DeveloperTools/PkceGenerator/PkceGeneratorToolPage").then(
+    (module) => module.PkceGeneratorToolPage,
+  ),
+);
+const RegexTesterToolPage = lazyPage(() =>
+  import("../pages/DeveloperTools/RegexTester/RegexTesterToolPage").then(
+    (module) => module.RegexTesterToolPage,
+  ),
+);
+const TimestampToolPage = lazyPage(() =>
+  import("../pages/DeveloperTools/Timestamp/TimestampToolPage").then(
+    (module) => module.TimestampToolPage,
+  ),
+);
+const UrlEncoderDecoderToolPage = lazyPage(() =>
+  import("../pages/DeveloperTools/UrlEncoderDecoder/UrlEncoderDecoderToolPage").then(
+    (module) => module.UrlEncoderDecoderToolPage,
+  ),
+);
+const UuidToolPage = lazyPage(() =>
+  import("../pages/DeveloperTools/Uuid/UuidToolPage").then(
+    (module) => module.UuidToolPage,
+  ),
+);
+const ContainerPlatformCalculatorPage = lazyPage(() =>
+  import("../pages/PlatformEngineering/ContainerPlatformCalculator/ContainerPlatformCalculatorPage").then(
+    (module) => module.ContainerPlatformCalculatorPage,
+  ),
+);
+const JvmMemoryCalculatorPage = lazyPage(() =>
+  import("../pages/PlatformEngineering/JvmMemoryCalculator/JvmMemoryCalculatorPage").then(
+    (module) => module.JvmMemoryCalculatorPage,
+  ),
+);
+const PlatformEngineeringPage = lazyPage(() =>
+  import("../pages/PlatformEngineering/PlatformEngineeringPage").then(
+    (module) => module.PlatformEngineeringPage,
+  ),
+);
 
 export const appRouter = createBrowserRouter(
   [
@@ -35,63 +131,91 @@ export const appRouter = createBrowserRouter(
         { path: routePaths.about, element: <AboutPage /> },
         {
           path: routePaths.architectureDesign,
-          element: <ArchitectureDesignPage />,
+          element: <LazyRoute page={ArchitectureDesignPage} />,
         },
         {
           path: routePaths.adrGenerator,
-          element: <AdrGeneratorPage />,
+          element: <LazyRoute page={AdrGeneratorPage} />,
         },
         {
           path: routePaths.architectureNotesTool,
-          element: <ArchitectureNotesToolPage />,
+          element: <LazyRoute page={ArchitectureNotesToolPage} />,
         },
-        { path: routePaths.developerTools, element: <DeveloperToolsPage /> },
+        {
+          path: routePaths.developerTools,
+          element: <LazyRoute page={DeveloperToolsPage} />,
+        },
         {
           path: routePaths.threatModelingHelper,
-          element: <ThreatModelingHelperPage />,
+          element: <LazyRoute page={ThreatModelingHelperPage} />,
         },
-        { path: routePaths.base64Tool, element: <Base64ToolPage /> },
-        { path: routePaths.uuidTool, element: <UuidToolPage /> },
-        { path: routePaths.formatterTool, element: <FormatterToolPage /> },
-        { path: routePaths.dataCompareTool, element: <DataCompareToolPage /> },
-        { path: routePaths.timestampTool, element: <TimestampToolPage /> },
-        { path: routePaths.jwtDecoderTool, element: <JwtDecoderToolPage /> },
+        {
+          path: routePaths.base64Tool,
+          element: <LazyRoute page={Base64ToolPage} />,
+        },
+        {
+          path: routePaths.uuidTool,
+          element: <LazyRoute page={UuidToolPage} />,
+        },
+        {
+          path: routePaths.formatterTool,
+          element: <LazyRoute page={FormatterToolPage} />,
+        },
+        {
+          path: routePaths.dataCompareTool,
+          element: <LazyRoute page={DataCompareToolPage} />,
+        },
+        {
+          path: routePaths.timestampTool,
+          element: <LazyRoute page={TimestampToolPage} />,
+        },
+        {
+          path: routePaths.jwtDecoderTool,
+          element: <LazyRoute page={JwtDecoderToolPage} />,
+        },
         {
           path: routePaths.hashGeneratorTool,
-          element: <HashGeneratorToolPage />,
+          element: <LazyRoute page={HashGeneratorToolPage} />,
         },
-        { path: routePaths.regexTesterTool, element: <RegexTesterToolPage /> },
+        {
+          path: routePaths.regexTesterTool,
+          element: <LazyRoute page={RegexTesterToolPage} />,
+        },
         {
           path: routePaths.urlEncoderDecoderTool,
-          element: <UrlEncoderDecoderToolPage />,
+          element: <LazyRoute page={UrlEncoderDecoderToolPage} />,
         },
         {
           path: routePaths.pkceGeneratorTool,
-          element: <PkceGeneratorToolPage />,
+          element: <LazyRoute page={PkceGeneratorToolPage} />,
         },
         {
           path: routePaths.architectureNotes,
-          element: <ArchitectureNotesPage />,
+          element: <LazyRoute page={ArchitectureNotesPage} />,
         },
         {
           path: routePaths.dpopArchitectureNote,
-          element: <DpopNotePage />,
+          element: <LazyRoute page={DpopNotePage} />,
         },
         {
           path: routePaths.platformEngineering,
-          element: <PlatformEngineeringPage />,
+          element: <LazyRoute page={PlatformEngineeringPage} />,
         },
         {
           path: routePaths.containerPlatformCalculator,
-          element: <ContainerPlatformCalculatorPage />,
+          element: <LazyRoute page={ContainerPlatformCalculatorPage} />,
         },
         {
           path: routePaths.jvmMemoryCalculator,
-          element: <JvmMemoryCalculatorPage />,
+          element: <LazyRoute page={JvmMemoryCalculatorPage} />,
         },
         {
           path: routePaths.plantUmlViewer,
-          element: <PlantUmlViewerPage />,
+          element: <LazyRoute page={PlantUmlViewerPage} />,
+        },
+        {
+          path: routePaths.mermaidViewer,
+          element: <LazyRoute page={MermaidViewerPage} />,
         },
         { path: "*", element: <NotFoundPage /> },
       ],

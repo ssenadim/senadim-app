@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Alert, Button, Select, TextInput, Textarea } from "flowbite-react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { HelpTooltip } from "../../../components/common/HelpTooltip";
 import { ToolToast } from "../../../components/common/ToolToast";
 import { ToolPageLayout } from "../../../components/layout/ToolPageLayout";
@@ -671,7 +671,7 @@ export function AdrGeneratorPage() {
   return (
     <ToolPageLayout
       title="ADR Generator"
-      description="Create Architecture Decision Records using a structured template."
+      description="Create structured Architecture Decision Records that capture context, options, decisions, consequences, and ownership."
       breadcrumbs={[
         {
           label: "Architecture & Design",
@@ -684,9 +684,15 @@ export function AdrGeneratorPage() {
       overviewToggleLabel="What is an Architecture Decision Record?"
       overview={
         <div className="space-y-3">
-          <p>ADRs document important architectural decisions.</p>
-          <p>ADRs capture context, decision and consequences.</p>
-          <p>ADRs help teams understand why decisions were made.</p>
+          <p>
+            An Architecture Decision Record documents an important design choice
+            together with its context, considered options, consequences, and
+            current status.
+          </p>
+          <p>
+            Keeping ADRs concise gives future maintainers a durable explanation
+            of why the decision was made and when it should be revisited.
+          </p>
         </div>
       }
       inputTitle={null}
@@ -1016,6 +1022,16 @@ export function AdrGeneratorPage() {
           <li>Prefer one important decision per ADR.</li>
           <li>
             Link ADRs from related architecture diagrams and platform standards.
+          </li>
+          <li>
+            Capture working context before a formal decision in{" "}
+            <Link
+              to={routePaths.architectureNotesTool}
+              className="font-medium text-cyan-700 hover:underline dark:text-cyan-300"
+            >
+              Architecture Notes
+            </Link>
+            .
           </li>
         </ul>
       }

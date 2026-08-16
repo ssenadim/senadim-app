@@ -112,9 +112,9 @@ export function Base64ToolPage() {
   return (
     <ToolPageLayout
       title="Base64 Encoder / Decoder"
-      description="Encode and decode Base64 strings."
+      description="Encode plain text as Base64 or decode Base64 values for API payloads, credentials, and integration troubleshooting."
       breadcrumbs={[
-        { label: "Developer Tools", path: routePaths.developerTools },
+        { label: "Developer Productivity", path: routePaths.developerTools },
         { label: "Base64 Encoder / Decoder" },
       ]}
       overviewTitle="What is Base64?"
@@ -214,6 +214,7 @@ export function Base64ToolPage() {
         </div>
       }
       examples={examples}
+      notesCollapsible
       notes={
         <p className="text-sm leading-7 text-gray-600 dark:text-gray-300">
           Base64 is useful for transport-safe representation of text and binary

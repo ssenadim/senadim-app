@@ -86,7 +86,7 @@ export function HashGeneratorToolPage() {
       title="Hash Generator"
       description="Generate MD5, SHA1, SHA256 and SHA512 hashes from text input."
       breadcrumbs={[
-        { label: "Developer Tools", path: routePaths.developerTools },
+        { label: "Developer Productivity", path: routePaths.developerTools },
         { label: "Hash Generator" },
       ]}
       overviewTitle="What is a Hash?"

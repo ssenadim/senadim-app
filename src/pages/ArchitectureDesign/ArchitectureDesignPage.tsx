@@ -4,13 +4,13 @@ import { architectureDesignTools } from "../../data/architectureDesignTools";
 import { usePageTitle } from "../../hooks/usePageTitle";
 
 export function ArchitectureDesignPage() {
-  usePageTitle("Architecture & Design");
+  usePageTitle("Architecture & Design Tools");
 
   return (
     <PageShell
-      eyebrow="Architecture & Design"
+      eyebrow="Tool catalog"
       title="Architecture & Design"
-      description="Tools for software architecture, documentation and design decisions."
+      description="Architecture tools for diagramming systems, documenting decisions, capturing design context, and reviewing security threats across a software design workflow."
     >
       <section aria-labelledby="architecture-tools-catalog">
         <h2 id="architecture-tools-catalog" className="sr-only">
