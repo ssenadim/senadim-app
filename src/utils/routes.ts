@@ -5,6 +5,7 @@ export const routePaths = {
   base64Tool: "/developer-tools/base64",
   uuidTool: "/developer-tools/uuid",
   formatterTool: "/developer-tools/formatter",
+  configurationConverter: "/developer-tools/configuration-converter",
   dataCompareTool: "/developer-tools/data-compare",
   timestampTool: "/developer-tools/timestamp",
   jwtDecoderTool: "/developer-tools/jwt-decoder",

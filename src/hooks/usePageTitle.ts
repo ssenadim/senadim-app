@@ -15,6 +15,8 @@ const pageDescriptions: Record<string, string> = {
     "Generate one or more UUID v4 identifiers for APIs, databases, test fixtures, migrations, and distributed workflows.",
   "Data Formatter":
     "Format, validate, and minify JSON, XML, and HTML for API development, integrations, debugging, and web workflows.",
+  "Configuration Converter":
+    "Convert application configuration between JSON and YAML directly in the browser while preserving compatible value types.",
   "Data Compare":
     "Compare JSON, XML, YAML, Java, C#, or plain text and reduce formatting noise to focus on meaningful differences.",
   "Timestamp Converter":

@@ -56,6 +56,11 @@ const Base64ToolPage = lazyPage(() =>
     (module) => module.Base64ToolPage,
   ),
 );
+const ConfigurationConverterPage = lazyPage(() =>
+  import("../pages/DeveloperTools/ConfigurationConverter/ConfigurationConverterPage").then(
+    (module) => module.ConfigurationConverterPage,
+  ),
+);
 const DataCompareToolPage = lazyPage(() =>
   import("../pages/DeveloperTools/DataCompare/DataCompareToolPage").then(
     (module) => module.DataCompareToolPage,
@@ -160,6 +165,10 @@ export const appRouter = createBrowserRouter(
         {
           path: routePaths.formatterTool,
           element: <LazyRoute page={FormatterToolPage} />,
+        },
+        {
+          path: routePaths.configurationConverter,
+          element: <LazyRoute page={ConfigurationConverterPage} />,
         },
         {
           path: routePaths.dataCompareTool,

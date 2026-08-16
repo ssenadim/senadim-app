@@ -4,14 +4,16 @@ import { routePaths } from "../utils/routes";
 export const developerTools: DeveloperTool[] = [
   {
     title: "Base64 Encoder / Decoder",
-    description: "Encode and decode Base64 strings for quick API and token debugging.",
+    description:
+      "Encode and decode Base64 strings for quick API and token debugging.",
     category: "Encoding",
     path: routePaths.base64Tool,
     status: "available",
   },
   {
     title: "JWT Decoder",
-    description: "Inspect JWT headers and payloads without sending sensitive data away.",
+    description:
+      "Inspect JWT headers and payloads without sending sensitive data away.",
     category: "Security",
     path: routePaths.jwtDecoderTool,
     status: "available",
@@ -25,6 +27,14 @@ export const developerTools: DeveloperTool[] = [
     status: "available",
   },
   {
+    title: "Configuration Converter",
+    description:
+      "Convert configuration between JSON and YAML, with Properties support planned.",
+    category: "Data",
+    path: routePaths.configurationConverter,
+    status: "available",
+  },
+  {
     title: "Data Compare",
     description: "Compare JSON, XML, YAML, Java, C# and plain text content.",
     category: "Data",
@@ -33,14 +43,16 @@ export const developerTools: DeveloperTool[] = [
   },
   {
     title: "UUID Generator",
-    description: "Generate identifiers for tests, fixtures, migrations, and mock data.",
+    description:
+      "Generate identifiers for tests, fixtures, migrations, and mock data.",
     category: "Utilities",
     path: routePaths.uuidTool,
     status: "available",
   },
   {
     title: "Regex Tester",
-    description: "Test regular expressions against sample text and inspect matches.",
+    description:
+      "Test regular expressions against sample text and inspect matches.",
     category: "Text",
     path: routePaths.regexTesterTool,
     status: "available",
@@ -62,7 +74,8 @@ export const developerTools: DeveloperTool[] = [
   },
   {
     title: "URL Encoder / Decoder",
-    description: "Encode and decode URLs, query parameters and special characters.",
+    description:
+      "Encode and decode URLs, query parameters and special characters.",
     category: "Encoding",
     path: routePaths.urlEncoderDecoderTool,
     status: "available",
