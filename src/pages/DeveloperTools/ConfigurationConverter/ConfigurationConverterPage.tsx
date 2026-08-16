@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Alert, Button, Checkbox, Select, Textarea } from "flowbite-react";
+import { HelpTooltip } from "../../../components/common/HelpTooltip";
 import { ToolToast } from "../../../components/common/ToolToast";
 import { ToolPageLayout } from "../../../components/layout/ToolPageLayout";
 import { usePageTitle } from "../../../hooks/usePageTitle";
@@ -7,6 +8,7 @@ import type { ToastMessage, ToastTone } from "../../../types/toast";
 import {
   convertConfiguration,
   getConfigurationFormatLabel,
+  getSupportedOutputFormats,
   isConfigurationConversionFailure,
   type ConfigurationFormat,
   type ConfigurationInputFormat,
@@ -40,11 +42,7 @@ database.host=db.internal
 database.enabled=true
 security.session.timeout=900`;
 
-function getOppositeFormat(format: ConfigurationFormat): ConfigurationFormat {
-  return format === "json" ? "yaml" : "json";
-}
-
-type ValidationState = "idle" | "valid" | "invalid";
+type ValidationState = "idle" | "empty" | "valid" | "invalid" | "stale";
 
 export function ConfigurationConverterPage() {
   usePageTitle("Configuration Converter");
@@ -64,6 +62,7 @@ export function ConfigurationConverterPage() {
 
   const inputLabel = getConfigurationFormatLabel(inputFormat);
   const outputLabel = getConfigurationFormatLabel(outputFormat);
+  const supportedOutputFormats = getSupportedOutputFormats(inputFormat);
   const hasCurrentOutput = validationState === "valid" && outputText.length > 0;
 
   useEffect(() => {
@@ -80,18 +79,29 @@ export function ConfigurationConverterPage() {
     setToast({ id: Date.now(), tone, text });
   }
 
-  function clearResultState() {
+  function resetResultState() {
     setOutputText("");
     setErrorMessage("");
     setValidationState("idle");
   }
 
+  function invalidateResultState() {
+    const shouldShowStaleState =
+      validationState === "stale" ||
+      (validationState === "valid" && outputText.length > 0);
+
+    setOutputText("");
+    setErrorMessage("");
+    setValidationState(shouldShowStaleState ? "stale" : "idle");
+  }
+
   function handleInputFormatChange(format: ConfigurationInputFormat) {
     setInputFormat(format);
 
-    if (format !== "properties") {
-      setOutputFormat(getOppositeFormat(format));
-    }
+    const nextOutputFormats = getSupportedOutputFormats(format);
+    setOutputFormat((current) =>
+      nextOutputFormats.includes(current) ? current : nextOutputFormats[0],
+    );
 
     if (
       !inputText.trim() ||
@@ -108,20 +118,22 @@ export function ConfigurationConverterPage() {
       );
     }
 
-    clearResultState();
+    invalidateResultState();
   }
 
   function handleOutputFormatChange(format: ConfigurationFormat) {
     setOutputFormat(format);
-
-    if (inputFormat !== "properties" && inputFormat === format) {
-      setInputFormat(getOppositeFormat(format));
-    }
-
-    clearResultState();
+    invalidateResultState();
   }
 
   function handleConvert() {
+    if (!inputText.trim()) {
+      setOutputText("");
+      setErrorMessage(`Enter ${inputLabel} configuration to convert.`);
+      setValidationState("empty");
+      return;
+    }
+
     const result = convertConfiguration(inputText, inputFormat, outputFormat, {
       expandDottedKeys,
       propertiesValueTypes,
@@ -151,12 +163,12 @@ export function ConfigurationConverterPage() {
       setInputText(outputText);
     }
 
-    clearResultState();
+    invalidateResultState();
   }
 
   function handleClear() {
     setInputText("");
-    clearResultState();
+    resetResultState();
     showToast("info", "Input and output cleared.");
   }
 
@@ -199,9 +211,9 @@ export function ConfigurationConverterPage() {
         { label: "Developer Productivity", path: routePaths.developerTools },
         { label: "Configuration Converter" },
       ]}
-      overviewTitle="Configuration Conversion"
+      overviewTitle="What is Configuration Conversion?"
       overviewCollapsible
-      overviewToggleLabel="About Configuration Conversion"
+      overviewToggleLabel="What is Configuration Conversion?"
       overview={
         <div className="space-y-3">
           <p>
@@ -245,6 +257,7 @@ export function ConfigurationConverterPage() {
               color="light"
               onClick={handleSwap}
               disabled={inputFormat === "properties"}
+              aria-label={`Swap ${inputLabel} and ${outputLabel} formats`}
               aria-describedby={
                 inputFormat === "properties"
                   ? "configuration-converter-swap-note"
@@ -270,62 +283,87 @@ export function ConfigurationConverterPage() {
                   )
                 }
               >
-                <option value="json">JSON</option>
-                <option value="yaml">YAML</option>
+                {supportedOutputFormats.map((format) => (
+                  <option key={format} value={format}>
+                    {getConfigurationFormatLabel(format)}
+                  </option>
+                ))}
               </Select>
             </div>
           </div>
 
+          <p
+            className="text-sm font-medium text-gray-600 dark:text-gray-300"
+            aria-live="polite"
+          >
+            Current direction: {inputLabel} → {outputLabel}
+          </p>
+
           {inputFormat === "properties" ? (
-            <div className="space-y-4">
+            <div className="space-y-3">
               <p
                 id="configuration-converter-swap-note"
-                className="text-sm text-gray-600 dark:text-gray-300"
+                className="text-xs text-gray-500 dark:text-gray-400"
               >
                 Swap is unavailable because conversion to Properties is not
                 supported.
               </p>
 
-              <div className="grid min-w-0 gap-4 sm:grid-cols-2 sm:items-end">
-                <div>
-                  <label
-                    htmlFor="configuration-converter-value-types"
-                    className="mb-2 block text-sm font-semibold text-gray-900 dark:text-white"
-                  >
-                    Value Types
-                  </label>
-                  <Select
-                    id="configuration-converter-value-types"
-                    value={propertiesValueTypes}
-                    onChange={(event) => {
-                      setPropertiesValueTypes(
-                        event.target.value as PropertiesValueTypes,
-                      );
-                      clearResultState();
-                    }}
-                  >
-                    <option value="infer">Infer Types</option>
-                    <option value="preserve">Preserve Strings</option>
-                  </Select>
-                </div>
+              <fieldset className="min-w-0 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-950/50">
+                <legend className="px-2 text-xs font-semibold tracking-wide text-gray-600 uppercase dark:text-gray-300">
+                  Properties options
+                </legend>
+                <div className="grid min-w-0 gap-4 sm:grid-cols-2 sm:items-end">
+                  <div>
+                    <div className="mb-2 flex items-center gap-2">
+                      <label
+                        htmlFor="configuration-converter-value-types"
+                        className="text-sm font-semibold text-gray-900 dark:text-white"
+                      >
+                        Value Types
+                      </label>
+                      <HelpTooltip
+                        title="Infer Types"
+                        description="Convert simple values such as numbers and booleans to native types when safe. Preserve Strings keeps every value as text."
+                      />
+                    </div>
+                    <Select
+                      id="configuration-converter-value-types"
+                      value={propertiesValueTypes}
+                      onChange={(event) => {
+                        setPropertiesValueTypes(
+                          event.target.value as PropertiesValueTypes,
+                        );
+                        invalidateResultState();
+                      }}
+                    >
+                      <option value="infer">Infer Types</option>
+                      <option value="preserve">Preserve Strings</option>
+                    </Select>
+                  </div>
 
-                <div>
-                  <label
-                    htmlFor="configuration-converter-expand-dotted-keys"
-                    className="flex min-h-10 cursor-pointer items-center gap-3 rounded-lg border border-gray-200 bg-white px-4 text-sm font-medium text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200"
-                  >
+                  <div className="flex min-h-10 items-center gap-3 rounded-lg border border-gray-200 bg-white px-4 dark:border-gray-700 dark:bg-gray-900">
                     <Checkbox
                       id="configuration-converter-expand-dotted-keys"
                       checked={expandDottedKeys}
                       onChange={(event) => {
                         setExpandDottedKeys(event.target.checked);
-                        clearResultState();
+                        invalidateResultState();
                       }}
                     />
-                    Expand dotted keys
-                  </label>
+                    <label
+                      htmlFor="configuration-converter-expand-dotted-keys"
+                      className="cursor-pointer text-sm font-medium text-gray-700 dark:text-gray-200"
+                    >
+                      Expand dotted keys
+                    </label>
+                    <HelpTooltip
+                      title="Expand dotted keys"
+                      description="Convert keys such as server.port into nested objects."
+                    />
+                  </div>
                 </div>
-              </div>
+              </fieldset>
             </div>
           ) : null}
 
@@ -348,13 +386,29 @@ export function ConfigurationConverterPage() {
             </p>
           ) : null}
 
-          {validationState === "invalid" && errorMessage ? (
+          {validationState === "stale" ? (
+            <p
+              role="status"
+              aria-live="polite"
+              className="text-sm font-medium text-amber-700 dark:text-amber-300"
+            >
+              Previous output was cleared after a change. Convert again to
+              refresh it.
+            </p>
+          ) : null}
+
+          {(validationState === "empty" || validationState === "invalid") &&
+          errorMessage ? (
             <Alert
               id="configuration-converter-validation-error"
-              color="failure"
+              color={validationState === "empty" ? "warning" : "failure"}
               role="alert"
             >
-              <span className="font-semibold">Invalid {inputLabel}.</span>{" "}
+              <span className="font-semibold">
+                {validationState === "empty"
+                  ? "Input required."
+                  : `Invalid ${inputLabel}.`}
+              </span>{" "}
               {errorMessage}
             </Alert>
           ) : null}
@@ -373,7 +427,7 @@ export function ConfigurationConverterPage() {
                 value={inputText}
                 onChange={(event) => {
                   setInputText(event.target.value);
-                  clearResultState();
+                  invalidateResultState();
                 }}
                 placeholder={`Paste ${inputLabel} configuration here...`}
                 className="font-mono"
@@ -443,7 +497,9 @@ export function ConfigurationConverterPage() {
               >
                 {hasCurrentOutput
                   ? "Actions use the current converted output only."
-                  : "Convert the current input to enable output actions."}
+                  : validationState === "stale"
+                    ? "Output was cleared after a change. Convert again to enable actions."
+                    : "Convert the current input to enable output actions."}
               </p>
             </div>
           </div>

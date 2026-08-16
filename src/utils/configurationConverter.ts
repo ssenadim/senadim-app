@@ -9,6 +9,13 @@ export interface ConfigurationConversionOptions {
   propertiesValueTypes?: PropertiesValueTypes;
 }
 
+const jsonOutputFormats: readonly ConfigurationFormat[] = ["json"];
+const yamlOutputFormats: readonly ConfigurationFormat[] = ["yaml"];
+const propertiesOutputFormats: readonly ConfigurationFormat[] = [
+  "yaml",
+  "json",
+];
+
 type ConversionSuccess = {
   ok: true;
   value: string;
@@ -81,6 +88,16 @@ export function getConfigurationFormatLabel(format: ConfigurationInputFormat) {
   }
 
   return format === "yaml" ? "YAML" : "Properties";
+}
+
+export function getSupportedOutputFormats(
+  inputFormat: ConfigurationInputFormat,
+): readonly ConfigurationFormat[] {
+  if (inputFormat === "json") {
+    return yamlOutputFormats;
+  }
+
+  return inputFormat === "yaml" ? jsonOutputFormats : propertiesOutputFormats;
 }
 
 function convertProperties(
