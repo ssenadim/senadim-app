@@ -37,7 +37,7 @@ export function TopNavigation({ onOpenSidebar }: TopNavigationProps) {
               Freeshot
             </p>
             <p className="hidden text-xs text-gray-500 sm:block dark:text-gray-400">
-              Practical developer utilities and architecture notes
+              Developer, platform and architecture toolkit
             </p>
           </div>
         </div>

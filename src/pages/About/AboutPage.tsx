@@ -68,7 +68,7 @@ const evolutionSteps: Array<{
   {
     title: "Architecture & Design",
     description:
-      "Introduced PlantUML templates and Architecture Decision Record tooling for software architects and engineering teams.",
+      "Introduced PlantUML and Mermaid diagramming, Architecture Decision Records, threat modeling and architecture notes.",
     icon: "compass",
   },
 ];
@@ -82,12 +82,7 @@ const technologies = [
 
 const currentVersion = "v1.0 (Preview)";
 
-const comingNext = [
-  "Threat Modeling Helper",
-  "Architecture Notes",
-  "Home Page Refresh",
-  "Continuous UX Improvements",
-];
+const comingNext = ["Freeshot v1.1 product roadmap planning"];
 function CardTitle({
   icon,
   children,

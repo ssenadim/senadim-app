@@ -5,6 +5,7 @@
   <url><loc>https://freeshot.online/developer-tools/base64</loc></url>
   <url><loc>https://freeshot.online/developer-tools/uuid</loc></url>
   <url><loc>https://freeshot.online/developer-tools/formatter</loc></url>
+  <url><loc>https://freeshot.online/developer-tools/configuration-converter</loc></url>
   <url><loc>https://freeshot.online/developer-tools/data-compare</loc></url>
   <url><loc>https://freeshot.online/developer-tools/timestamp</loc></url>
   <url><loc>https://freeshot.online/developer-tools/jwt-decoder</loc></url>
@@ -14,6 +15,7 @@
   <url><loc>https://freeshot.online/developer-tools/pkce-generator</loc></url>
   <url><loc>https://freeshot.online/architecture-design</loc></url>
   <url><loc>https://freeshot.online/architecture-design/plantuml-viewer</loc></url>
+  <url><loc>https://freeshot.online/architecture-design/mermaid-viewer</loc></url>
   <url><loc>https://freeshot.online/architecture-design/adr-generator</loc></url>
   <url><loc>https://freeshot.online/architecture-design/architecture-notes</loc></url>
   <url><loc>https://freeshot.online/architecture-design/threat-modeling-helper</loc></url>

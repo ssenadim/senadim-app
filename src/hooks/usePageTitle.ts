@@ -36,7 +36,7 @@ const pageDescriptions: Record<string, string> = {
   "PlantUML Viewer":
     "Write and render PlantUML diagrams from reusable architecture, sequence, deployment, and C4 modeling templates.",
   "Mermaid Viewer":
-    "Create and preview Mermaid diagrams directly in your browser using text-based diagram definitions.",
+    "Create and preview Mermaid diagrams from reusable templates, with client-side SVG and PNG export.",
   "ADR Generator":
     "Create structured Architecture Decision Records that capture context, options, decisions, consequences, and ownership.",
   "Architecture Notes":
