@@ -29,7 +29,7 @@ export const developerTools: DeveloperTool[] = [
   {
     title: "Configuration Converter",
     description:
-      "Convert configuration between JSON and YAML, with Properties support planned.",
+      "Convert Properties to JSON or YAML, and convert between JSON and YAML.",
     category: "Data",
     path: routePaths.configurationConverter,
     status: "available",
