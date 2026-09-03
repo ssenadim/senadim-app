@@ -1,6 +1,7 @@
 import { Button, DarkThemeToggle } from "flowbite-react";
 import { Link } from "react-router-dom";
 import { routePaths } from "../../utils/routes";
+import { GlobalToolSearch } from "../search/GlobalToolSearch";
 
 interface TopNavigationProps {
   onOpenSidebar: () => void;
@@ -42,11 +43,13 @@ export function TopNavigation({ onOpenSidebar }: TopNavigationProps) {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <GlobalToolSearch />
           <Button
             as={Link}
             to={routePaths.developerTools}
             color="light"
             size="sm"
+            className="hidden xl:inline-flex"
           >
             Explore tools
           </Button>
