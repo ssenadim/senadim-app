@@ -24,7 +24,7 @@ export function PlatformEngineeringPage() {
         </h2>
         <div className="grid items-stretch gap-4 md:grid-cols-2">
           {availableTools.map((tool) => (
-            <ToolCard key={tool.title} tool={tool} />
+            <ToolCard key={tool.id} tool={tool} />
           ))}
         </div>
       </section>

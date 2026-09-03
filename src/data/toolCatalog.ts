@@ -33,6 +33,10 @@ export const searchableTools: SearchableTool[] = toolGroups.flatMap(
     })),
 );
 
+export const availableToolIds: ReadonlySet<string> = new Set(
+  searchableTools.map((tool) => tool.id),
+);
+
 export function normalizeSearchValue(value: string) {
   return value
     .normalize("NFKD")

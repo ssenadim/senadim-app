@@ -18,7 +18,7 @@ export function ArchitectureDesignPage() {
         </h2>
         <div className="grid items-stretch gap-4 md:grid-cols-2 xl:grid-cols-3">
           {architectureDesignTools.map((tool) => (
-            <ToolCard key={tool.title} tool={tool} />
+            <ToolCard key={tool.id} tool={tool} />
           ))}
         </div>
       </section>
