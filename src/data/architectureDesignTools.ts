@@ -37,7 +37,7 @@ export const architectureDesignTools: CatalogTool[] = [
     description:
       "Capture lightweight system context, integration details and open questions locally.",
     category: "Documentation",
-    keywords: ["architecture", "notes", "context", "integration"],
+    keywords: ["architecture", "notes", "markdown", "context", "integration"],
     path: routePaths.architectureNotesTool,
     status: "available",
   },

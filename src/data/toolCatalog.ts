@@ -33,7 +33,7 @@ export const searchableTools: SearchableTool[] = toolGroups.flatMap(
     })),
 );
 
-function normalizeSearchValue(value: string) {
+export function normalizeSearchValue(value: string) {
   return value
     .normalize("NFKD")
     .toLowerCase()
@@ -42,24 +42,89 @@ function normalizeSearchValue(value: string) {
     .replace(/\s+/g, " ");
 }
 
-export function searchTools(query: string): SearchableTool[] {
-  const terms = normalizeSearchValue(query).split(" ").filter(Boolean);
+export function getSearchTerms(query: string): string[] {
+  return normalizeSearchValue(query).split(" ").filter(Boolean);
+}
+
+function containsEveryTerm(value: string, terms: string[]) {
+  const normalizedValue = normalizeSearchValue(value);
+  return terms.every((term) => normalizedValue.includes(term));
+}
+
+function getMatchRank(
+  tool: SearchableTool,
+  normalizedQuery: string,
+  terms: string[],
+): number | null {
+  const normalizedName = normalizeSearchValue(tool.name);
+  const keywordText = tool.keywords.join(" ");
+  const categoryText = `${tool.area} ${tool.category}`;
+  const searchableText = [
+    tool.name,
+    categoryText,
+    tool.description,
+    keywordText,
+  ].join(" ");
+
+  if (!containsEveryTerm(searchableText, terms)) {
+    return null;
+  }
+
+  if (normalizedName === normalizedQuery) {
+    return 0;
+  }
+
+  if (normalizedName.startsWith(normalizedQuery)) {
+    return 1;
+  }
+
+  if (normalizedName.includes(normalizedQuery)) {
+    return 2;
+  }
+
+  if (containsEveryTerm(keywordText, terms)) {
+    return 3;
+  }
+
+  if (containsEveryTerm(categoryText, terms)) {
+    return 4;
+  }
+
+  if (containsEveryTerm(tool.description, terms)) {
+    return 5;
+  }
+
+  return 6;
+}
+
+export function searchToolCollection(
+  tools: SearchableTool[],
+  query: string,
+): SearchableTool[] {
+  const normalizedQuery = normalizeSearchValue(query);
+  const terms = getSearchTerms(query);
 
   if (terms.length === 0) {
     return [];
   }
 
-  return searchableTools.filter((tool) => {
-    const searchableText = normalizeSearchValue(
-      [
-        tool.name,
-        tool.area,
-        tool.category,
-        tool.description,
-        ...tool.keywords,
-      ].join(" "),
-    );
+  return tools
+    .map((tool, index) => ({
+      index,
+      rank: getMatchRank(tool, normalizedQuery, terms),
+      tool,
+    }))
+    .filter(
+      (match): match is typeof match & { rank: number } => match.rank !== null,
+    )
+    .sort(
+      (firstMatch, secondMatch) =>
+        firstMatch.rank - secondMatch.rank ||
+        firstMatch.index - secondMatch.index,
+    )
+    .map((match) => match.tool);
+}
 
-    return terms.every((term) => searchableText.includes(term));
-  });
+export function searchTools(query: string): SearchableTool[] {
+  return searchToolCollection(searchableTools, query);
 }
