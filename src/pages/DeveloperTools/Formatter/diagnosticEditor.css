@@ -1,0 +1,98 @@
+.formatter-diagnostic-editor {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  background: #f9fafb;
+  color: #111827;
+}
+
+.formatter-diagnostic-editor .cm-editor.cm-focused {
+  outline: 2px solid #0e7490;
+  outline-offset: -1px;
+}
+
+.formatter-diagnostic-editor .cm-gutters {
+  border-right-color: #d1d5db;
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.formatter-diagnostic-editor .cm-activeLine,
+.formatter-diagnostic-editor .cm-activeLineGutter {
+  background: transparent;
+}
+
+.formatter-diagnostic-editor .cm-formatter-diagnostic-range {
+  border-radius: 0.125rem;
+  background-color: rgb(254 202 202 / 0.55);
+  text-decoration-line: underline;
+  text-decoration-style: wavy;
+  text-decoration-color: #b91c1c;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+}
+
+.formatter-diagnostic-editor .cm-formatter-diagnostic-line {
+  box-shadow: inset 3px 0 0 #b91c1c;
+  background-color: rgb(254 226 226 / 0.55);
+}
+
+.formatter-diagnostic-editor .cm-formatter-diagnostic-position {
+  display: inline-flex;
+  width: 1rem;
+  height: 1rem;
+  margin-inline: 0.125rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #991b1b;
+  border-radius: 9999px;
+  color: #991b1b;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.dark .formatter-diagnostic-editor {
+  border-color: #4b5563;
+  background: #111827;
+  color: #f9fafb;
+}
+
+.dark .formatter-diagnostic-editor .cm-editor {
+  background: #111827;
+}
+
+.dark .formatter-diagnostic-editor .cm-editor.cm-focused {
+  outline-color: #22d3ee;
+}
+
+.dark .formatter-diagnostic-editor .cm-gutters {
+  border-right-color: #4b5563;
+  background: #1f2937;
+  color: #9ca3af;
+}
+
+.dark .formatter-diagnostic-editor .cm-cursor {
+  border-left-color: #f9fafb;
+}
+
+.dark .formatter-diagnostic-editor .cm-selectionBackground,
+.dark .formatter-diagnostic-editor .cm-content ::selection {
+  background: #164e63 !important;
+}
+
+.dark .formatter-diagnostic-editor .cm-formatter-diagnostic-range {
+  background-color: rgb(127 29 29 / 0.45);
+  text-decoration-color: #fca5a5;
+}
+
+.dark .formatter-diagnostic-editor .cm-formatter-diagnostic-line {
+  box-shadow: inset 3px 0 0 #fca5a5;
+  background-color: rgb(127 29 29 / 0.3);
+}
+
+.dark .formatter-diagnostic-editor .cm-formatter-diagnostic-position {
+  border-color: #fca5a5;
+  color: #fca5a5;
+}

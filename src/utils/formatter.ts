@@ -1,4 +1,31 @@
+import { DOMParser as XmlDomParser, XMLSerializer } from "@xmldom/xmldom";
+import {
+  parse as parseJsonWithDiagnostics,
+  printParseErrorCode,
+  type ParseError,
+} from "jsonc-parser";
+import type { ValidationDiagnostic } from "../types/validationDiagnostic";
+
 export type FormatterType = "json" | "xml" | "html";
+
+const jsonParseErrorCode = {
+  InvalidSymbol: 1,
+  InvalidNumberFormat: 2,
+  PropertyNameExpected: 3,
+  ValueExpected: 4,
+  ColonExpected: 5,
+  CommaExpected: 6,
+  CloseBraceExpected: 7,
+  CloseBracketExpected: 8,
+  EndOfFileExpected: 9,
+  InvalidCommentToken: 10,
+  UnexpectedEndOfComment: 11,
+  UnexpectedEndOfString: 12,
+  UnexpectedEndOfNumber: 13,
+  InvalidUnicode: 14,
+  InvalidEscapeCharacter: 15,
+  InvalidCharacter: 16,
+} as const;
 
 export interface FormatterSuccess {
   value: string;
@@ -6,6 +33,7 @@ export interface FormatterSuccess {
 
 export interface FormatterFailure {
   error: string;
+  diagnostic: ValidationDiagnostic;
 }
 
 export type FormatterResult = FormatterSuccess | FormatterFailure;
@@ -17,23 +45,23 @@ export function isFormatterFailure(
 }
 
 export function formatJson(input: string): FormatterResult {
-  try {
-    return { value: JSON.stringify(JSON.parse(input), null, 2) };
-  } catch (error) {
-    return {
-      error: `Invalid JSON. ${getErrorMessage(error)}`,
-    };
+  const validation = validateJson(input);
+
+  if (validation) {
+    return validation;
   }
+
+  return { value: JSON.stringify(JSON.parse(input), null, 2) };
 }
 
 export function minifyJson(input: string): FormatterResult {
-  try {
-    return { value: JSON.stringify(JSON.parse(input)) };
-  } catch (error) {
-    return {
-      error: `Invalid JSON. ${getErrorMessage(error)}`,
-    };
+  const validation = validateJson(input);
+
+  if (validation) {
+    return validation;
   }
+
+  return { value: JSON.stringify(JSON.parse(input)) };
 }
 
 export function formatXml(input: string): FormatterResult {
@@ -66,7 +94,9 @@ export function formatHtml(input: string): FormatterResult {
   const protectedHtml = protectHtmlBlocks(input);
   const compactHtml = protectedHtml.value.replace(/>\s+</g, "><").trim();
 
-  return { value: restoreHtmlBlocks(prettifyHtml(compactHtml), protectedHtml.blocks) };
+  return {
+    value: restoreHtmlBlocks(prettifyHtml(compactHtml), protectedHtml.blocks),
+  };
 }
 
 export function minifyHtml(input: string): FormatterResult {
@@ -83,38 +113,21 @@ export function minifyHtml(input: string): FormatterResult {
 }
 function validateHtml(input: string): FormatterFailure | null {
   if (!input.trim()) {
-    return { error: "HTML input is empty." };
+    return createFailure("html", "HTML input is empty.", {
+      code: "EMPTY_INPUT",
+      type: "general",
+    });
   }
 
-  const protectedHtml = protectHtmlBlocks(input);
-  const withoutComments = protectedHtml.value.replace(/<!--[\s\S]*?-->/g, "");
+  const protectedHtml = maskHtmlBlocks(input);
+  const unclosedCommentOffset = findUnclosedHtmlComment(protectedHtml);
 
-  if (withoutComments.includes("<!--")) {
-    return { error: "Invalid HTML. A comment is missing its closing --> marker." };
-  }
-
-  const stack: string[] = [];
-  const tagPattern = /<\/?([A-Za-z][\w:-]*)(?:\s[^<>]*?)?\/?\s*>/g;
-  let match: RegExpExecArray | null;
-
-  while ((match = tagPattern.exec(withoutComments))) {
-    const token = match[0];
-    const tagName = match[1].toLowerCase();
-    const isClosingTag = token.startsWith("</");
-    const isSelfClosing = /\/\s*>$/.test(token) || isHtmlVoidElement(token);
-
-    if (isClosingTag) {
-      const openingTag = stack.pop();
-      if (openingTag !== tagName) {
-        return { error: `Invalid HTML. Closing </${tagName}> does not match the expected tag.` };
-      }
-    } else if (!isSelfClosing) {
-      stack.push(tagName);
-    }
-  }
-
-  if (stack.length > 0) {
-    return { error: `Invalid HTML. Missing closing </${stack[stack.length - 1]}> tag.` };
+  if (unclosedCommentOffset !== -1) {
+    return createFailure(
+      "html",
+      "A comment is missing its closing --> marker.",
+      createRangeDetails(input, unclosedCommentOffset, 4, "UNCLOSED_COMMENT"),
+    );
   }
 
   return null;
@@ -122,13 +135,42 @@ function validateHtml(input: string): FormatterFailure | null {
 
 function protectHtmlBlocks(html: string) {
   const blocks: string[] = [];
-  const value = html.replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, (block) => {
-    const placeholder = `@@HTML_BLOCK_${blocks.length}@@`;
-    blocks.push(block);
-    return placeholder;
-  });
+  const value = html.replace(
+    /<(script|style)\b[^>]*>[\s\S]*?<\/\1\s*>/gi,
+    (block) => {
+      const placeholder = `@@HTML_BLOCK_${blocks.length}@@`;
+      blocks.push(block);
+      return placeholder;
+    },
+  );
 
   return { value, blocks };
+}
+
+function maskHtmlBlocks(html: string) {
+  return html.replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, (block) =>
+    " ".repeat(block.length),
+  );
+}
+
+function findUnclosedHtmlComment(html: string) {
+  let searchOffset = 0;
+
+  while (searchOffset < html.length) {
+    const commentStart = html.indexOf("<!--", searchOffset);
+    if (commentStart === -1) {
+      return -1;
+    }
+
+    const commentEnd = html.indexOf("-->", commentStart + 4);
+    if (commentEnd === -1) {
+      return commentStart;
+    }
+
+    searchOffset = commentEnd + 3;
+  }
+
+  return -1;
 }
 
 function restoreHtmlBlocks(html: string, blocks: string[]) {
@@ -138,23 +180,59 @@ function restoreHtmlBlocks(html: string, blocks: string[]) {
   );
 }
 function parseXml(input: string): FormatterResult {
-  try {
-    const parser = new DOMParser();
-    const document = parser.parseFromString(input, "application/xml");
-    const parserError = document.querySelector("parsererror");
+  if (!input.trim()) {
+    return createFailure("xml", "XML input is empty.", {
+      code: "EMPTY_INPUT",
+      type: "general",
+    });
+  }
 
-    if (parserError) {
-      return {
-        error:
-          "Invalid XML. Please check for missing closing tags, malformed attributes, or invalid nesting.",
-      };
+  let parserDiagnostic: ValidationDiagnostic | null = null;
+
+  try {
+    const parser = new XmlDomParser({
+      locator: true,
+      onError: (level, message, context) => {
+        if (parserDiagnostic) {
+          return;
+        }
+
+        const locator = context?.locator as
+          | { lineNumber?: number; columnNumber?: number }
+          | undefined;
+        parserDiagnostic = createPositionDiagnostic(
+          input,
+          "xml",
+          normaliseParserMessage(message),
+          locator?.lineNumber,
+          locator?.columnNumber,
+          `XML_${level.toUpperCase()}`,
+        );
+      },
+    });
+    const document = parser.parseFromString(input, "application/xml");
+
+    if (parserDiagnostic) {
+      return createFailureFromDiagnostic(parserDiagnostic);
     }
 
     return { value: new XMLSerializer().serializeToString(document) };
-  } catch {
-    return {
-      error: "Invalid XML. Please check the document structure and try again.",
-    };
+  } catch (error) {
+    if (parserDiagnostic) {
+      return createFailureFromDiagnostic(parserDiagnostic);
+    }
+
+    const locator = getXmlErrorLocator(error);
+    return createFailureFromDiagnostic(
+      createPositionDiagnostic(
+        input,
+        "xml",
+        normaliseParserMessage(getErrorMessage(error)),
+        locator?.lineNumber,
+        locator?.columnNumber,
+        "XML_FATAL_ERROR",
+      ),
+    );
   }
 }
 
@@ -218,8 +296,246 @@ function prettifyHtml(html: string) {
 }
 
 function isHtmlVoidElement(token: string) {
-  return /^<(area|base|br|col|embed|hr|img|input|link|meta|param|source|track|wbr)(\s|>)/i.test(token);
+  return /^<(area|base|br|col|embed|hr|img|input|link|meta|param|source|track|wbr)(\s|>)/i.test(
+    token,
+  );
 }
+
+function validateJson(input: string): FormatterFailure | null {
+  const errors: ParseError[] = [];
+  parseJsonWithDiagnostics(input, errors, {
+    allowEmptyContent: false,
+    allowTrailingComma: false,
+    disallowComments: true,
+  });
+
+  if (errors.length === 0) {
+    return null;
+  }
+
+  const diagnostic = createJsonDiagnostic(input, errors[0]);
+  return createFailureFromDiagnostic(diagnostic);
+}
+
+export function createJsonDiagnostic(
+  input: string,
+  parseError: ParseError,
+): ValidationDiagnostic {
+  const isTrailingComma =
+    (parseError.error === jsonParseErrorCode.PropertyNameExpected ||
+      parseError.error === jsonParseErrorCode.ValueExpected) &&
+    getPreviousNonWhitespaceCharacter(input, parseError.offset) === ",";
+  const message = isTrailingComma
+    ? "Trailing commas are not allowed in strict JSON."
+    : getJsonDiagnosticMessage(input, parseError);
+  const length = Math.max(
+    parseError.length,
+    parseError.offset < input.length ? 1 : 0,
+  );
+
+  return {
+    message,
+    severity: "error",
+    format: "json",
+    ...createRangeDetails(
+      input,
+      parseError.offset,
+      length,
+      isTrailingComma
+        ? "TRAILING_COMMA"
+        : printParseErrorCode(parseError.error),
+    ),
+  };
+}
+
+function getJsonDiagnosticMessage(input: string, parseError: ParseError) {
+  switch (parseError.error) {
+    case jsonParseErrorCode.InvalidSymbol: {
+      const nextCharacter = getNextNonWhitespaceCharacter(
+        input,
+        parseError.offset + parseError.length,
+      );
+      return nextCharacter === ":"
+        ? "Property names must be enclosed in double quotes."
+        : "String values must be enclosed in double quotes.";
+    }
+    case jsonParseErrorCode.InvalidCommentToken:
+    case jsonParseErrorCode.UnexpectedEndOfComment:
+      return "Comments are not allowed in strict JSON.";
+    case jsonParseErrorCode.UnexpectedEndOfString:
+      return "The string is missing a closing double quote.";
+    case jsonParseErrorCode.InvalidNumberFormat:
+    case jsonParseErrorCode.UnexpectedEndOfNumber:
+      return "The number is not valid JSON.";
+    case jsonParseErrorCode.PropertyNameExpected:
+      return "A property name enclosed in double quotes is required here.";
+    case jsonParseErrorCode.ValueExpected:
+      return "A JSON value is required here.";
+    case jsonParseErrorCode.ColonExpected:
+      return "A colon is required after the property name.";
+    case jsonParseErrorCode.CommaExpected:
+      return "A comma is required between JSON values.";
+    case jsonParseErrorCode.CloseBraceExpected:
+      return "The object is missing a closing brace.";
+    case jsonParseErrorCode.CloseBracketExpected:
+      return "The array is missing a closing bracket.";
+    case jsonParseErrorCode.EndOfFileExpected:
+      return "Unexpected content appears after the JSON value.";
+    case jsonParseErrorCode.InvalidUnicode:
+      return "The string contains an invalid Unicode escape sequence.";
+    case jsonParseErrorCode.InvalidEscapeCharacter:
+      return "The string contains an invalid escape character.";
+    case jsonParseErrorCode.InvalidCharacter:
+      return "The JSON contains an invalid character.";
+    default:
+      return "Please check the JSON syntax and try again.";
+  }
+}
+
+function createRangeDetails(
+  input: string,
+  startOffset: number,
+  length: number,
+  code: string,
+) {
+  const safeStart = Math.max(0, Math.min(startOffset, input.length));
+  const safeLength = Math.max(0, Math.min(length, input.length - safeStart));
+  const location = getLineAndColumn(input, safeStart);
+
+  return {
+    ...location,
+    startOffset: safeStart,
+    endOffset: safeStart + safeLength,
+    length: safeLength,
+    code,
+    type: safeLength > 0 ? ("range" as const) : ("position" as const),
+  };
+}
+
+function createPositionDiagnostic(
+  input: string,
+  format: "xml",
+  message: string,
+  line?: number,
+  column?: number,
+  code?: string,
+): ValidationDiagnostic {
+  if (!line || !column) {
+    return {
+      message,
+      severity: "error",
+      format,
+      code,
+      type: "general",
+    };
+  }
+
+  const startOffset = getOffsetFromLineAndColumn(input, line, column);
+  return {
+    message,
+    severity: "error",
+    format,
+    line,
+    column,
+    startOffset,
+    endOffset: startOffset,
+    length: 0,
+    code,
+    type: "position",
+  };
+}
+
+function createFailure(
+  format: ValidationDiagnostic["format"],
+  message: string,
+  details: Partial<ValidationDiagnostic>,
+): FormatterFailure {
+  return createFailureFromDiagnostic({
+    message,
+    severity: "error",
+    format,
+    ...details,
+  });
+}
+
+function createFailureFromDiagnostic(
+  diagnostic: ValidationDiagnostic,
+): FormatterFailure {
+  return {
+    error: `Invalid ${diagnostic.format.toUpperCase()}. ${diagnostic.message}`,
+    diagnostic,
+  };
+}
+
+function getLineAndColumn(input: string, offset: number) {
+  const beforeOffset = input.slice(0, offset);
+  const lines = beforeOffset.split(/\r\n|\r|\n/);
+
+  return {
+    line: lines.length,
+    column: (lines[lines.length - 1]?.length ?? 0) + 1,
+  };
+}
+
+function getOffsetFromLineAndColumn(
+  input: string,
+  line: number,
+  column: number,
+) {
+  const lines = input.split(/\r\n|\r|\n/);
+  const targetLine = Math.max(1, Math.min(line, lines.length));
+  let offset = 0;
+
+  for (let index = 0; index < targetLine - 1; index += 1) {
+    offset += lines[index].length;
+    const lineEnding = input.slice(offset).match(/^(\r\n|\r|\n)/)?.[0] ?? "";
+    offset += lineEnding.length;
+  }
+
+  return Math.min(offset + Math.max(column - 1, 0), input.length);
+}
+
+function getPreviousNonWhitespaceCharacter(input: string, offset: number) {
+  for (let index = offset - 1; index >= 0; index -= 1) {
+    if (!/\s/.test(input[index])) {
+      return input[index];
+    }
+  }
+
+  return "";
+}
+
+function getNextNonWhitespaceCharacter(input: string, offset: number) {
+  for (let index = offset; index < input.length; index += 1) {
+    if (!/\s/.test(input[index])) {
+      return input[index];
+    }
+  }
+
+  return "";
+}
+
+function normaliseParserMessage(message: string) {
+  const trimmedMessage = message.replace(/\s+/g, " ").trim();
+  if (!trimmedMessage) {
+    return "Please check the document structure and try again.";
+  }
+
+  return /[.!?]$/.test(trimmedMessage) ? trimmedMessage : `${trimmedMessage}.`;
+}
+
+function getXmlErrorLocator(error: unknown) {
+  if (!(error instanceof Error) || !("locator" in error)) {
+    return undefined;
+  }
+
+  return (
+    error as Error & {
+      locator?: { lineNumber?: number; columnNumber?: number };
+    }
+  ).locator;
+}
+
 function getErrorMessage(error: unknown) {
   if (error instanceof Error && error.message) {
     return error.message;

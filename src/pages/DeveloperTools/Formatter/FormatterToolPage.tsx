@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
-import { Alert, Button, Select, Textarea } from "flowbite-react";
+import { useEffect, useRef, useState } from "react";
+import { Button, Select, Textarea } from "flowbite-react";
 import { HelpTooltip } from "../../../components/common/HelpTooltip";
 import { ToolToast } from "../../../components/common/ToolToast";
 import { ToolPageLayout } from "../../../components/layout/ToolPageLayout";
 import { usePageTitle } from "../../../hooks/usePageTitle";
 import type { ToolExample } from "../../../types/toolPage";
 import type { ToastMessage, ToastTone } from "../../../types/toast";
+import type { ValidationDiagnostic } from "../../../types/validationDiagnostic";
 import {
   formatHtml,
   formatJson,
@@ -17,6 +18,11 @@ import {
   type FormatterType,
 } from "../../../utils/formatter";
 import { routePaths } from "../../../utils/routes";
+import {
+  DiagnosticEditor,
+  type DiagnosticEditorHandle,
+} from "./DiagnosticEditor";
+import { DiagnosticSummary } from "./DiagnosticSummary";
 
 const examples: ToolExample[] = [
   {
@@ -77,8 +83,11 @@ export function FormatterToolPage() {
   const [formatType, setFormatType] = useState<FormatterType>("json");
   const [inputText, setInputText] = useState("");
   const [outputText, setOutputText] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
+  const [diagnostic, setDiagnostic] = useState<ValidationDiagnostic | null>(
+    null,
+  );
   const [toast, setToast] = useState<ToastMessage | null>(null);
+  const editorRef = useRef<DiagnosticEditorHandle | null>(null);
 
   useEffect(() => {
     if (!toast) {
@@ -103,13 +112,13 @@ export function FormatterToolPage() {
           : formatHtml(inputText);
 
     if (isFormatterFailure(result)) {
-      setErrorMessage(result.error);
+      setDiagnostic(result.diagnostic);
       setOutputText("");
       showToast("failure", "Formatting failed.");
       return;
     }
 
-    setErrorMessage("");
+    setDiagnostic(null);
     setOutputText(result.value);
     showToast("success", `${getFormatLabel(formatType)} formatted.`);
   }
@@ -123,13 +132,13 @@ export function FormatterToolPage() {
           : minifyHtml(inputText);
 
     if (isFormatterFailure(result)) {
-      setErrorMessage(result.error);
+      setDiagnostic(result.diagnostic);
       setOutputText("");
       showToast("failure", "Minification failed.");
       return;
     }
 
-    setErrorMessage("");
+    setDiagnostic(null);
     setOutputText(result.value);
     showToast("success", `${getFormatLabel(formatType)} minified.`);
   }
@@ -151,8 +160,18 @@ export function FormatterToolPage() {
   function handleClear() {
     setInputText("");
     setOutputText("");
-    setErrorMessage("");
+    setDiagnostic(null);
     showToast("info", "Input and result cleared.");
+  }
+
+  function handleInputChange(value: string) {
+    setInputText(value);
+    setDiagnostic(null);
+  }
+
+  function handleFormatTypeChange(nextFormatType: FormatterType) {
+    setFormatType(nextFormatType);
+    setDiagnostic(null);
   }
 
   return (
@@ -197,7 +216,7 @@ export function FormatterToolPage() {
               id="formatter-type"
               value={formatType}
               onChange={(event) =>
-                setFormatType(event.target.value as FormatterType)
+                handleFormatTypeChange(event.target.value as FormatterType)
               }
             >
               <option value="json">JSON</option>
@@ -221,25 +240,30 @@ export function FormatterToolPage() {
                 exampleOutput='{\n  "name": "John"\n}'
               />
             </div>
-            <Textarea
+            <DiagnosticEditor
+              ref={editorRef}
               id="formatter-input"
-              rows={10}
               value={inputText}
-              onChange={(event) => setInputText(event.target.value)}
+              onChange={handleInputChange}
+              diagnostic={diagnostic}
+              ariaLabel={`${getFormatLabel(formatType)} input`}
               placeholder="Paste JSON, XML, or HTML content here..."
-              className="font-mono"
-              aria-invalid={Boolean(errorMessage)}
-              aria-describedby={
-                errorMessage ? "formatter-validation-error" : undefined
+              describedBy={
+                diagnostic ? "formatter-validation-error" : undefined
               }
             />
           </div>
 
-          {errorMessage ? (
-            <Alert id="formatter-validation-error" color="failure" role="alert">
-              <span className="font-semibold">Validation failed.</span>{" "}
-              {errorMessage}
-            </Alert>
+          {diagnostic ? (
+            <DiagnosticSummary
+              id="formatter-validation-error"
+              diagnostic={diagnostic}
+              onFocusDiagnostic={
+                diagnostic.startOffset === undefined
+                  ? undefined
+                  : () => editorRef.current?.focusDiagnostic()
+              }
+            />
           ) : null}
 
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
@@ -295,7 +319,7 @@ export function FormatterToolPage() {
         );
         setInputText(example.input);
         setOutputText("");
-        setErrorMessage("");
+        setDiagnostic(null);
       }}
       notesCollapsible
       notes={
