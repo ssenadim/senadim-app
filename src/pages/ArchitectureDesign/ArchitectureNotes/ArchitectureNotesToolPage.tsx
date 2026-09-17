@@ -683,7 +683,7 @@ function NoteEditor({
         </div>
         <div className="flex max-w-full flex-wrap gap-2 sm:justify-end">
           <Button color="blue" size="sm" onClick={onSave}>
-            Save
+            Save Note
           </Button>
           <Button
             color="light"
@@ -692,7 +692,7 @@ function NoteEditor({
             onClick={onDelete}
             aria-label={`Delete ${draft.title || "architecture note"}`}
           >
-            Delete
+            Delete Note
           </Button>
         </div>
       </div>

@@ -227,7 +227,7 @@ export function UuidToolPage() {
                       size="xs"
                       onClick={() => void copyText(uuid, "UUID copied.")}
                     >
-                      Copy
+                      Copy UUID
                     </Button>
                   </div>
                 ))}

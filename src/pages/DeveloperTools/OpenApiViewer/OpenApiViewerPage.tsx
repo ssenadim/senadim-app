@@ -453,7 +453,7 @@ function AnalysisResult({ analysis }: { analysis: OpenApiAnalysis }) {
               id="openapi-endpoints-heading"
               className="text-xl font-semibold text-gray-950 dark:text-white"
             >
-              Endpoints
+              Endpoint Explorer
             </h2>
             {endpoints.length > 0 ? (
               <p
@@ -591,7 +591,7 @@ function SchemaExplorer({
         id="openapi-schemas-heading"
         className="text-xl font-semibold text-gray-950 dark:text-white"
       >
-        Schemas
+        Schema &amp; Model Explorer
       </h2>
 
       {schemas.length === 0 ? (
@@ -640,7 +640,8 @@ function SchemaExplorer({
             </ul>
           ) : (
             <p className="mt-4 text-sm text-gray-600 dark:text-gray-300">
-              No schemas match your search.
+              No schemas match your search. Try another name, property, or
+              description.
             </p>
           )}
         </>

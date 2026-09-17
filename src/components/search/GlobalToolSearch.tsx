@@ -22,8 +22,10 @@ const emptyStateMessages: Record<
   string
 > = {
   "search-prompt": "Search by tool name, category or keyword.",
-  "no-favorites": "No favorite tools yet.",
-  "no-matching-favorites": "No favorite tools match your search.",
+  "no-favorites":
+    "No favorite tools yet. Use the star on any tool card to add one.",
+  "no-matching-favorites":
+    "No favorite tools match this search. Try another term or show all tools.",
 };
 
 function HighlightedText({ text, query }: { text: string; query: string }) {

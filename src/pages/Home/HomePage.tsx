@@ -15,14 +15,14 @@ import {
   buildQuickAccessItems,
   maximumQuickAccessTools,
 } from "../../utils/quickAccess";
-import { maximumRecentTools } from "../../utils/recentTools";
 import { routePaths } from "../../utils/routes";
+import { selectToolsByIds } from "../../utils/toolSelection";
 
-const featuredDeveloperToolNames = [
-  "JWT Decoder",
-  "Timestamp Converter",
-  "Data Compare",
-  "Regex Tester",
+const featuredDeveloperToolIds = [
+  "jwt-decoder",
+  "timestamp-converter",
+  "data-compare",
+  "regex-tester",
 ];
 
 const defaultQuickAccessToolIds = [
@@ -34,32 +34,17 @@ const defaultQuickAccessToolIds = [
   "mermaid-viewer",
 ];
 
-const recentToolNames = ["Mermaid Viewer", "Configuration Converter"];
+const architectureDiagrammingTools = selectToolsByIds(searchableTools, [
+  "plantuml-viewer",
+  "mermaid-viewer",
+]);
 
-const recentToolDescriptions: Record<string, string> = {
-  "Mermaid Viewer":
-    "Create and preview Mermaid diagrams using practical templates with SVG and PNG export.",
-  "Configuration Converter":
-    "Convert application configuration between JSON, YAML and Java-style Properties formats.",
-};
+const recentlyAddedTools = selectToolsByIds(searchableTools, [
+  "openapi-viewer",
+  "configuration-converter",
+]);
 
-const featuredCapabilities = [
-  {
-    title: "Architecture & Design",
-    description:
-      "Text-based diagramming, C4 modeling, architecture records and design documentation.",
-  },
-  {
-    title: "Platform Engineering",
-    description:
-      "Container platform sizing, capacity planning, JVM memory calculations and operational tooling.",
-  },
-  {
-    title: "Developer Productivity",
-    description:
-      "JWT, PKCE, Regex, Encoding, Formatting and comparison utilities.",
-  },
-];
+const homeRecentToolLimit = 3;
 
 export function HomePage() {
   usePageTitle("Home");
@@ -76,19 +61,8 @@ export function HomePage() {
     (tool) => tool.status === "available",
   );
   const featuredDeveloperTools = developerTools.filter((tool) =>
-    featuredDeveloperToolNames.includes(tool.title),
+    featuredDeveloperToolIds.includes(tool.id),
   );
-  const recentlyAddedTools = [...architectureDesignTools, ...developerTools]
-    .filter((tool) => recentToolNames.includes(tool.title))
-    .map((tool) => ({
-      ...tool,
-      description: recentToolDescriptions[tool.title] ?? tool.description,
-    }))
-    .sort(
-      (firstTool, secondTool) =>
-        recentToolNames.indexOf(firstTool.title) -
-        recentToolNames.indexOf(secondTool.title),
-    );
   const quickAccessItems = buildQuickAccessItems({
     tools: searchableTools,
     favoriteIds,
@@ -135,6 +109,9 @@ export function HomePage() {
             <Button as={Link} to={routePaths.platformEngineering} color="light">
               Explore Platform Engineering
             </Button>
+            <Button as={Link} to={routePaths.architectureDesign} color="light">
+              Explore Architecture &amp; Design
+            </Button>
           </div>
         </div>
       </section>
@@ -167,17 +144,17 @@ export function HomePage() {
       <section className="grid gap-4 md:grid-cols-3">
         <MetricCard
           label="Architecture & Design"
-          value={`${availableArchitectureTools.length}+`}
+          value={String(availableArchitectureTools.length)}
           detail="Architecture and documentation tools"
         />
         <MetricCard
           label="Platform Engineering"
-          value={`${availablePlatformTools.length}+`}
+          value={String(availablePlatformTools.length)}
           detail="Operational calculators"
         />
         <MetricCard
           label="Developer Productivity"
-          value={`${availableDeveloperTools.length}+`}
+          value={String(availableDeveloperTools.length)}
           detail="Developer productivity utilities"
         />
       </section>
@@ -188,25 +165,8 @@ export function HomePage() {
           description="Create and preview text-based diagrams using PlantUML or Mermaid, with practical templates and export capabilities."
         />
         <div className="grid items-stretch gap-4 md:grid-cols-2">
-          {[
-            {
-              title: "PlantUML Viewer",
-              description:
-                "Create PlantUML sequence, component, deployment, and C4 architecture diagrams.",
-              category: "Diagramming",
-              path: routePaths.plantUmlViewer,
-              status: "available" as const,
-            },
-            {
-              title: "Mermaid Viewer",
-              description:
-                "Create Mermaid flowcharts, sequence, class, state, and ER diagrams.",
-              category: "Diagramming",
-              path: routePaths.mermaidViewer,
-              status: "available" as const,
-            },
-          ].map((tool) => (
-            <ToolCard key={tool.title} tool={tool} />
+          {architectureDiagrammingTools.map((tool) => (
+            <ToolCard key={tool.id} tool={toCatalogTool(tool)} />
           ))}
         </div>
       </section>
@@ -224,12 +184,12 @@ export function HomePage() {
                 aria-label="Clear recently used tools"
                 onClick={clearRecentTools}
               >
-                Clear Recent
+                Clear Recently Used
               </Button>
             }
           />
           <div className="grid min-w-0 items-stretch gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {recentTools.slice(0, maximumRecentTools).map((tool) => (
+            {recentTools.slice(0, homeRecentToolLimit).map((tool) => (
               <ToolCard key={tool.id} tool={toCatalogTool(tool)} />
             ))}
           </div>
@@ -238,64 +198,55 @@ export function HomePage() {
 
       <section className="flex flex-col gap-5">
         <SectionHeader
-          title="Featured Capabilities"
-          description="Freeshot connects everyday developer workflows with platform planning and architecture documentation."
+          title="Featured Categories"
+          description="Explore Freeshot by engineering workflow and discipline."
         />
-        <div className="grid gap-4 md:grid-cols-3">
-          {featuredCapabilities.map((capability) => (
-            <CapabilityCard
-              key={capability.title}
-              title={capability.title}
-              description={capability.description}
-            />
-          ))}
+        <div className="grid gap-5 lg:grid-cols-3">
+          <FeaturedSectionCard
+            title="Architecture & Design"
+            description="Tools for architecture diagrams, C4 modeling, ADRs and design documentation."
+            examples={availableArchitectureTools.map((tool) => tool.title)}
+            actionLabel="View Architecture & Design"
+            to={routePaths.architectureDesign}
+          />
+          <FeaturedSectionCard
+            title="Developer Productivity"
+            description="Developer productivity utilities for integration teams, backend engineers and architects."
+            examples={featuredDeveloperTools.map((tool) => tool.title)}
+            actionLabel="View Developer Productivity"
+            to={routePaths.developerTools}
+          />
+          <FeaturedSectionCard
+            title="Platform Engineering"
+            description="Sizing, capacity planning and operational tooling for container platform workloads."
+            examples={availablePlatformTools.map((tool) => tool.title)}
+            actionLabel="View Platform Engineering"
+            to={routePaths.platformEngineering}
+          />
         </div>
-      </section>
-
-      <section className="grid gap-5 lg:grid-cols-3">
-        <FeaturedSectionCard
-          title="Architecture & Design"
-          description="Tools for architecture diagrams, C4 modeling, ADRs and design documentation."
-          examples={availableArchitectureTools.map((tool) => tool.title)}
-          actionLabel="View Architecture & Design"
-          to={routePaths.architectureDesign}
-        />
-        <FeaturedSectionCard
-          title="Developer Productivity"
-          description="Developer productivity utilities for integration teams, backend engineers and architects."
-          examples={featuredDeveloperTools.map((tool) => tool.title)}
-          actionLabel="View Developer Productivity"
-          to={routePaths.developerTools}
-        />
-        <FeaturedSectionCard
-          title="Platform Engineering"
-          description="Sizing, capacity planning and operational tooling for container platform workloads."
-          examples={availablePlatformTools.map((tool) => tool.title)}
-          actionLabel="View Platform Engineering"
-          to={routePaths.platformEngineering}
-        />
       </section>
 
       <section className="flex flex-col gap-5">
         <SectionHeader
           title="Recently Added"
-          description="The latest tools for architecture diagramming and application configuration workflows."
+          description="Recent additions for API exploration and application configuration workflows."
         />
         <div className="grid min-w-0 gap-4 sm:grid-cols-2">
           {recentlyAddedTools.map((tool) => (
-            <ToolCard key={tool.title} tool={tool} />
+            <ToolCard key={tool.id} tool={toCatalogTool(tool)} />
           ))}
         </div>
       </section>
 
       <section className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
         <h2 className="text-2xl font-bold text-gray-950 dark:text-white">
-          About This Project
+          Why Freeshot
         </h2>
         <p className="mt-3 max-w-4xl text-sm leading-7 text-gray-600 dark:text-gray-300">
-          Freeshot is intended for software architects, platform engineers and
-          developers who need practical support for architecture design,
-          platform engineering and developer productivity workflows.
+          Freeshot gives software architects, platform engineers, and developers
+          focused browser-based tools for recurring engineering work. Tool
+          discovery and personalization stay lightweight, while inputs and
+          preferences remain local to the browser where practical.
         </p>
       </section>
 
@@ -306,6 +257,7 @@ export function HomePage() {
             "Architecture & Design",
             "Platform Engineering",
             "Developer Productivity",
+            "Tool Discovery & Personalization",
           ]}
         />
         <RoadmapCard
@@ -349,9 +301,9 @@ function FeaturedSectionCard({
 }: FeaturedSectionCardProps) {
   return (
     <Card className="border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
-      <h2 className="text-2xl font-bold text-gray-950 dark:text-white">
+      <h3 className="text-2xl font-bold text-gray-950 dark:text-white">
         {title}
-      </h2>
+      </h3>
       <p className="text-sm leading-6 text-gray-600 dark:text-gray-300">
         {description}
       </p>
@@ -371,25 +323,6 @@ function FeaturedSectionCard({
         </Button>
       </div>
     </Card>
-  );
-}
-
-function CapabilityCard({
-  title,
-  description,
-}: {
-  title: string;
-  description: string;
-}) {
-  return (
-    <section className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-      <h2 className="text-lg font-semibold text-gray-950 dark:text-white">
-        {title}
-      </h2>
-      <p className="mt-3 text-sm leading-6 text-gray-600 dark:text-gray-300">
-        {description}
-      </p>
-    </section>
   );
 }
 
