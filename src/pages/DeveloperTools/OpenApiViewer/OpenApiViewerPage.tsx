@@ -12,7 +12,9 @@ import { ToolPageLayout } from "../../../components/layout/ToolPageLayout";
 import { usePageTitle } from "../../../hooks/usePageTitle";
 import {
   analyzeOpenApi,
+  filterOpenApiEndpoints,
   filterOpenApiSchemas,
+  getAvailableOpenApiMethods,
   type OpenApiAnalysis,
   type OpenApiEndpoint,
   type OpenApiInputFormat,
@@ -168,9 +170,9 @@ export function OpenApiViewerPage() {
         { label: "Developer Productivity", path: routePaths.developerTools },
         { label: "OpenAPI Viewer" },
       ]}
-      overviewTitle="About OpenAPI Viewer"
+      overviewTitle="What is OpenAPI?"
       overviewCollapsible
-      overviewToggleLabel="About OpenAPI Viewer"
+      overviewToggleLabel="What is OpenAPI?"
       overview={
         <div className="space-y-3">
           <p>
@@ -230,7 +232,7 @@ export function OpenApiViewerPage() {
               aria-invalid={Boolean(errorMessage)}
               aria-describedby={
                 errorMessage
-                  ? "openapi-validation-error"
+                  ? "openapi-definition-note openapi-validation-error"
                   : "openapi-definition-note"
               }
             />
@@ -240,6 +242,20 @@ export function OpenApiViewerPage() {
             >
               Analysis runs only when you select Analyze API. Content remains in
               this browser.
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <Button
+              type="button"
+              color="blue"
+              className="w-full sm:w-auto"
+              onClick={handleAnalyze}
+            >
+              Analyze API
+            </Button>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Analysis stays on this device.
             </p>
           </div>
 
@@ -260,10 +276,6 @@ export function OpenApiViewerPage() {
               Analyze the API again to refresh it.
             </p>
           ) : null}
-
-          <Button type="button" color="blue" onClick={handleAnalyze}>
-            Analyze API
-          </Button>
         </div>
       }
       outputs={
@@ -292,6 +304,8 @@ export function OpenApiViewerPage() {
 
 function AnalysisResult({ analysis }: { analysis: OpenApiAnalysis }) {
   const { overview, endpoints, schemas } = analysis;
+  const [endpointQuery, setEndpointQuery] = useState("");
+  const [endpointMethod, setEndpointMethod] = useState("ALL");
   const [schemaQuery, setSchemaQuery] = useState("");
   const [expandedSchemaNames, setExpandedSchemaNames] = useState<Set<string>>(
     new Set(),
@@ -301,17 +315,20 @@ function AnalysisResult({ analysis }: { analysis: OpenApiAnalysis }) {
   );
   const schemaButtonRefs = useRef(new Map<string, HTMLButtonElement>());
   const schemaNames = new Set(schemas.map((schema) => schema.name));
+  const availableEndpointMethods = getAvailableOpenApiMethods(endpoints);
+  const filteredEndpoints = filterOpenApiEndpoints(
+    endpoints,
+    endpointQuery,
+    endpointMethod,
+  );
+  const hasEndpointFilters =
+    Boolean(endpointQuery.trim()) || endpointMethod !== "ALL";
   const filteredSchemas = filterOpenApiSchemas(schemas, schemaQuery);
-  const metrics = [
-    ["API Title", overview.title ?? "Not provided"],
-    ["Version", overview.version ?? "Not provided"],
-    ["OpenAPI Version", overview.openApiVersion],
-    ["Detected Format", formatLabels[analysis.detectedFormat]],
+  const overviewCounts = [
     ["Servers", String(overview.serverCount)],
     ["Paths", String(overview.pathCount)],
     ["Operations", String(overview.operationCount)],
     ["Schemas", String(overview.schemaCount)],
-    ["Tags", String(overview.tagCount)],
   ];
 
   useEffect(() => {
@@ -366,9 +383,18 @@ function AnalysisResult({ analysis }: { analysis: OpenApiAnalysis }) {
     }
   }
 
+  function resetEndpointFilters() {
+    setEndpointQuery("");
+    setEndpointMethod("ALL");
+  }
+
   return (
     <SchemaNavigationContext.Provider value={{ schemaNames, navigateToSchema }}>
-      <div className="space-y-7" aria-live="polite">
+      <div className="space-y-7">
+        <p className="sr-only" role="status">
+          Analysis complete. {overview.operationCount} operations and{" "}
+          {overview.schemaCount} schemas found.
+        </p>
         <section aria-labelledby="openapi-overview-heading">
           <h2
             id="openapi-overview-heading"
@@ -376,44 +402,146 @@ function AnalysisResult({ analysis }: { analysis: OpenApiAnalysis }) {
           >
             API Overview
           </h2>
-          <dl className="mt-4 grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {metrics.map(([label, value]) => (
-              <div
-                key={label}
-                className="min-w-0 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-950/60"
-              >
-                <dt className="text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">
-                  {label}
-                </dt>
-                <dd className="mt-1 text-sm font-semibold break-words text-gray-950 dark:text-white">
-                  {value}
-                </dd>
+          <div className="mt-4 min-w-0 rounded-lg border border-gray-200 bg-gray-50 p-4 sm:p-5 dark:border-gray-700 dark:bg-gray-950/60">
+            <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0">
+                <h3 className="text-lg font-semibold break-words text-gray-950 dark:text-white">
+                  {overview.title ?? "Untitled API"}
+                </h3>
+                <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
+                  API version {overview.version ?? "not provided"}
+                </p>
               </div>
-            ))}
-          </dl>
-          {overview.description ? (
-            <p className="mt-4 max-w-4xl text-sm leading-6 text-gray-600 dark:text-gray-300">
-              {overview.description}
-            </p>
-          ) : null}
+              <div className="flex flex-wrap gap-2">
+                <MetadataBadge tone="neutral">
+                  OpenAPI {overview.openApiVersion}
+                </MetadataBadge>
+                <MetadataBadge tone="neutral">
+                  {formatLabels[analysis.detectedFormat]}
+                </MetadataBadge>
+                {overview.tagCount > 0 ? (
+                  <MetadataBadge tone="neutral">
+                    {overview.tagCount}{" "}
+                    {overview.tagCount === 1 ? "tag" : "tags"}
+                  </MetadataBadge>
+                ) : null}
+              </div>
+            </div>
+            {overview.description ? (
+              <p className="mt-3 max-w-4xl text-sm leading-6 text-gray-600 dark:text-gray-300">
+                {overview.description}
+              </p>
+            ) : null}
+            <dl className="mt-4 grid min-w-0 grid-cols-2 gap-3 lg:grid-cols-4">
+              {overviewCounts.map(([label, value]) => (
+                <div key={label} className="min-w-0">
+                  <dt className="text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">
+                    {label}
+                  </dt>
+                  <dd className="mt-1 text-base font-semibold text-gray-950 dark:text-white">
+                    {value}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </div>
         </section>
 
         <section aria-labelledby="openapi-endpoints-heading">
-          <h2
-            id="openapi-endpoints-heading"
-            className="text-xl font-semibold text-gray-950 dark:text-white"
-          >
-            Endpoints
-          </h2>
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h2
+              id="openapi-endpoints-heading"
+              className="text-xl font-semibold text-gray-950 dark:text-white"
+            >
+              Endpoints
+            </h2>
+            {endpoints.length > 0 ? (
+              <p
+                className="text-xs text-gray-500 dark:text-gray-400"
+                aria-live="polite"
+              >
+                {filteredEndpoints.length} of {endpoints.length} operations
+              </p>
+            ) : null}
+          </div>
           {endpoints.length > 0 ? (
-            <ul className="mt-4 grid min-w-0 gap-3">
-              {endpoints.map((endpoint) => (
-                <EndpointCard
-                  key={`${endpoint.method}-${endpoint.path}`}
-                  endpoint={endpoint}
-                />
-              ))}
-            </ul>
+            <>
+              <div className="mt-4 grid min-w-0 gap-3 sm:grid-cols-[minmax(0,1fr)_12rem_auto] sm:items-end">
+                <div className="min-w-0">
+                  <label
+                    htmlFor="openapi-endpoint-search"
+                    className="mb-2 block text-sm font-semibold text-gray-900 dark:text-white"
+                  >
+                    Search Endpoints
+                  </label>
+                  <TextInput
+                    id="openapi-endpoint-search"
+                    type="search"
+                    value={endpointQuery}
+                    onChange={(event) => setEndpointQuery(event.target.value)}
+                    placeholder="Search endpoints..."
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="openapi-endpoint-method"
+                    className="mb-2 block text-sm font-semibold text-gray-900 dark:text-white"
+                  >
+                    HTTP Method
+                  </label>
+                  <Select
+                    id="openapi-endpoint-method"
+                    value={endpointMethod}
+                    onChange={(event) => setEndpointMethod(event.target.value)}
+                  >
+                    <option value="ALL">All</option>
+                    {availableEndpointMethods.map((method) => (
+                      <option key={method} value={method}>
+                        {method}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+                <Button
+                  type="button"
+                  color="light"
+                  className="w-full sm:w-auto"
+                  onClick={resetEndpointFilters}
+                  disabled={!hasEndpointFilters}
+                >
+                  Clear Filters
+                </Button>
+              </div>
+
+              {filteredEndpoints.length > 0 ? (
+                <ul className="mt-4 grid min-w-0 gap-2">
+                  {filteredEndpoints.map((endpoint) => (
+                    <EndpointCard
+                      key={`${endpoint.method}-${endpoint.path}`}
+                      endpoint={endpoint}
+                    />
+                  ))}
+                </ul>
+              ) : (
+                <div className="mt-4 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-950/60">
+                  <p
+                    className="text-sm text-gray-700 dark:text-gray-200"
+                    role="status"
+                  >
+                    No endpoints match the current search or method filter.
+                  </p>
+                  <Button
+                    type="button"
+                    color="light"
+                    size="xs"
+                    className="mt-3"
+                    onClick={resetEndpointFilters}
+                  >
+                    Clear Filters
+                  </Button>
+                </div>
+              )}
+            </>
           ) : (
             <p className="mt-3 text-sm text-gray-600 dark:text-gray-300">
               No endpoints are defined in this OpenAPI document.
@@ -490,6 +618,7 @@ function SchemaExplorer({
             <p
               id="openapi-schema-search-note"
               className="mt-2 text-xs text-gray-500 dark:text-gray-400"
+              aria-live="polite"
             >
               Showing {filteredSchemas.length} of {schemas.length} schemas.
             </p>
@@ -541,7 +670,7 @@ function SchemaCard({
       <button
         ref={setButtonRef}
         type="button"
-        className="flex w-full min-w-0 flex-col gap-3 p-4 text-left outline-none hover:bg-gray-50 focus-visible:ring-2 focus-visible:ring-cyan-600 focus-visible:ring-inset sm:flex-row sm:items-start sm:justify-between dark:hover:bg-gray-800 dark:focus-visible:ring-cyan-400"
+        className="flex w-full min-w-0 flex-col gap-2 p-3 text-left outline-none hover:bg-gray-50 focus-visible:ring-2 focus-visible:ring-cyan-600 focus-visible:ring-inset sm:flex-row sm:items-start sm:justify-between sm:p-4 dark:hover:bg-gray-800 dark:focus-visible:ring-cyan-400"
         aria-expanded={isExpanded}
         aria-controls={detailId}
         onClick={onToggle}
@@ -887,7 +1016,7 @@ function MetadataBadge({
   children,
   tone,
 }: {
-  children: string;
+  children: ReactNode;
   tone: "warning" | "neutral";
 }) {
   const toneClasses =
@@ -906,10 +1035,7 @@ function MetadataBadge({
 
 function EndpointDetails({ endpoint }: { endpoint: OpenApiEndpoint }) {
   const hasMetadata = Boolean(
-    endpoint.operationId ||
-    endpoint.summary ||
-    endpoint.description ||
-    endpoint.tags?.length,
+    endpoint.operationId || endpoint.description || endpoint.tags?.length,
   );
 
   return (
@@ -924,9 +1050,6 @@ function EndpointDetails({ endpoint }: { endpoint: OpenApiEndpoint }) {
               <DetailField label="Operation ID">
                 <code className="break-all">{endpoint.operationId}</code>
               </DetailField>
-            ) : null}
-            {endpoint.summary ? (
-              <DetailField label="Summary">{endpoint.summary}</DetailField>
             ) : null}
             {endpoint.description ? (
               <DetailField label="Description">
@@ -980,7 +1103,7 @@ function DetailField({
   children: ReactNode;
 }) {
   return (
-    <div className="min-w-0 rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-900">
+    <div className="min-w-0 border-l-2 border-gray-200 py-1 pl-3 dark:border-gray-700">
       <dt className="text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">
         {label}
       </dt>

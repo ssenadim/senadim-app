@@ -3,7 +3,9 @@ import test from "node:test";
 import {
   analyzeOpenApi,
   detectOpenApiFormat,
+  filterOpenApiEndpoints,
   filterOpenApiSchemas,
+  getAvailableOpenApiMethods,
 } from "../src/utils/openApi.ts";
 
 const jsonDocument = JSON.stringify({
@@ -689,6 +691,57 @@ test("schema search matches names, property names, and descriptions case-insensi
   );
   assert.deepEqual(filterOpenApiSchemas(schemas, "missing"), []);
   assert.equal(filterOpenApiSchemas(schemas, "").length, 2);
+});
+
+test("endpoint search matches path, summary, operation id, and tags", () => {
+  const endpoints = [
+    {
+      method: "GET",
+      path: "/customers/{id}",
+      summary: "Get account owner",
+      operationId: "getCustomer",
+      tags: ["Customers"],
+    },
+    {
+      method: "POST",
+      path: "/invoices",
+      summary: "Create invoice",
+      operationId: "createInvoice",
+      tags: ["Billing"],
+    },
+  ];
+
+  for (const query of ["customers", "ACCOUNT", "getCustomer", "billing"]) {
+    assert.deepEqual(
+      filterOpenApiEndpoints(endpoints, query).map(
+        ({ operationId }) => operationId,
+      ),
+      [query.toLowerCase() === "billing" ? "createInvoice" : "getCustomer"],
+    );
+  }
+  assert.deepEqual(filterOpenApiEndpoints(endpoints, "missing"), []);
+});
+
+test("endpoint method filtering combines with search and lists available methods", () => {
+  const endpoints = [
+    { method: "POST", path: "/customers", summary: "Create customer" },
+    { method: "GET", path: "/customers", summary: "List customers" },
+    { method: "DELETE", path: "/customers/{id}", summary: "Delete customer" },
+  ];
+
+  assert.deepEqual(getAvailableOpenApiMethods(endpoints), [
+    "GET",
+    "POST",
+    "DELETE",
+  ]);
+  assert.deepEqual(
+    filterOpenApiEndpoints(endpoints, "customer", "GET").map(
+      ({ method }) => method,
+    ),
+    ["GET"],
+  );
+  assert.deepEqual(filterOpenApiEndpoints(endpoints, "invoice", "GET"), []);
+  assert.equal(filterOpenApiEndpoints(endpoints, "", "ALL").length, 3);
 });
 
 test("unresolved schema references and oversized examples remain safe", () => {

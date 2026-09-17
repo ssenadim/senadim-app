@@ -244,6 +244,49 @@ export function filterOpenApiSchemas(
   );
 }
 
+export function getAvailableOpenApiMethods(
+  endpoints: readonly OpenApiEndpoint[],
+): string[] {
+  const availableMethods = new Set(
+    endpoints.map((endpoint) => endpoint.method.toUpperCase()),
+  );
+
+  return httpMethods
+    .map((method) => method.toUpperCase())
+    .filter((method) => availableMethods.has(method));
+}
+
+export function filterOpenApiEndpoints(
+  endpoints: readonly OpenApiEndpoint[],
+  query: string,
+  method = "ALL",
+): OpenApiEndpoint[] {
+  const normalizedQuery = query.trim().toLowerCase();
+  const normalizedMethod = method.toUpperCase();
+
+  return endpoints.filter((endpoint) => {
+    if (
+      normalizedMethod !== "ALL" &&
+      endpoint.method.toUpperCase() !== normalizedMethod
+    ) {
+      return false;
+    }
+
+    if (!normalizedQuery) {
+      return true;
+    }
+
+    return [
+      endpoint.path,
+      endpoint.summary,
+      endpoint.operationId,
+      ...(endpoint.tags ?? []),
+    ]
+      .filter((value): value is string => typeof value === "string")
+      .some((value) => value.toLowerCase().includes(normalizedQuery));
+  });
+}
+
 export function detectOpenApiFormat(source: string): OpenApiDetectedFormat {
   const firstCharacter = source.trimStart()[0];
   return firstCharacter === "{" || firstCharacter === "[" ? "json" : "yaml";
