@@ -51,10 +51,25 @@ test("strict JSON rejects trailing commas with a focused diagnostic", () => {
   assert.equal(result.diagnostic.code, "TRAILING_COMMA");
   assert.equal(
     result.diagnostic.message,
-    "Trailing commas are not allowed in strict JSON.",
+    "Trailing commas are not allowed in JSON.",
   );
   assert.equal(result.diagnostic.line, 1);
   assert.equal(result.diagnostic.column, 13);
+});
+
+test("incomplete JSON uses a concise user-facing message", () => {
+  const result = formatJson('{"A":');
+
+  assert.equal(isFormatterFailure(result), true);
+  if (!isFormatterFailure(result)) {
+    return;
+  }
+
+  assert.equal(
+    result.diagnostic.message,
+    "The JSON input appears to be incomplete.",
+  );
+  assert.equal(result.diagnostic.type, "position");
 });
 
 test("multiline JSON diagnostics report the invalid value line and range", () => {
@@ -118,7 +133,10 @@ test("mismatched XML tags return a parser-derived position diagnostic", () => {
   assert.equal(result.diagnostic.type, "position");
   assert.equal(result.diagnostic.line, 1);
   assert.equal(typeof result.diagnostic.column, "number");
-  assert.match(result.diagnostic.message, /tag mismatch/i);
+  assert.equal(
+    result.diagnostic.message,
+    "Closing </customer> does not match the open <name> element.",
+  );
 });
 
 test("unclosed XML elements return a parser-derived position diagnostic", () => {
@@ -131,7 +149,25 @@ test("unclosed XML elements return a parser-derived position diagnostic", () => 
 
   assert.equal(result.diagnostic.format, "xml");
   assert.equal(result.diagnostic.type, "position");
-  assert.match(result.diagnostic.message, /unclosed xml tag/i);
+  assert.equal(
+    result.diagnostic.message,
+    "Element <child> is missing a closing tag.",
+  );
+});
+
+test("malformed XML attributes use a concise parser-derived message", () => {
+  const result = formatXml('<root name="value></root>');
+
+  assert.equal(isFormatterFailure(result), true);
+  if (!isFormatterFailure(result)) {
+    return;
+  }
+
+  assert.equal(
+    result.diagnostic.message,
+    "An attribute value is missing its closing quote.",
+  );
+  assert.equal(result.diagnostic.type, "position");
 });
 
 test("valid HTML keeps existing beautify and minify behavior", () => {

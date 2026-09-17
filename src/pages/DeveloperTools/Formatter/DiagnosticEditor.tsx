@@ -20,7 +20,8 @@ import type { ValidationDiagnostic } from "../../../types/validationDiagnostic";
 import "./diagnosticEditor.css";
 
 export interface DiagnosticEditorHandle {
-  focusDiagnostic: () => void;
+  focusDiagnostic: (targetDiagnostic?: ValidationDiagnostic) => void;
+  clearDiagnosticSelection: () => void;
 }
 
 interface DiagnosticEditorProps {
@@ -121,7 +122,6 @@ const diagnosticField = StateField.define<DecorationSet>({
 
 const editorTheme = EditorView.theme({
   "&": {
-    height: "16rem",
     minWidth: "0",
   },
   ".cm-scroller": {
@@ -135,6 +135,7 @@ const editorTheme = EditorView.theme({
   },
   ".cm-line": {
     padding: "0 0.75rem",
+    lineHeight: "1.5rem",
   },
   ".cm-gutters": {
     userSelect: "none",
@@ -160,21 +161,40 @@ export const DiagnosticEditor = forwardRef<
   useImperativeHandle(
     forwardedRef,
     () => ({
-      focusDiagnostic() {
+      focusDiagnostic(targetDiagnostic) {
         const editor = editorRef.current;
-        if (!editor || diagnostic?.startOffset === undefined) {
+        const activeDiagnostic = targetDiagnostic ?? diagnostic;
+        if (!editor || activeDiagnostic?.startOffset === undefined) {
           return;
         }
 
-        const offset = Math.max(
+        const startOffset = Math.max(
           0,
-          Math.min(diagnostic.startOffset, editor.state.doc.length),
+          Math.min(activeDiagnostic.startOffset, editor.state.doc.length),
+        );
+        const endOffset = Math.max(
+          startOffset,
+          Math.min(
+            activeDiagnostic.endOffset ?? startOffset,
+            editor.state.doc.length,
+          ),
         );
         editor.dispatch({
-          selection: { anchor: offset },
-          effects: EditorView.scrollIntoView(offset, { y: "center" }),
+          selection: { anchor: startOffset, head: endOffset },
+          effects: EditorView.scrollIntoView(startOffset, { y: "center" }),
         });
         editor.focus();
+      },
+      clearDiagnosticSelection() {
+        const editor = editorRef.current;
+        if (!editor) {
+          return;
+        }
+
+        const selection = editor.state.selection.main;
+        if (!selection.empty) {
+          editor.dispatch({ selection: { anchor: selection.head } });
+        }
       },
     }),
     [diagnostic],
@@ -195,7 +215,6 @@ export const DiagnosticEditor = forwardRef<
           history(),
           drawSelection(),
           keymap.of([...defaultKeymap, ...historyKeymap]),
-          EditorView.lineWrapping,
           contentAttributesCompartmentRef.current.of(
             EditorView.contentAttributes.of({
               id: initialConfiguration.id,

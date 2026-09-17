@@ -7,6 +7,14 @@
   color: #111827;
 }
 
+.formatter-diagnostic-editor .cm-editor {
+  height: 14rem;
+}
+
+.formatter-diagnostic-editor .cm-scroller {
+  overscroll-behavior: contain;
+}
+
 .formatter-diagnostic-editor .cm-editor.cm-focused {
   outline: 2px solid #0e7490;
   outline-offset: -1px;
@@ -25,7 +33,7 @@
 
 .formatter-diagnostic-editor .cm-formatter-diagnostic-range {
   border-radius: 0.125rem;
-  background-color: rgb(254 202 202 / 0.55);
+  background-color: rgb(254 202 202 / 0.25);
   text-decoration-line: underline;
   text-decoration-style: wavy;
   text-decoration-color: #b91c1c;
@@ -35,7 +43,7 @@
 
 .formatter-diagnostic-editor .cm-formatter-diagnostic-line {
   box-shadow: inset 3px 0 0 #b91c1c;
-  background-color: rgb(254 226 226 / 0.55);
+  background-color: rgb(254 226 226 / 0.3);
 }
 
 .formatter-diagnostic-editor .cm-formatter-diagnostic-position {
@@ -83,16 +91,22 @@
 }
 
 .dark .formatter-diagnostic-editor .cm-formatter-diagnostic-range {
-  background-color: rgb(127 29 29 / 0.45);
+  background-color: rgb(127 29 29 / 0.25);
   text-decoration-color: #fca5a5;
 }
 
 .dark .formatter-diagnostic-editor .cm-formatter-diagnostic-line {
   box-shadow: inset 3px 0 0 #fca5a5;
-  background-color: rgb(127 29 29 / 0.3);
+  background-color: rgb(127 29 29 / 0.2);
 }
 
 .dark .formatter-diagnostic-editor .cm-formatter-diagnostic-position {
   border-color: #fca5a5;
   color: #fca5a5;
+}
+
+@media (min-width: 768px) {
+  .formatter-diagnostic-editor .cm-editor {
+    height: 18rem;
+  }
 }

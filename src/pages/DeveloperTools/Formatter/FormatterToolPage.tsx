@@ -115,6 +115,9 @@ export function FormatterToolPage() {
       setDiagnostic(result.diagnostic);
       setOutputText("");
       showToast("failure", "Formatting failed.");
+      window.requestAnimationFrame(() =>
+        editorRef.current?.focusDiagnostic(result.diagnostic),
+      );
       return;
     }
 
@@ -135,6 +138,9 @@ export function FormatterToolPage() {
       setDiagnostic(result.diagnostic);
       setOutputText("");
       showToast("failure", "Minification failed.");
+      window.requestAnimationFrame(() =>
+        editorRef.current?.focusDiagnostic(result.diagnostic),
+      );
       return;
     }
 
@@ -158,6 +164,7 @@ export function FormatterToolPage() {
   }
 
   function handleClear() {
+    editorRef.current?.clearDiagnosticSelection();
     setInputText("");
     setOutputText("");
     setDiagnostic(null);
@@ -170,6 +177,7 @@ export function FormatterToolPage() {
   }
 
   function handleFormatTypeChange(nextFormatType: FormatterType) {
+    editorRef.current?.clearDiagnosticSelection();
     setFormatType(nextFormatType);
     setDiagnostic(null);
   }
@@ -310,6 +318,7 @@ export function FormatterToolPage() {
       }
       examples={examples}
       onExampleSelect={(example) => {
+        editorRef.current?.clearDiagnosticSelection();
         setFormatType(
           example.title.startsWith("XML")
             ? "xml"

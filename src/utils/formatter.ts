@@ -203,7 +203,7 @@ function parseXml(input: string): FormatterResult {
         parserDiagnostic = createPositionDiagnostic(
           input,
           "xml",
-          normaliseParserMessage(message),
+          getXmlDiagnosticMessage(message),
           locator?.lineNumber,
           locator?.columnNumber,
           `XML_${level.toUpperCase()}`,
@@ -227,7 +227,7 @@ function parseXml(input: string): FormatterResult {
       createPositionDiagnostic(
         input,
         "xml",
-        normaliseParserMessage(getErrorMessage(error)),
+        getXmlDiagnosticMessage(getErrorMessage(error)),
         locator?.lineNumber,
         locator?.columnNumber,
         "XML_FATAL_ERROR",
@@ -325,9 +325,17 @@ export function createJsonDiagnostic(
     (parseError.error === jsonParseErrorCode.PropertyNameExpected ||
       parseError.error === jsonParseErrorCode.ValueExpected) &&
     getPreviousNonWhitespaceCharacter(input, parseError.offset) === ",";
+  const isUnexpectedEnd =
+    parseError.offset >= input.trimEnd().length &&
+    (parseError.error === jsonParseErrorCode.ValueExpected ||
+      parseError.error === jsonParseErrorCode.PropertyNameExpected ||
+      parseError.error === jsonParseErrorCode.CloseBraceExpected ||
+      parseError.error === jsonParseErrorCode.CloseBracketExpected);
   const message = isTrailingComma
-    ? "Trailing commas are not allowed in strict JSON."
-    : getJsonDiagnosticMessage(input, parseError);
+    ? "Trailing commas are not allowed in JSON."
+    : isUnexpectedEnd
+      ? "The JSON input appears to be incomplete."
+      : getJsonDiagnosticMessage(input, parseError);
   const length = Math.max(
     parseError.length,
     parseError.offset < input.length ? 1 : 0,
@@ -515,10 +523,41 @@ function getNextNonWhitespaceCharacter(input: string, offset: number) {
   return "";
 }
 
-function normaliseParserMessage(message: string) {
+function getXmlDiagnosticMessage(message: string) {
   const trimmedMessage = message.replace(/\s+/g, " ").trim();
   if (!trimmedMessage) {
     return "Please check the document structure and try again.";
+  }
+
+  const mismatchedTags = trimmedMessage.match(
+    /Opening and ending tag mismatch:\s*["']([^"']+)["']\s*!=\s*["']([^"']+)["']/i,
+  );
+  if (mismatchedTags) {
+    return `Closing </${mismatchedTags[2]}> does not match the open <${mismatchedTags[1]}> element.`;
+  }
+
+  const unclosedTags = trimmedMessage.match(/unclosed xml tag\(s\):\s*(.+)/i);
+  if (unclosedTags) {
+    const tagNames = unclosedTags[1]
+      .split(",")
+      .map((value) => value.trim())
+      .filter(Boolean);
+    const tagName = tagNames[tagNames.length - 1];
+    if (tagName) {
+      return `Element <${tagName}> is missing a closing tag.`;
+    }
+  }
+
+  if (/attribute value no end/i.test(trimmedMessage)) {
+    return "An attribute value is missing its closing quote.";
+  }
+
+  if (/missing root element/i.test(trimmedMessage)) {
+    return "The XML document is missing a root element.";
+  }
+
+  if (/Unexpected content outside root element/i.test(trimmedMessage)) {
+    return "Content is not allowed outside the XML root element.";
   }
 
   return /[.!?]$/.test(trimmedMessage) ? trimmedMessage : `${trimmedMessage}.`;
