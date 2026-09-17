@@ -86,6 +86,11 @@ const JwtDecoderToolPage = lazyPage(() =>
     (module) => module.JwtDecoderToolPage,
   ),
 );
+const OpenApiViewerPage = lazyPage(() =>
+  import("../pages/DeveloperTools/OpenApiViewer/OpenApiViewerPage").then(
+    (module) => module.OpenApiViewerPage,
+  ),
+);
 const PkceGeneratorToolPage = lazyPage(() =>
   import("../pages/DeveloperTools/PkceGenerator/PkceGeneratorToolPage").then(
     (module) => module.PkceGeneratorToolPage,
@@ -197,6 +202,10 @@ export const appRouter = createBrowserRouter(
         {
           path: routePaths.pkceGeneratorTool,
           element: <LazyRoute page={PkceGeneratorToolPage} />,
+        },
+        {
+          path: routePaths.openApiViewer,
+          element: <LazyRoute page={OpenApiViewerPage} />,
         },
         {
           path: routePaths.architectureNotes,

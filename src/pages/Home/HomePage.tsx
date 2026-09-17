@@ -6,7 +6,16 @@ import { SectionHeader } from "../../components/common/SectionHeader";
 import { architectureDesignTools } from "../../data/architectureDesignTools";
 import { developerTools } from "../../data/developerTools";
 import { platformTools } from "../../data/platformTools";
+import { searchableTools } from "../../data/toolCatalog";
+import { useFavorites } from "../../hooks/useFavorites";
 import { usePageTitle } from "../../hooks/usePageTitle";
+import { useRecentTools } from "../../hooks/useRecentTools";
+import type { CatalogTool, SearchableTool } from "../../types/tool";
+import {
+  buildQuickAccessItems,
+  maximumQuickAccessTools,
+} from "../../utils/quickAccess";
+import { maximumRecentTools } from "../../utils/recentTools";
 import { routePaths } from "../../utils/routes";
 
 const featuredDeveloperToolNames = [
@@ -14,6 +23,15 @@ const featuredDeveloperToolNames = [
   "Timestamp Converter",
   "Data Compare",
   "Regex Tester",
+];
+
+const defaultQuickAccessToolIds = [
+  "jwt-decoder",
+  "data-compare",
+  "openshift-calculator-suite",
+  "jvm-memory-calculator",
+  "plantuml-viewer",
+  "mermaid-viewer",
 ];
 
 const recentToolNames = ["Mermaid Viewer", "Configuration Converter"];
@@ -45,6 +63,8 @@ const featuredCapabilities = [
 
 export function HomePage() {
   usePageTitle("Home");
+  const { favoriteIds } = useFavorites();
+  const { recentToolIds, recentTools, clearRecentTools } = useRecentTools();
 
   const availableDeveloperTools = developerTools.filter(
     (tool) => tool.status === "available",
@@ -58,7 +78,7 @@ export function HomePage() {
   const featuredDeveloperTools = developerTools.filter((tool) =>
     featuredDeveloperToolNames.includes(tool.title),
   );
-  const recentTools = [...architectureDesignTools, ...developerTools]
+  const recentlyAddedTools = [...architectureDesignTools, ...developerTools]
     .filter((tool) => recentToolNames.includes(tool.title))
     .map((tool) => ({
       ...tool,
@@ -69,6 +89,13 @@ export function HomePage() {
         recentToolNames.indexOf(firstTool.title) -
         recentToolNames.indexOf(secondTool.title),
     );
+  const quickAccessItems = buildQuickAccessItems({
+    tools: searchableTools,
+    favoriteIds,
+    recentToolIds,
+    defaultToolIds: defaultQuickAccessToolIds,
+  });
+
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-12 px-4 py-8 sm:px-6 lg:px-8">
       <section className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm sm:p-8 dark:border-gray-800 dark:bg-gray-900">
@@ -114,6 +141,49 @@ export function HomePage() {
 
       <section className="flex flex-col gap-5">
         <SectionHeader
+          title="Quick Access"
+          description="Your fastest way back to useful Freeshot tools."
+        />
+        <div className="grid min-w-0 items-stretch gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {quickAccessItems
+            .slice(0, maximumQuickAccessTools)
+            .map(({ tool, source }) => (
+              <ToolCard
+                key={tool.id}
+                tool={toCatalogTool(tool)}
+                variant="compact"
+                contextLabel={
+                  source === "favorite"
+                    ? "Favorite"
+                    : source === "recent"
+                      ? "Recent"
+                      : undefined
+                }
+              />
+            ))}
+        </div>
+      </section>
+
+      <section className="grid gap-4 md:grid-cols-3">
+        <MetricCard
+          label="Architecture & Design"
+          value={`${availableArchitectureTools.length}+`}
+          detail="Architecture and documentation tools"
+        />
+        <MetricCard
+          label="Platform Engineering"
+          value={`${availablePlatformTools.length}+`}
+          detail="Operational calculators"
+        />
+        <MetricCard
+          label="Developer Productivity"
+          value={`${availableDeveloperTools.length}+`}
+          detail="Developer productivity utilities"
+        />
+      </section>
+
+      <section className="flex flex-col gap-5">
+        <SectionHeader
           title="Architecture Diagramming"
           description="Create and preview text-based diagrams using PlantUML or Mermaid, with practical templates and export capabilities."
         />
@@ -141,23 +211,30 @@ export function HomePage() {
         </div>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-3">
-        <MetricCard
-          label="Architecture & Design"
-          value={`${availableArchitectureTools.length}+`}
-          detail="Architecture and documentation tools"
-        />
-        <MetricCard
-          label="Platform Engineering"
-          value={`${availablePlatformTools.length}+`}
-          detail="Operational calculators"
-        />
-        <MetricCard
-          label="Developer Productivity"
-          value={`${availableDeveloperTools.length}+`}
-          detail="Developer productivity utilities"
-        />
-      </section>
+      {recentTools.length > 0 ? (
+        <section className="flex flex-col gap-5">
+          <SectionHeader
+            title="Recently Used"
+            description="Return to tools you opened most recently."
+            action={
+              <Button
+                type="button"
+                color="light"
+                size="sm"
+                aria-label="Clear recently used tools"
+                onClick={clearRecentTools}
+              >
+                Clear Recent
+              </Button>
+            }
+          />
+          <div className="grid min-w-0 items-stretch gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {recentTools.slice(0, maximumRecentTools).map((tool) => (
+              <ToolCard key={tool.id} tool={toCatalogTool(tool)} />
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <section className="flex flex-col gap-5">
         <SectionHeader
@@ -205,7 +282,7 @@ export function HomePage() {
           description="The latest tools for architecture diagramming and application configuration workflows."
         />
         <div className="grid min-w-0 gap-4 sm:grid-cols-2">
-          {recentTools.map((tool) => (
+          {recentlyAddedTools.map((tool) => (
             <ToolCard key={tool.title} tool={tool} />
           ))}
         </div>
@@ -241,6 +318,18 @@ export function HomePage() {
       </section>
     </div>
   );
+}
+
+function toCatalogTool(tool: SearchableTool): CatalogTool {
+  return {
+    id: tool.id,
+    title: tool.name,
+    description: tool.description,
+    category: tool.category,
+    keywords: tool.keywords,
+    path: tool.route,
+    status: "available",
+  };
 }
 
 interface FeaturedSectionCardProps {

@@ -31,6 +31,8 @@ const pageDescriptions: Record<string, string> = {
     "Encode or decode URLs, query parameters, and reserved characters for API requests, redirects, and integration debugging.",
   "PKCE Generator":
     "Generate OAuth 2.0 PKCE code verifiers and S256 code challenges for authorization-code flow development and testing.",
+  "OpenAPI Viewer":
+    "Analyze OpenAPI 3.0 and 3.1 JSON or YAML documents and inspect API overview and endpoint information directly in the browser.",
   "Architecture & Design Tools":
     "Architecture tools for diagramming systems, documenting decisions, capturing design notes, and identifying security threats.",
   "PlantUML Viewer":

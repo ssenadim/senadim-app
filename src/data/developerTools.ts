@@ -52,6 +52,25 @@ export const developerTools: CatalogTool[] = [
     status: "available",
   },
   {
+    id: "openapi-viewer",
+    title: "OpenAPI Viewer",
+    description:
+      "Analyze OpenAPI 3.0 and 3.1 documents and inspect API overview and endpoint information.",
+    category: "API",
+    keywords: [
+      "openapi",
+      "swagger",
+      "api",
+      "yaml",
+      "json",
+      "rest",
+      "endpoint",
+      "schema",
+    ],
+    path: routePaths.openApiViewer,
+    status: "available",
+  },
+  {
     id: "uuid-generator",
     title: "UUID Generator",
     description:

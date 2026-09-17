@@ -13,6 +13,7 @@ export const routePaths = {
   regexTesterTool: "/developer-tools/regex-tester",
   urlEncoderDecoderTool: "/developer-tools/url-encoder-decoder",
   pkceGeneratorTool: "/developer-tools/pkce-generator",
+  openApiViewer: "/developer-tools/openapi-viewer",
   architectureDesign: "/architecture-design",
   adrGenerator: "/architecture-design/adr-generator",
   architectureNotesTool: "/architecture-design/architecture-notes",

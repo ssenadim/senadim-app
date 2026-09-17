@@ -7,6 +7,10 @@ import {
   storeFavorites,
   toggleFavoriteId,
 } from "../src/utils/favorites.ts";
+import {
+  filterToolsByFavorites,
+  getToolSearchEmptyState,
+} from "../src/utils/favoriteSearch.ts";
 
 const availableToolIds = new Set(["jwt-decoder", "mermaid-viewer"]);
 
@@ -87,4 +91,88 @@ test("a favorite id can be added and removed without mutating prior state", () =
   assert.deepEqual(initialIds, ["jwt-decoder"]);
   assert.deepEqual(addedIds, ["jwt-decoder", "mermaid-viewer"]);
   assert.deepEqual(removedIds, ["mermaid-viewer"]);
+});
+
+test("Favorites only filters the supplied search results by stable id", () => {
+  const tools = [
+    { id: "jwt-decoder", name: "JWT Decoder" },
+    { id: "mermaid-viewer", name: "Mermaid Viewer" },
+    { id: "yaml-converter", name: "YAML Converter" },
+  ];
+
+  assert.deepEqual(
+    filterToolsByFavorites(tools, ["jwt-decoder", "yaml-converter"], true),
+    [tools[0], tools[2]],
+  );
+});
+
+test("Favorites only composes with an already filtered text search", () => {
+  const yamlSearchResults = [
+    { id: "yaml-converter", name: "YAML Converter" },
+    { id: "data-formatter", name: "Data Formatter" },
+  ];
+
+  assert.deepEqual(
+    filterToolsByFavorites(
+      yamlSearchResults,
+      ["data-formatter", "jwt-decoder"],
+      true,
+    ),
+    [yamlSearchResults[1]],
+  );
+  assert.deepEqual(
+    filterToolsByFavorites(yamlSearchResults, [], false),
+    yamlSearchResults,
+  );
+});
+
+test("Favorites-only empty states distinguish no favorites from no matches", () => {
+  assert.equal(
+    getToolSearchEmptyState({
+      favoritesOnly: true,
+      favoriteCount: 0,
+      hasQuery: true,
+      resultCount: 0,
+    }),
+    "no-favorites",
+  );
+  assert.equal(
+    getToolSearchEmptyState({
+      favoritesOnly: true,
+      favoriteCount: 2,
+      hasQuery: true,
+      resultCount: 0,
+    }),
+    "no-matching-favorites",
+  );
+  assert.equal(
+    getToolSearchEmptyState({
+      favoritesOnly: true,
+      favoriteCount: 2,
+      hasQuery: false,
+      resultCount: 2,
+    }),
+    null,
+  );
+});
+
+test("normal search prompt and no-result states remain unchanged", () => {
+  assert.equal(
+    getToolSearchEmptyState({
+      favoritesOnly: false,
+      favoriteCount: 0,
+      hasQuery: false,
+      resultCount: 0,
+    }),
+    "search-prompt",
+  );
+  assert.equal(
+    getToolSearchEmptyState({
+      favoritesOnly: false,
+      favoriteCount: 0,
+      hasQuery: true,
+      resultCount: 0,
+    }),
+    "no-tools",
+  );
 });

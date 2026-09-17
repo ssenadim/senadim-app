@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Outlet } from "react-router-dom";
+import { RecentToolTracker } from "../discovery/RecentToolTracker";
 import { Footer } from "./Footer";
 import { MobileSidebar } from "./MobileSidebar";
 import { Sidebar } from "./Sidebar";
@@ -10,6 +11,7 @@ export function AppLayout() {
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-100">
+      <RecentToolTracker />
       <MobileSidebar
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
