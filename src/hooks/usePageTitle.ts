@@ -6,7 +6,7 @@ const homeTitle = "Freeshot | Engineering Toolkit";
 const pageDescriptions: Record<string, string> = {
   Home: "Freeshot is an engineering toolkit for developer productivity, platform engineering, and architecture and design workflows.",
   "About Freeshot":
-    "Learn how Freeshot is evolving into a practical toolkit for developers, platform engineers, and software architects.",
+    "Discover how Freeshot supports developer productivity, platform engineering, architecture workflows, and browser-local tool discovery.",
   "Developer Productivity Tools":
     "Developer tools for formatting data, inspecting tokens, testing patterns, encoding values, and debugging everyday integration workflows.",
   "Base64 Encoder / Decoder":
