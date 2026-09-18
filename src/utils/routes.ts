@@ -6,6 +6,7 @@ export const routePaths = {
   uuidTool: "/developer-tools/uuid",
   formatterTool: "/developer-tools/formatter",
   configurationConverter: "/developer-tools/configuration-converter",
+  dataModelGenerator: "/developer-tools/data-model-generator",
   dataCompareTool: "/developer-tools/data-compare",
   timestampTool: "/developer-tools/timestamp",
   jwtDecoderTool: "/developer-tools/jwt-decoder",

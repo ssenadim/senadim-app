@@ -43,6 +43,27 @@ export const developerTools: CatalogTool[] = [
     status: "available",
   },
   {
+    id: "data-model-generator",
+    title: "Data Model Generator",
+    description:
+      "Generate copy-ready C# and Java model classes from JSON objects.",
+    category: "Data",
+    keywords: [
+      "json",
+      "class",
+      "model",
+      "pojo",
+      "csharp",
+      "c#",
+      "java",
+      "dto",
+      "object",
+      "generator",
+    ],
+    path: routePaths.dataModelGenerator,
+    status: "available",
+  },
+  {
     id: "data-compare",
     title: "Data Compare",
     description: "Compare JSON, XML, YAML, Java, C# and plain text content.",

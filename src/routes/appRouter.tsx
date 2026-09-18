@@ -66,6 +66,11 @@ const DataCompareToolPage = lazyPage(() =>
     (module) => module.DataCompareToolPage,
   ),
 );
+const DataModelGeneratorPage = lazyPage(() =>
+  import("../pages/DeveloperTools/DataModelGenerator/DataModelGeneratorPage").then(
+    (module) => module.DataModelGeneratorPage,
+  ),
+);
 const DeveloperToolsPage = lazyPage(() =>
   import("../pages/DeveloperTools/DeveloperToolsPage").then(
     (module) => module.DeveloperToolsPage,
@@ -174,6 +179,10 @@ export const appRouter = createBrowserRouter(
         {
           path: routePaths.configurationConverter,
           element: <LazyRoute page={ConfigurationConverterPage} />,
+        },
+        {
+          path: routePaths.dataModelGenerator,
+          element: <LazyRoute page={DataModelGeneratorPage} />,
         },
         {
           path: routePaths.dataCompareTool,

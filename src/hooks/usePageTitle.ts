@@ -17,6 +17,8 @@ const pageDescriptions: Record<string, string> = {
     "Format, validate, and minify JSON, XML, and HTML for API development, integrations, debugging, and web workflows.",
   "Configuration Converter":
     "Convert Properties configuration to JSON or YAML, or convert between JSON and YAML directly in the browser.",
+  "Data Model Generator":
+    "Generate copy-ready C# or Java model classes from JSON objects directly in the browser.",
   "Data Compare":
     "Compare JSON, XML, YAML, Java, C#, or plain text and reduce formatting noise to focus on meaningful differences.",
   "Timestamp Converter":
