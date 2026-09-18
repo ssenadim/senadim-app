@@ -40,8 +40,8 @@ const architectureDiagrammingTools = selectToolsByIds(searchableTools, [
 ]);
 
 const recentlyAddedTools = selectToolsByIds(searchableTools, [
+  "data-model-generator",
   "openapi-viewer",
-  "configuration-converter",
 ]);
 
 const homeRecentToolLimit = 3;
@@ -211,7 +211,7 @@ export function HomePage() {
           />
           <FeaturedSectionCard
             title="Developer Productivity"
-            description="Developer productivity utilities for integration teams, backend engineers and architects."
+            description="Encoding, formatting, comparison, security, configuration, OpenAPI inspection and data model generation workflows."
             examples={featuredDeveloperTools.map((tool) => tool.title)}
             actionLabel="View Developer Productivity"
             to={routePaths.developerTools}
@@ -229,7 +229,7 @@ export function HomePage() {
       <section className="flex flex-col gap-5">
         <SectionHeader
           title="Recently Added"
-          description="Recent additions for API exploration and application configuration workflows."
+          description="Recent additions for data model generation and API exploration workflows."
         />
         <div className="grid min-w-0 gap-4 sm:grid-cols-2">
           {recentlyAddedTools.map((tool) => (
