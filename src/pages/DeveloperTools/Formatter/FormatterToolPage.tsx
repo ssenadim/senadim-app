@@ -173,12 +173,14 @@ export function FormatterToolPage() {
 
   function handleInputChange(value: string) {
     setInputText(value);
+    setOutputText("");
     setDiagnostic(null);
   }
 
   function handleFormatTypeChange(nextFormatType: FormatterType) {
     editorRef.current?.clearDiagnosticSelection();
     setFormatType(nextFormatType);
+    setOutputText("");
     setDiagnostic(null);
   }
 
