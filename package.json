@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "test": "node --test --experimental-strip-types tests/aboutStory.test.ts tests/dataModelGenerator.test.ts tests/favorites.test.ts tests/formatter.test.ts tests/openApi.test.ts tests/productConsistency.test.ts tests/quickAccess.test.ts tests/recentTools.test.ts tests/v1Regression.test.ts",
+    "test": "node --test --experimental-strip-types tests/aboutStory.test.ts tests/classSampleGenerator.test.ts tests/dataModelGenerator.test.ts tests/favorites.test.ts tests/formatter.test.ts tests/openApi.test.ts tests/productConsistency.test.ts tests/quickAccess.test.ts tests/recentTools.test.ts tests/v1Regression.test.ts",
     "preview": "vite preview",
     "format": "prettier . --write",
     "format:check": "prettier . --check"

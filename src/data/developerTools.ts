@@ -46,7 +46,7 @@ export const developerTools: CatalogTool[] = [
     id: "data-model-generator",
     title: "Data Model Generator",
     description:
-      "Generate copy-ready C# and Java model classes from JSON or XML.",
+      "Generate C# and Java models from JSON or XML, or create representative JSON samples from classes.",
     category: "Data",
     keywords: [
       "json",
@@ -60,6 +60,10 @@ export const developerTools: CatalogTool[] = [
       "dto",
       "object",
       "generator",
+      "sample json",
+      "class to json",
+      "csharp to json",
+      "java to json",
     ],
     path: routePaths.dataModelGenerator,
     status: "available",
