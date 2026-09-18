@@ -7,6 +7,8 @@ import type { ToastMessage, ToastTone } from "../../../types/toast";
 import {
   generateDataModel,
   getRootClassNameError,
+  getXmlRootClassName,
+  type DataModelInputFormat,
   type DataModelLanguage,
 } from "../../../utils/dataModelGenerator";
 import { routePaths } from "../../../utils/routes";
@@ -25,15 +27,31 @@ const initialJsonExample = `{
   ]
 }`;
 
+const initialXmlExample = `<customer id="15">
+  <name>Customer</name>
+  <active>true</active>
+  <address>
+    <city>Istanbul</city>
+    <postalCode>34400</postalCode>
+  </address>
+  <roles>
+    <role>user</role>
+    <role>admin</role>
+  </roles>
+</customer>`;
+
 type GenerationState = "idle" | "empty" | "invalid" | "valid" | "stale";
-type ErrorField = "json" | "rootClass" | null;
+type ErrorField = "source" | "rootClass" | null;
 
 export function DataModelGeneratorPage() {
   usePageTitle("Data Model Generator");
 
+  const [inputFormat, setInputFormat] = useState<DataModelInputFormat>("json");
   const [language, setLanguage] = useState<DataModelLanguage>("csharp");
   const [rootClassName, setRootClassName] = useState("Root");
-  const [jsonInput, setJsonInput] = useState(initialJsonExample);
+  const [isRootClassNameCustomized, setIsRootClassNameCustomized] =
+    useState(false);
+  const [sourceInput, setSourceInput] = useState(initialJsonExample);
   const [generatedCode, setGeneratedCode] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [errorField, setErrorField] = useState<ErrorField>(null);
@@ -43,6 +61,7 @@ export function DataModelGeneratorPage() {
 
   const hasCurrentOutput =
     generationState === "valid" && generatedCode.length > 0;
+  const inputFormatLabel = inputFormat === "json" ? "JSON" : "XML";
   const languageLabel = language === "csharp" ? "C#" : "Java";
 
   useEffect(() => {
@@ -69,21 +88,58 @@ export function DataModelGeneratorPage() {
     setGenerationState(hadCurrentOutput ? "stale" : "idle");
   }
 
+  function handleInputFormatChange(format: DataModelInputFormat) {
+    const nextExample =
+      format === "json" ? initialJsonExample : initialXmlExample;
+
+    setInputFormat(format);
+    setSourceInput(nextExample);
+
+    if (!isRootClassNameCustomized) {
+      setRootClassName(
+        format === "xml"
+          ? (getXmlRootClassName(nextExample) ?? "Root")
+          : "Root",
+      );
+    }
+
+    invalidateGeneratedCode();
+  }
+
+  function handleSourceInputChange(value: string) {
+    setSourceInput(value);
+
+    if (inputFormat === "xml" && !isRootClassNameCustomized) {
+      const inferredRootName = getXmlRootClassName(value);
+
+      if (inferredRootName) {
+        setRootClassName(inferredRootName);
+      }
+    }
+
+    invalidateGeneratedCode();
+  }
+
   function handleGenerate() {
-    const result = generateDataModel(jsonInput, language, rootClassName);
+    const result = generateDataModel(
+      sourceInput,
+      language,
+      rootClassName,
+      inputFormat,
+    );
 
     if (!result.ok) {
       setGeneratedCode("");
       setErrorMessage(result.error);
       setErrorField(
-        !jsonInput.trim()
-          ? "json"
+        !sourceInput.trim()
+          ? "source"
           : getRootClassNameError(rootClassName)
             ? "rootClass"
-            : "json",
+            : "source",
       );
       setGenerationState(
-        !jsonInput.trim() || !rootClassName.trim() ? "empty" : "invalid",
+        !sourceInput.trim() || !rootClassName.trim() ? "empty" : "invalid",
       );
       return;
     }
@@ -110,18 +166,18 @@ export function DataModelGeneratorPage() {
   return (
     <ToolPageLayout
       title="Data Model Generator"
-      description="Generate copy-ready C# or Java model classes from JSON directly in your browser."
+      description="Generate copy-ready C# or Java model classes from JSON or XML directly in your browser."
       breadcrumbs={[
         { label: "Developer Productivity", path: routePaths.developerTools },
         { label: "Data Model Generator" },
       ]}
-      overviewTitle="What is JSON to Class Generation?"
+      overviewTitle="What is Data Model Generation?"
       overviewCollapsible
-      overviewToggleLabel="What is JSON to Class Generation?"
+      overviewToggleLabel="What is Data Model Generation?"
       overview={
         <div className="space-y-3">
           <p>
-            Turn a representative JSON object into a readable starting point for
+            Turn representative JSON or XML into a readable starting point for
             C# or Java data models without sending the content to an external
             service.
           </p>
@@ -145,17 +201,22 @@ export function DataModelGeneratorPage() {
               </label>
               <Select
                 id="data-model-generator-input-format"
-                value="json"
-                disabled
+                value={inputFormat}
+                onChange={(event) =>
+                  handleInputFormatChange(
+                    event.target.value as DataModelInputFormat,
+                  )
+                }
                 aria-describedby="data-model-generator-input-format-note"
               >
                 <option value="json">JSON</option>
+                <option value="xml">XML</option>
               </Select>
               <p
                 id="data-model-generator-input-format-note"
                 className="mt-2 text-xs text-gray-500 dark:text-gray-400"
               >
-                JSON is the supported input format in this version.
+                Choose the source format before generating a model.
               </p>
             </div>
 
@@ -191,6 +252,7 @@ export function DataModelGeneratorPage() {
                 value={rootClassName}
                 onChange={(event) => {
                   setRootClassName(event.target.value);
+                  setIsRootClassNameCustomized(true);
                   invalidateGeneratedCode();
                 }}
                 placeholder="Root"
@@ -258,26 +320,25 @@ export function DataModelGeneratorPage() {
           <div className="grid min-w-0 gap-5 lg:grid-cols-2">
             <div className="min-w-0">
               <label
-                htmlFor="data-model-generator-json-input"
+                htmlFor="data-model-generator-source-input"
                 className="mb-2 block text-sm font-semibold text-gray-900 dark:text-white"
               >
-                JSON Input
+                {inputFormatLabel} Input
               </label>
               <Textarea
-                id="data-model-generator-json-input"
+                id="data-model-generator-source-input"
                 rows={22}
-                value={jsonInput}
-                onChange={(event) => {
-                  setJsonInput(event.target.value);
-                  invalidateGeneratedCode();
-                }}
-                placeholder="Paste a JSON object here..."
+                value={sourceInput}
+                onChange={(event) =>
+                  handleSourceInputChange(event.target.value)
+                }
+                placeholder={`Paste ${inputFormatLabel} here...`}
                 className="max-w-full font-mono"
                 spellCheck={false}
                 wrap="off"
-                aria-invalid={errorField === "json"}
+                aria-invalid={errorField === "source"}
                 aria-describedby={
-                  errorField === "json"
+                  errorField === "source"
                     ? "data-model-generator-validation-error"
                     : undefined
                 }
@@ -322,7 +383,7 @@ export function DataModelGeneratorPage() {
                   ? "Copy Code uses the current generated source only."
                   : generationState === "stale"
                     ? "Output was cleared after a change. Generate again to enable Copy Code."
-                    : "Generate the current JSON to enable Copy Code."}
+                    : `Generate the current ${inputFormatLabel} to enable Copy Code.`}
               </p>
             </div>
           </div>
@@ -335,12 +396,19 @@ export function DataModelGeneratorPage() {
           <li>Parsing and generation run entirely in your browser.</li>
           <li>Models are generated only when you select Generate Model.</li>
           <li>
-            Empty arrays, mixed incompatible arrays, and null values use safe
-            Object-style fallbacks rather than invented types.
+            JSON empty arrays, mixed incompatible arrays, and null values use
+            safe Object-style fallbacks rather than invented types.
           </li>
           <li>
-            This foundation supports JSON input only; XML and reverse generation
-            are not available.
+            XML attributes become properties, repeated siblings become
+            collections, and mixed element/text content falls back to a string.
+          </li>
+          <li>
+            When an XML attribute and child element share a name, the child
+            property receives an Element suffix.
+          </li>
+          <li>
+            Reverse generation and serialization annotations are not available.
           </li>
         </ul>
       }

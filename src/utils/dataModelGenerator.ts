@@ -1,4 +1,12 @@
+import { DOMParser as XmlDomParser } from "@xmldom/xmldom";
+import type {
+  Attr as XmlAttribute,
+  Element as XmlElement,
+  Node as XmlNode,
+} from "@xmldom/xmldom";
+
 export type DataModelLanguage = "csharp" | "java";
+export type DataModelInputFormat = "json" | "xml";
 
 type PrimitiveType = "string" | "integer" | "decimal" | "boolean" | "any";
 
@@ -134,9 +142,13 @@ export function generateDataModel(
   source: string,
   language: DataModelLanguage,
   rootClassName: string,
+  inputFormat: DataModelInputFormat = "json",
 ): DataModelGenerationResult {
   if (!source.trim()) {
-    return { ok: false, error: "Enter JSON to generate a model." };
+    return {
+      ok: false,
+      error: `Enter ${getInputFormatLabel(inputFormat)} to generate a model.`,
+    };
   }
 
   const classNameError = getRootClassNameError(rootClassName);
@@ -145,19 +157,11 @@ export function generateDataModel(
     return { ok: false, error: classNameError };
   }
 
-  let parsed: unknown;
+  const parsed =
+    inputFormat === "json" ? parseJsonModel(source) : parseXmlModel(source);
 
-  try {
-    parsed = JSON.parse(source) as unknown;
-  } catch (error) {
-    return { ok: false, error: getJsonErrorMessage(error, source) };
-  }
-
-  if (!isRecord(parsed)) {
-    return {
-      ok: false,
-      error: "Use a JSON object at the root level to generate model classes.",
-    };
+  if (!parsed.ok) {
+    return parsed;
   }
 
   const context: ModelContext = {
@@ -166,7 +170,7 @@ export function generateDataModel(
     nestedShapeNames: new Map(),
   };
 
-  createClass(context, rootClassName, parsed, false);
+  createClass(context, rootClassName, parsed.value, false);
 
   return {
     ok: true,
@@ -175,6 +179,11 @@ export function generateDataModel(
         ? renderCsharp(context.classes)
         : renderJava(context.classes),
   };
+}
+
+export function getXmlRootClassName(source: string): string | null {
+  const parsed = parseXmlDocument(source);
+  return parsed.ok ? toClassName(getXmlLocalName(parsed.value)) : null;
 }
 
 export function getRootClassNameError(className: string): string | null {
@@ -236,6 +245,334 @@ function createClass(
   }));
 
   return name;
+}
+
+function parseJsonModel(
+  source: string,
+): { ok: true; value: Record<string, unknown> } | GenerationFailure {
+  let parsed: unknown;
+
+  try {
+    parsed = JSON.parse(source) as unknown;
+  } catch (error) {
+    return { ok: false, error: getJsonErrorMessage(error, source) };
+  }
+
+  if (!isRecord(parsed)) {
+    return {
+      ok: false,
+      error: "Use a JSON object at the root level to generate model classes.",
+    };
+  }
+
+  return { ok: true, value: parsed };
+}
+
+function parseXmlModel(
+  source: string,
+): { ok: true; value: Record<string, unknown> } | GenerationFailure {
+  const parsed = parseXmlDocument(source);
+
+  if (!parsed.ok) {
+    return parsed;
+  }
+
+  return { ok: true, value: convertXmlElementToRecord(parsed.value) };
+}
+
+function parseXmlDocument(
+  source: string,
+): { ok: true; value: XmlElement } | GenerationFailure {
+  let parserError:
+    | { message: string; line?: number; column?: number }
+    | undefined;
+
+  try {
+    const parser = new XmlDomParser({
+      locator: true,
+      onError: (_level, message, context) => {
+        if (parserError) {
+          return;
+        }
+
+        const locator = context?.locator as
+          | { lineNumber?: number; columnNumber?: number }
+          | undefined;
+        parserError = {
+          message: getXmlErrorDescription(message),
+          line: locator?.lineNumber,
+          column: locator?.columnNumber,
+        };
+      },
+    });
+    const document = parser.parseFromString(source, "application/xml");
+
+    if (parserError) {
+      return { ok: false, error: formatXmlError(parserError) };
+    }
+
+    if (!document.documentElement) {
+      return { ok: false, error: "XML must contain a root element." };
+    }
+
+    return { ok: true, value: document.documentElement };
+  } catch (error) {
+    if (parserError) {
+      return { ok: false, error: formatXmlError(parserError) };
+    }
+
+    return {
+      ok: false,
+      error: formatXmlError({
+        message: getXmlErrorDescription(
+          error instanceof Error ? error.message : "",
+        ),
+      }),
+    };
+  }
+}
+
+function convertXmlElementToRecord(element: XmlElement) {
+  const output: Record<string, unknown> = Object.create(null) as Record<
+    string,
+    unknown
+  >;
+
+  appendXmlAttributes(output, element);
+
+  const childElements = getXmlChildElements(element);
+  const text = getXmlDirectText(element);
+
+  if (childElements.length === 0) {
+    if (Object.keys(output).length === 0 || text.hasContent) {
+      output.Value = inferXmlText(text.value, text.hasCdata);
+    }
+
+    return output;
+  }
+
+  if (text.hasContent) {
+    output.Value = element.textContent?.trim() ?? "";
+    return output;
+  }
+
+  const groups = groupXmlElements(childElements);
+
+  groups.forEach((elements, localName) => {
+    const propertyName = getXmlElementPropertyName(output, localName);
+    output[propertyName] =
+      elements.length === 1
+        ? convertXmlElementToValue(elements[0])
+        : elements.map(convertXmlElementToValue);
+  });
+
+  return output;
+}
+
+function convertXmlElementToValue(element: XmlElement): unknown {
+  const attributes = getXmlAttributes(element);
+  const childElements = getXmlChildElements(element);
+  const text = getXmlDirectText(element);
+
+  if (childElements.length === 0 && attributes.length === 0) {
+    return inferXmlText(text.value, text.hasCdata);
+  }
+
+  if (childElements.length > 0 && text.hasContent) {
+    return element.textContent?.trim() ?? "";
+  }
+
+  if (
+    attributes.length === 0 &&
+    !text.hasContent &&
+    childElements.length > 1 &&
+    childElements.every(
+      (child) => getXmlLocalName(child) === getXmlLocalName(childElements[0]),
+    )
+  ) {
+    return childElements.map(convertXmlElementToValue);
+  }
+
+  return convertXmlElementToRecord(element);
+}
+
+function appendXmlAttributes(
+  output: Record<string, unknown>,
+  element: XmlElement,
+) {
+  getXmlAttributes(element).forEach((attribute) => {
+    const localName = getXmlLocalName(attribute);
+    const propertyName = getUniqueRawPropertyName(
+      output,
+      localName,
+      "Attribute",
+    );
+    output[propertyName] = inferXmlText(attribute.value, false);
+  });
+}
+
+function getXmlAttributes(element: XmlElement): XmlAttribute[] {
+  const attributes: XmlAttribute[] = [];
+
+  for (let index = 0; index < element.attributes.length; index += 1) {
+    const attribute = element.attributes.item(index);
+
+    if (
+      attribute &&
+      attribute.namespaceURI !== "http://www.w3.org/2000/xmlns/" &&
+      attribute.nodeName !== "xmlns" &&
+      attribute.prefix !== "xmlns"
+    ) {
+      attributes.push(attribute);
+    }
+  }
+
+  return attributes;
+}
+
+function getXmlChildElements(element: XmlElement): XmlElement[] {
+  const elements: XmlElement[] = [];
+
+  for (let index = 0; index < element.childNodes.length; index += 1) {
+    const node = element.childNodes.item(index);
+
+    if (node?.nodeType === 1) {
+      elements.push(node as XmlElement);
+    }
+  }
+
+  return elements;
+}
+
+function getXmlDirectText(element: XmlElement) {
+  let value = "";
+  let hasCdata = false;
+
+  for (let index = 0; index < element.childNodes.length; index += 1) {
+    const node = element.childNodes.item(index);
+
+    if (node?.nodeType === 3 || node?.nodeType === 4) {
+      value += node.nodeValue ?? "";
+      hasCdata ||= node.nodeType === 4;
+    }
+  }
+
+  const trimmedValue = value.trim();
+  return {
+    value: trimmedValue,
+    hasCdata,
+    hasContent: trimmedValue.length > 0,
+  };
+}
+
+function groupXmlElements(elements: XmlElement[]) {
+  const groups = new Map<string, XmlElement[]>();
+
+  elements.forEach((element) => {
+    const localName = getXmlLocalName(element);
+    const group = groups.get(localName);
+
+    if (group) {
+      group.push(element);
+    } else {
+      groups.set(localName, [element]);
+    }
+  });
+
+  return groups;
+}
+
+function getXmlElementPropertyName(
+  output: Record<string, unknown>,
+  localName: string,
+) {
+  if (hasOwnProperty(output, localName)) {
+    return getUniqueRawPropertyName(output, `${localName}Element`, "Element");
+  }
+
+  return localName;
+}
+
+function getUniqueRawPropertyName(
+  output: Record<string, unknown>,
+  preferredName: string,
+  suffix: string,
+) {
+  if (!hasOwnProperty(output, preferredName)) {
+    return preferredName;
+  }
+
+  let index = 2;
+  let candidate = `${preferredName}${suffix}`;
+
+  while (hasOwnProperty(output, candidate)) {
+    candidate = `${preferredName}${suffix}${index}`;
+    index += 1;
+  }
+
+  return candidate;
+}
+
+function inferXmlText(value: string, preserveAsText: boolean): unknown {
+  if (preserveAsText || value === "") {
+    return value;
+  }
+
+  if (/^(?:true|false)$/i.test(value)) {
+    return value.toLowerCase() === "true";
+  }
+
+  if (/^-?(?:0|[1-9]\d*)$/.test(value)) {
+    const numberValue = Number(value);
+
+    if (isSafeInt32(numberValue)) {
+      return numberValue;
+    }
+  }
+
+  if (/^-?(?:0|[1-9]\d*)\.\d+$/.test(value)) {
+    const numberValue = Number(value);
+
+    if (Number.isFinite(numberValue)) {
+      return numberValue;
+    }
+  }
+
+  return value;
+}
+
+function getXmlLocalName(node: XmlNode) {
+  return node.localName || node.nodeName.split(":").pop() || "Value";
+}
+
+function getXmlErrorDescription(message: string) {
+  const description = message
+    .replace(/\[xmldom\s+[^\]]+\]\s*/gi, "")
+    .replace(/@#\[line:\d+,col:\d+\]/gi, "")
+    .replace(/^error:\s*/i, "")
+    .trim();
+
+  return description || "Check XML syntax and element structure.";
+}
+
+function formatXmlError(error: {
+  message: string;
+  line?: number;
+  column?: number;
+}) {
+  const location =
+    typeof error.line === "number" && typeof error.column === "number"
+      ? ` near line ${error.line}, column ${error.column}`
+      : "";
+  return `Invalid XML${location}: ${error.message}`;
+}
+
+function getInputFormatLabel(inputFormat: DataModelInputFormat) {
+  return inputFormat === "json" ? "JSON" : "XML";
+}
+
+function hasOwnProperty(value: object, propertyName: string) {
+  return Object.prototype.hasOwnProperty.call(value, propertyName);
 }
 
 function inferType(

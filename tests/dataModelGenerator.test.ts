@@ -4,14 +4,21 @@ import test from "node:test";
 import {
   generateDataModel,
   getRootClassNameError,
+  getXmlRootClassName,
 } from "../src/utils/dataModelGenerator.ts";
 
 function expectCode(
   source: string,
   language: "csharp" | "java" = "csharp",
   rootClassName = "Root",
+  inputFormat: "json" | "xml" = "json",
 ) {
-  const result = generateDataModel(source, language, rootClassName);
+  const result = generateDataModel(
+    source,
+    language,
+    rootClassName,
+    inputFormat,
+  );
   assert.equal(result.ok, true);
 
   if (!result.ok) {
@@ -19,6 +26,14 @@ function expectCode(
   }
 
   return result.code;
+}
+
+function expectXmlCode(
+  source: string,
+  language: "csharp" | "java" = "csharp",
+  rootClassName = "Customer",
+) {
+  return expectCode(source, language, rootClassName, "xml");
 }
 
 test("C# generation maps flat JSON values and property names", () => {
@@ -130,7 +145,160 @@ test("invalid and reserved root class names are rejected", () => {
   assert.equal(getRootClassNameError("ApiResponse"), null);
 });
 
-test("tool page clears changed output and disables stale copying", () => {
+test("simple XML generates C# and Java properties", () => {
+  const source = `<customer>
+  <id>1</id>
+  <name>John</name>
+  <active>true</active>
+</customer>`;
+  const csharp = expectXmlCode(source);
+  const java = expectXmlCode(source, "java");
+
+  assert.match(csharp, /public class Customer/);
+  assert.match(csharp, /public int Id \{ get; set; \}/);
+  assert.match(csharp, /public string Name \{ get; set; \}/);
+  assert.match(csharp, /public bool Active \{ get; set; \}/);
+  assert.match(java, /private int id;/);
+  assert.match(java, /private String name;/);
+  assert.match(java, /private boolean active;/);
+});
+
+test("XML attributes become properties and element conflicts use an Element suffix", () => {
+  const code = expectXmlCode(
+    `<customer id="15" active="true">
+  <id>20</id>
+  <name>John</name>
+</customer>`,
+  );
+
+  assert.match(code, /public int Id \{ get; set; \}/);
+  assert.match(code, /public bool Active \{ get; set; \}/);
+  assert.match(code, /public int IdElement \{ get; set; \}/);
+});
+
+test("nested XML elements generate nested model classes", () => {
+  const code = expectXmlCode(`<customer>
+  <address>
+    <location>
+      <city>Istanbul</city>
+    </location>
+  </address>
+</customer>`);
+
+  assert.match(code, /public Address Address \{ get; set; \}/);
+  assert.match(code, /public Location Location \{ get; set; \}/);
+  assert.match(code, /public string City \{ get; set; \}/);
+});
+
+test("repeated primitive XML elements generate collection types", () => {
+  const csharp = expectXmlCode(
+    "<roles><role>user</role><role>admin</role></roles>",
+    "csharp",
+    "Roles",
+  );
+  const java = expectXmlCode(
+    "<roles><role>user</role><role>admin</role></roles>",
+    "java",
+    "Roles",
+  );
+
+  assert.match(csharp, /public List<string> Role/);
+  assert.match(java, /private List<String> role;/);
+});
+
+test("repeated complex XML elements generate a model collection", () => {
+  const code = expectXmlCode(
+    `<customers>
+  <customer><id>1</id><name>John</name></customer>
+  <customer><id>2</id><name>Jane</name></customer>
+</customers>`,
+    "csharp",
+    "Customers",
+  );
+
+  assert.match(code, /public List<Customer> Customer/);
+  assert.match(code, /public class Customer/);
+  assert.equal((code.match(/public class Customer\n/g) ?? []).length, 1);
+});
+
+test("a single plural-named XML element is not inferred as a collection", () => {
+  const code = expectXmlCode(
+    "<customer><roles><role>user</role></roles></customer>",
+  );
+
+  assert.match(code, /public Roles Roles/);
+  assert.match(code, /public string Role/);
+  assert.doesNotMatch(code, /List</);
+});
+
+test("leading-zero and empty XML values remain strings", () => {
+  const code = expectXmlCode(`<customer>
+  <postalCode>00123</postalCode>
+  <description />
+  <balance>30.5</balance>
+</customer>`);
+
+  assert.match(code, /public string PostalCode/);
+  assert.match(code, /public string Description/);
+  assert.match(code, /public double Balance/);
+});
+
+test("namespace prefixes, comments, and CDATA stay model-safe", () => {
+  const code = expectXmlCode(`<ns:customer xmlns:ns="urn:example">
+  <!-- customer name -->
+  <ns:name>John</ns:name>
+  <ns:description><![CDATA[Some text]]></ns:description>
+</ns:customer>`);
+
+  assert.match(code, /public string Name/);
+  assert.match(code, /public string Description/);
+  assert.doesNotMatch(code, /Namespace|Comment|Cdata|Xmlns/i);
+  assert.equal(
+    getXmlRootClassName('<ns:customer xmlns:ns="urn:example" />'),
+    "Customer",
+  );
+});
+
+test("a custom root class name takes precedence over the XML root", () => {
+  const code = expectXmlCode(
+    "<customer><id>1</id></customer>",
+    "csharp",
+    "ApiResponse",
+  );
+
+  assert.match(code, /^public class ApiResponse/);
+  assert.doesNotMatch(code, /public class Customer/);
+});
+
+test("mixed XML content uses a conservative string fallback", () => {
+  const code = expectXmlCode(
+    "<customer><description>Text <strong>important</strong> text</description></customer>",
+  );
+
+  assert.match(code, /public string Description/);
+  assert.doesNotMatch(code, /class Strong/);
+});
+
+test("malformed XML returns a controlled location-aware error", () => {
+  const result = generateDataModel(
+    "<customer><name>John</customer>",
+    "csharp",
+    "Customer",
+    "xml",
+  );
+
+  assert.equal(result.ok, false);
+
+  if (result.ok) {
+    throw new Error("Malformed XML unexpectedly generated code.");
+  }
+
+  assert.match(result.error, /^Invalid XML/);
+  assert.match(result.error, /line \d+, column \d+/);
+  assert.doesNotMatch(result.error, /stack|xmldom/i);
+});
+
+test("tool page switches formats, clears changed output, and disables stale copying", () => {
   const pageSource = readFileSync(
     new URL(
       "../src/pages/DeveloperTools/DataModelGenerator/DataModelGeneratorPage.tsx",
@@ -143,7 +311,10 @@ test("tool page clears changed output and disables stale copying", () => {
   assert.match(pageSource, /setGeneratedCode\(""\)/);
   assert.match(pageSource, /disabled=\{!hasCurrentOutput\}/);
   assert.match(pageSource, /if \(!hasCurrentOutput\)/);
-  assert.doesNotMatch(pageSource, /<option value="xml"/i);
+  assert.match(pageSource, /<option value="xml">XML<\/option>/i);
+  assert.match(pageSource, /function handleInputFormatChange/);
+  assert.match(pageSource, /setErrorMessage\(""\)/);
+  assert.match(pageSource, /getXmlRootClassName/);
 
   const ids = [...pageSource.matchAll(/\bid="([^"]+)"/g)].map(
     (match) => match[1],
@@ -166,7 +337,17 @@ test("tool metadata registers the shared discovery route and keywords", () => {
     /dataModelGenerator:\s*"\/developer-tools\/data-model-generator"/,
   );
   assert.match(catalogSource, /id:\s*"data-model-generator"/);
-  ["json", "class", "model", "pojo", "csharp", "c#", "java", "dto"].forEach(
-    (keyword) => assert.match(catalogSource, new RegExp(`"${keyword}"`)),
+  [
+    "json",
+    "xml",
+    "class",
+    "model",
+    "pojo",
+    "csharp",
+    "c#",
+    "java",
+    "dto",
+  ].forEach((keyword) =>
+    assert.match(catalogSource, new RegExp(`"${keyword}"`)),
   );
 });

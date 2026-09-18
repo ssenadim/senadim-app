@@ -46,10 +46,11 @@ export const developerTools: CatalogTool[] = [
     id: "data-model-generator",
     title: "Data Model Generator",
     description:
-      "Generate copy-ready C# and Java model classes from JSON objects.",
+      "Generate copy-ready C# and Java model classes from JSON or XML.",
     category: "Data",
     keywords: [
       "json",
+      "xml",
       "class",
       "model",
       "pojo",
