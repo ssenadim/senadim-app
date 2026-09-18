@@ -326,10 +326,15 @@ test("tool page exposes class mode and clears mode-specific state", () => {
   );
 
   assert.match(pageSource, /Generate From/);
-  assert.match(pageSource, /<option value="class">Class<\/option>/);
+  assert.match(
+    pageSource,
+    /<option value="class">Class → Sample Data<\/option>/,
+  );
   assert.match(pageSource, /Class → Sample Data/);
+  assert.match(pageSource, /Sample Root Class/);
   assert.match(pageSource, /Generated JSON Sample/);
   assert.match(pageSource, /Copy JSON/);
+  assert.doesNotMatch(pageSource, /data-model-generator-output-format/);
   assert.match(pageSource, /function handleModeChange/);
   assert.match(pageSource, /resetGenerationState\(\)/);
   assert.match(pageSource, /setWarnings\(\[\]\)/);

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { Alert, Button, Select, Textarea, TextInput } from "flowbite-react";
 import { ToolToast } from "../../../components/common/ToolToast";
 import { ToolPageLayout } from "../../../components/layout/ToolPageLayout";
@@ -107,6 +107,8 @@ export function DataModelGeneratorPage() {
       createDefaultClassSampleGenerationOptions,
     );
   const [toast, setToast] = useState<ToastMessage | null>(null);
+  const [areOptionsVisible, setAreOptionsVisible] = useState(false);
+  const optionsPanelId = useId();
 
   const hasCurrentOutput =
     generationState === "valid" && generatedCode.length > 0;
@@ -116,6 +118,24 @@ export function DataModelGeneratorPage() {
     mode === "data"
       ? `${inputFormatLabel} Input`
       : `${languageLabel} Class Input`;
+  const outputLabel =
+    mode === "data"
+      ? `Generated ${languageLabel} Model`
+      : "Generated JSON Sample";
+  const outputEmptyMessage =
+    mode === "data"
+      ? `Generated ${languageLabel} model will appear here.`
+      : "Generated JSON sample will appear here.";
+  const primaryActionLabel =
+    mode === "data"
+      ? `Generate ${languageLabel} Model`
+      : "Generate JSON Sample";
+  const hasCustomizedOptions =
+    mode === "data"
+      ? JSON.stringify(dataOptions) !==
+        JSON.stringify(createDefaultDataModelGenerationOptions())
+      : JSON.stringify(classSampleOptions) !==
+        JSON.stringify(createDefaultClassSampleGenerationOptions());
 
   useEffect(() => {
     if (!toast) {
@@ -355,8 +375,8 @@ export function DataModelGeneratorPage() {
       showToast(
         "success",
         mode === "class"
-          ? "JSON sample copied to clipboard."
-          : `${languageLabel} model copied to clipboard.`,
+          ? "JSON sample copied."
+          : `${languageLabel} model copied.`,
       );
     } catch {
       showToast("failure", "Copy failed. Please copy the output manually.");
@@ -384,27 +404,29 @@ export function DataModelGeneratorPage() {
         { label: "Developer Productivity", path: routePaths.developerTools },
         { label: "Data Model Generator" },
       ]}
-      overviewTitle="What is Data Model Generation?"
+      overviewTitle="What is Data Model Generator?"
       overviewCollapsible
-      overviewToggleLabel="What is Data Model Generation?"
+      overviewToggleLabel="What is Data Model Generator?"
       overview={
         <div className="space-y-3">
           <p>
-            Turn representative JSON or XML into a readable starting point for
-            C# or Java data models without sending the content to an external
-            service.
+            Convert representative JSON or XML into readable C# or Java model
+            structures.
           </p>
           <p>
-            Class mode reads a focused subset of common C# and Java model
-            declarations to create representative JSON shape samples. It does
-            not execute code or emulate a runtime serializer.
+            C# and Java classes can also produce representative JSON samples.
+            Source data and code are processed in your browser.
           </p>
         </div>
       }
       inputTitle={null}
       inputs={
         <div className="min-w-0 space-y-5">
-          <div className="grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div
+            className={`grid min-w-0 gap-4 sm:grid-cols-2 ${
+              mode === "data" ? "xl:grid-cols-4" : "xl:grid-cols-3"
+            }`}
+          >
             <div className="min-w-0">
               <label
                 htmlFor="data-model-generator-mode"
@@ -419,11 +441,13 @@ export function DataModelGeneratorPage() {
                   handleModeChange(event.target.value as GeneratorMode)
                 }
               >
-                <option value="data">Data</option>
-                <option value="class">Class</option>
+                <option value="data">Data → Model</option>
+                <option value="class">Class → Sample Data</option>
               </Select>
               <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                {mode === "data" ? "Data → Model" : "Class → Sample Data"}
+                {mode === "data"
+                  ? "JSON or XML → C# or Java"
+                  : "C# or Java → JSON sample"}
               </p>
             </div>
 
@@ -465,36 +489,24 @@ export function DataModelGeneratorPage() {
               )}
             </div>
 
-            <div className="min-w-0">
-              <label
-                htmlFor={
-                  mode === "data"
-                    ? "data-model-generator-language"
-                    : "data-model-generator-output-format"
-                }
-                className="mb-2 block text-sm font-semibold text-gray-900 dark:text-white"
-              >
-                {mode === "data" ? "Target Language" : "Output Format"}
-              </label>
-              {mode === "data" ? (
-                languageSelector
-              ) : (
-                <Select
-                  id="data-model-generator-output-format"
-                  value="json"
-                  disabled
+            {mode === "data" ? (
+              <div className="min-w-0">
+                <label
+                  htmlFor="data-model-generator-language"
+                  className="mb-2 block text-sm font-semibold text-gray-900 dark:text-white"
                 >
-                  <option value="json">JSON Sample</option>
-                </Select>
-              )}
-            </div>
+                  Target Language
+                </label>
+                {languageSelector}
+              </div>
+            ) : null}
 
             <div className="min-w-0 sm:col-span-2 xl:col-span-1">
               <label
                 htmlFor="data-model-generator-root-class"
                 className="mb-2 block text-sm font-semibold text-gray-900 dark:text-white"
               >
-                Root Class Name
+                {mode === "data" ? "Root Class Name" : "Sample Root Class"}
               </label>
               <TextInput
                 id="data-model-generator-root-class"
@@ -510,381 +522,435 @@ export function DataModelGeneratorPage() {
                 aria-invalid={errorField === "rootClass"}
                 aria-describedby={
                   errorField === "rootClass"
-                    ? "data-model-generator-validation-error"
+                    ? "data-model-generator-root-class-error"
                     : "data-model-generator-root-class-note"
                 }
               />
-              <p
-                id="data-model-generator-root-class-note"
-                className="mt-2 text-xs text-gray-500 dark:text-gray-400"
-              >
-                {mode === "class"
-                  ? "Match a parsed class, or leave empty to use the first class."
-                  : "Examples: Customer, Order, ApiResponse"}
-              </p>
+              {errorField === "rootClass" ? (
+                <p
+                  id="data-model-generator-root-class-error"
+                  role="alert"
+                  className="mt-2 text-sm font-medium text-red-700 dark:text-red-300"
+                >
+                  {errorMessage}
+                </p>
+              ) : (
+                <p
+                  id="data-model-generator-root-class-note"
+                  className="mt-2 text-xs text-gray-500 dark:text-gray-400"
+                >
+                  {mode === "class"
+                    ? "Choose a class declared in the input, or leave empty to use the first class."
+                    : "Defines the generated root model name."}
+                </p>
+              )}
             </div>
           </div>
 
-          <fieldset className="min-w-0 rounded-xl border border-gray-200 bg-gray-50/70 p-4 dark:border-gray-700 dark:bg-gray-800/40">
-            <legend className="px-1 text-sm font-semibold text-gray-900 dark:text-white">
-              Generator Options
-            </legend>
-            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                {mode === "data"
-                  ? `Options shown for ${languageLabel} model generation.`
-                  : "Options shown for JSON sample generation."}
-              </p>
+          <section className="min-w-0 rounded-xl border border-gray-200 bg-gray-50/70 p-4 dark:border-gray-700 dark:bg-gray-800/40">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="text-sm font-semibold text-gray-900 dark:text-white">
+                    Generator Options
+                  </h2>
+                  <span className="rounded-full bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-200">
+                    {hasCustomizedOptions ? "Customized" : "Defaults"}
+                  </span>
+                </div>
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  {mode === "data"
+                    ? `Naming and ${languageLabel} output preferences.`
+                    : "JSON naming, nullable values, and collection samples."}
+                </p>
+              </div>
               <Button
                 type="button"
                 color="light"
-                size="xs"
-                onClick={handleResetOptions}
+                size="sm"
+                onClick={() => setAreOptionsVisible((current) => !current)}
+                aria-expanded={areOptionsVisible}
+                aria-controls={optionsPanelId}
+                className="shrink-0"
               >
-                Reset Options
+                {areOptionsVisible ? "Hide Options" : "Show Options"}
               </Button>
             </div>
 
-            {mode === "data" ? (
-              <div className="space-y-5">
-                <div>
-                  <h3 className="mb-3 text-xs font-semibold tracking-wide text-gray-700 uppercase dark:text-gray-300">
-                    Naming
-                  </h3>
-                  <div className="grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                    <div className="min-w-0">
-                      <label
-                        htmlFor="data-model-generator-property-naming"
-                        className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200"
-                      >
-                        Property Naming
-                      </label>
-                      <Select
-                        id="data-model-generator-property-naming"
-                        value={dataOptions.propertyNaming}
-                        onChange={(event) =>
-                          updateDataOption(
-                            "propertyNaming",
-                            event.target
-                              .value as typeof dataOptions.propertyNaming,
-                          )
-                        }
-                      >
-                        <option value="default">
-                          Default (
-                          {language === "csharp" ? "PascalCase" : "camelCase"})
-                        </option>
-                        <option value="preserve">Preserve Source Name</option>
-                      </Select>
-                    </div>
-
-                    <div className="min-w-0">
-                      <label
-                        htmlFor="data-model-generator-class-naming"
-                        className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200"
-                      >
-                        Class Naming
-                      </label>
-                      <Select
-                        id="data-model-generator-class-naming"
-                        value={dataOptions.classNaming}
-                        onChange={(event) =>
-                          updateDataOption(
-                            "classNaming",
-                            event.target
-                              .value as typeof dataOptions.classNaming,
-                          )
-                        }
-                      >
-                        <option value="pascal">PascalCase</option>
-                        <option value="preserve">Preserve Source Name</option>
-                      </Select>
-                    </div>
-                  </div>
+            {areOptionsVisible ? (
+              <fieldset
+                id={optionsPanelId}
+                className="mt-4 min-w-0 border-t border-gray-200 pt-4 dark:border-gray-700"
+              >
+                <legend className="sr-only">Generator Options</legend>
+                <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Changing an option clears the current output until you
+                    generate again.
+                  </p>
+                  <Button
+                    type="button"
+                    color="light"
+                    size="xs"
+                    onClick={handleResetOptions}
+                    className="shrink-0"
+                  >
+                    Reset Options
+                  </Button>
                 </div>
 
-                {language === "csharp" ? (
-                  <div>
-                    <h3 className="mb-3 text-xs font-semibold tracking-wide text-gray-700 uppercase dark:text-gray-300">
-                      C# Output
-                    </h3>
-                    <div className="grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                      <div className="min-w-0">
-                        <label
-                          htmlFor="data-model-generator-csharp-nullable"
-                          className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200"
-                        >
-                          Nullable Reference Types
-                        </label>
-                        <Select
-                          id="data-model-generator-csharp-nullable"
-                          value={
-                            dataOptions.csharpNullableTypes
-                              ? "enabled"
-                              : "disabled"
-                          }
-                          onChange={(event) =>
-                            updateDataOption(
-                              "csharpNullableTypes",
-                              event.target.value === "enabled",
-                            )
-                          }
-                        >
-                          <option value="disabled">Disabled</option>
-                          <option value="enabled">Enabled</option>
-                        </Select>
-                      </div>
-
-                      <div className="min-w-0">
-                        <label
-                          htmlFor="data-model-generator-csharp-style"
-                          className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200"
-                        >
-                          C# Model Style
-                        </label>
-                        <Select
-                          id="data-model-generator-csharp-style"
-                          value={dataOptions.csharpModelStyle}
-                          onChange={(event) =>
-                            updateDataOption(
-                              "csharpModelStyle",
-                              event.target
-                                .value as typeof dataOptions.csharpModelStyle,
-                            )
-                          }
-                        >
-                          <option value="class">Class</option>
-                          <option value="record">Record</option>
-                        </Select>
-                      </div>
-
-                      {dataOptions.csharpModelStyle === "class" ? (
+                {mode === "data" ? (
+                  <div className="space-y-5">
+                    <div>
+                      <h3 className="mb-3 text-xs font-semibold tracking-wide text-gray-700 uppercase dark:text-gray-300">
+                        Naming
+                      </h3>
+                      <div className="grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-3">
                         <div className="min-w-0">
                           <label
-                            htmlFor="data-model-generator-csharp-setter"
+                            htmlFor="data-model-generator-property-naming"
                             className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200"
                           >
-                            Property Setter
+                            Property Naming
                           </label>
                           <Select
-                            id="data-model-generator-csharp-setter"
-                            value={dataOptions.csharpPropertySetter}
+                            id="data-model-generator-property-naming"
+                            value={dataOptions.propertyNaming}
                             onChange={(event) =>
                               updateDataOption(
-                                "csharpPropertySetter",
+                                "propertyNaming",
                                 event.target
-                                  .value as typeof dataOptions.csharpPropertySetter,
+                                  .value as typeof dataOptions.propertyNaming,
                               )
                             }
                           >
-                            <option value="set">set</option>
-                            <option value="init">init</option>
+                            <option value="default">
+                              Default (
+                              {language === "csharp"
+                                ? "PascalCase"
+                                : "camelCase"}
+                              )
+                            </option>
+                            <option value="preserve">
+                              Preserve Source Name
+                            </option>
                           </Select>
                         </div>
-                      ) : null}
 
-                      <div className="min-w-0">
-                        <label
-                          htmlFor="data-model-generator-csharp-serialization"
-                          className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200"
-                        >
-                          Serialization Attributes
-                        </label>
-                        <Select
-                          id="data-model-generator-csharp-serialization"
-                          value={dataOptions.csharpSerialization}
-                          onChange={(event) =>
-                            updateDataOption(
-                              "csharpSerialization",
-                              event.target
-                                .value as typeof dataOptions.csharpSerialization,
-                            )
-                          }
-                        >
-                          <option value="none">None</option>
-                          <option value="system-text-json">
-                            System.Text.Json
-                          </option>
-                        </Select>
-                      </div>
-
-                      <div className="min-w-0">
-                        <label
-                          htmlFor="data-model-generator-csharp-collection"
-                          className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200"
-                        >
-                          Collection Type
-                        </label>
-                        <Select
-                          id="data-model-generator-csharp-collection"
-                          value={dataOptions.csharpCollectionType}
-                          onChange={(event) =>
-                            updateDataOption(
-                              "csharpCollectionType",
-                              event.target
-                                .value as typeof dataOptions.csharpCollectionType,
-                            )
-                          }
-                        >
-                          <option value="list">List&lt;T&gt;</option>
-                          <option value="array">Array</option>
-                        </Select>
+                        <div className="min-w-0">
+                          <label
+                            htmlFor="data-model-generator-class-naming"
+                            className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200"
+                          >
+                            Class Naming
+                          </label>
+                          <Select
+                            id="data-model-generator-class-naming"
+                            value={dataOptions.classNaming}
+                            onChange={(event) =>
+                              updateDataOption(
+                                "classNaming",
+                                event.target
+                                  .value as typeof dataOptions.classNaming,
+                              )
+                            }
+                          >
+                            <option value="pascal">PascalCase</option>
+                            <option value="preserve">
+                              Preserve Source Name
+                            </option>
+                          </Select>
+                        </div>
                       </div>
                     </div>
+
+                    {language === "csharp" ? (
+                      <div>
+                        <h3 className="mb-3 text-xs font-semibold tracking-wide text-gray-700 uppercase dark:text-gray-300">
+                          C# Output
+                        </h3>
+                        <div className="grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                          <div className="min-w-0">
+                            <label
+                              htmlFor="data-model-generator-csharp-nullable"
+                              className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200"
+                            >
+                              Nullable Reference Types
+                            </label>
+                            <Select
+                              id="data-model-generator-csharp-nullable"
+                              value={
+                                dataOptions.csharpNullableTypes
+                                  ? "enabled"
+                                  : "disabled"
+                              }
+                              onChange={(event) =>
+                                updateDataOption(
+                                  "csharpNullableTypes",
+                                  event.target.value === "enabled",
+                                )
+                              }
+                            >
+                              <option value="disabled">Disabled</option>
+                              <option value="enabled">Enabled</option>
+                            </Select>
+                          </div>
+
+                          <div className="min-w-0">
+                            <label
+                              htmlFor="data-model-generator-csharp-style"
+                              className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200"
+                            >
+                              C# Model Style
+                            </label>
+                            <Select
+                              id="data-model-generator-csharp-style"
+                              value={dataOptions.csharpModelStyle}
+                              onChange={(event) =>
+                                updateDataOption(
+                                  "csharpModelStyle",
+                                  event.target
+                                    .value as typeof dataOptions.csharpModelStyle,
+                                )
+                              }
+                            >
+                              <option value="class">Class</option>
+                              <option value="record">Record</option>
+                            </Select>
+                          </div>
+
+                          {dataOptions.csharpModelStyle === "class" ? (
+                            <div className="min-w-0">
+                              <label
+                                htmlFor="data-model-generator-csharp-setter"
+                                className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200"
+                              >
+                                Property Setter
+                              </label>
+                              <Select
+                                id="data-model-generator-csharp-setter"
+                                value={dataOptions.csharpPropertySetter}
+                                onChange={(event) =>
+                                  updateDataOption(
+                                    "csharpPropertySetter",
+                                    event.target
+                                      .value as typeof dataOptions.csharpPropertySetter,
+                                  )
+                                }
+                              >
+                                <option value="set">set</option>
+                                <option value="init">init</option>
+                              </Select>
+                            </div>
+                          ) : null}
+
+                          <div className="min-w-0">
+                            <label
+                              htmlFor="data-model-generator-csharp-serialization"
+                              className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200"
+                            >
+                              Serialization Attributes
+                            </label>
+                            <Select
+                              id="data-model-generator-csharp-serialization"
+                              value={dataOptions.csharpSerialization}
+                              onChange={(event) =>
+                                updateDataOption(
+                                  "csharpSerialization",
+                                  event.target
+                                    .value as typeof dataOptions.csharpSerialization,
+                                )
+                              }
+                            >
+                              <option value="none">None</option>
+                              <option value="system-text-json">
+                                System.Text.Json
+                              </option>
+                            </Select>
+                          </div>
+
+                          <div className="min-w-0">
+                            <label
+                              htmlFor="data-model-generator-csharp-collection"
+                              className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200"
+                            >
+                              Collection Type
+                            </label>
+                            <Select
+                              id="data-model-generator-csharp-collection"
+                              value={dataOptions.csharpCollectionType}
+                              onChange={(event) =>
+                                updateDataOption(
+                                  "csharpCollectionType",
+                                  event.target
+                                    .value as typeof dataOptions.csharpCollectionType,
+                                )
+                              }
+                            >
+                              <option value="list">List&lt;T&gt;</option>
+                              <option value="array">Array</option>
+                            </Select>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        <h3 className="mb-3 text-xs font-semibold tracking-wide text-gray-700 uppercase dark:text-gray-300">
+                          Java Output
+                        </h3>
+                        <div className="grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                          <div className="min-w-0">
+                            <label
+                              htmlFor="data-model-generator-java-style"
+                              className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200"
+                            >
+                              Java Model Style
+                            </label>
+                            <Select
+                              id="data-model-generator-java-style"
+                              value={dataOptions.javaModelStyle}
+                              onChange={(event) =>
+                                updateDataOption(
+                                  "javaModelStyle",
+                                  event.target
+                                    .value as typeof dataOptions.javaModelStyle,
+                                )
+                              }
+                            >
+                              <option value="accessors">
+                                Fields + Getters/Setters
+                              </option>
+                              <option value="fields">Fields Only</option>
+                            </Select>
+                          </div>
+
+                          <div className="min-w-0">
+                            <label
+                              htmlFor="data-model-generator-java-serialization"
+                              className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200"
+                            >
+                              Serialization Attributes
+                            </label>
+                            <Select
+                              id="data-model-generator-java-serialization"
+                              value={dataOptions.javaSerialization}
+                              onChange={(event) =>
+                                updateDataOption(
+                                  "javaSerialization",
+                                  event.target
+                                    .value as typeof dataOptions.javaSerialization,
+                                )
+                              }
+                            >
+                              <option value="none">None</option>
+                              <option value="jackson">Jackson</option>
+                            </Select>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div>
                     <h3 className="mb-3 text-xs font-semibold tracking-wide text-gray-700 uppercase dark:text-gray-300">
-                      Java Output
+                      JSON Sample
                     </h3>
                     <div className="grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-3">
                       <div className="min-w-0">
                         <label
-                          htmlFor="data-model-generator-java-style"
+                          htmlFor="data-model-generator-json-property-naming"
                           className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200"
                         >
-                          Java Model Style
+                          JSON Property Naming
                         </label>
                         <Select
-                          id="data-model-generator-java-style"
-                          value={dataOptions.javaModelStyle}
+                          id="data-model-generator-json-property-naming"
+                          value={classSampleOptions.jsonPropertyNaming}
                           onChange={(event) =>
-                            updateDataOption(
-                              "javaModelStyle",
+                            updateClassSampleOption(
+                              "jsonPropertyNaming",
                               event.target
-                                .value as typeof dataOptions.javaModelStyle,
+                                .value as typeof classSampleOptions.jsonPropertyNaming,
                             )
                           }
                         >
-                          <option value="accessors">
-                            Fields + Getters/Setters
+                          <option value="camel">camelCase</option>
+                          <option value="preserve">
+                            Preserve Class Member Name
                           </option>
-                          <option value="fields">Fields Only</option>
                         </Select>
                       </div>
 
                       <div className="min-w-0">
                         <label
-                          htmlFor="data-model-generator-java-serialization"
+                          htmlFor="data-model-generator-nullable-sample"
                           className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200"
                         >
-                          Serialization Attributes
+                          Nullable Sample Values
                         </label>
                         <Select
-                          id="data-model-generator-java-serialization"
-                          value={dataOptions.javaSerialization}
+                          id="data-model-generator-nullable-sample"
+                          value={classSampleOptions.nullableSampleValue}
                           onChange={(event) =>
-                            updateDataOption(
-                              "javaSerialization",
+                            updateClassSampleOption(
+                              "nullableSampleValue",
                               event.target
-                                .value as typeof dataOptions.javaSerialization,
+                                .value as typeof classSampleOptions.nullableSampleValue,
                             )
                           }
                         >
-                          <option value="none">None</option>
-                          <option value="jackson">Jackson</option>
+                          <option value="example">
+                            Generate Example Value
+                          </option>
+                          <option value="null">Generate null</option>
+                        </Select>
+                      </div>
+
+                      <div className="min-w-0">
+                        <label
+                          htmlFor="data-model-generator-collection-sample"
+                          className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200"
+                        >
+                          Collection Sample
+                        </label>
+                        <Select
+                          id="data-model-generator-collection-sample"
+                          value={classSampleOptions.collectionSampleValue}
+                          onChange={(event) =>
+                            updateClassSampleOption(
+                              "collectionSampleValue",
+                              event.target
+                                .value as typeof classSampleOptions.collectionSampleValue,
+                            )
+                          }
+                        >
+                          <option value="one">One Item</option>
+                          <option value="empty">Empty Array</option>
                         </Select>
                       </div>
                     </div>
                   </div>
                 )}
-              </div>
-            ) : (
-              <div>
-                <h3 className="mb-3 text-xs font-semibold tracking-wide text-gray-700 uppercase dark:text-gray-300">
-                  JSON Sample
-                </h3>
-                <div className="grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                  <div className="min-w-0">
-                    <label
-                      htmlFor="data-model-generator-json-property-naming"
-                      className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200"
-                    >
-                      JSON Property Naming
-                    </label>
-                    <Select
-                      id="data-model-generator-json-property-naming"
-                      value={classSampleOptions.jsonPropertyNaming}
-                      onChange={(event) =>
-                        updateClassSampleOption(
-                          "jsonPropertyNaming",
-                          event.target
-                            .value as typeof classSampleOptions.jsonPropertyNaming,
-                        )
-                      }
-                    >
-                      <option value="camel">camelCase</option>
-                      <option value="preserve">
-                        Preserve Class Member Name
-                      </option>
-                    </Select>
-                  </div>
-
-                  <div className="min-w-0">
-                    <label
-                      htmlFor="data-model-generator-nullable-sample"
-                      className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200"
-                    >
-                      Nullable Sample Values
-                    </label>
-                    <Select
-                      id="data-model-generator-nullable-sample"
-                      value={classSampleOptions.nullableSampleValue}
-                      onChange={(event) =>
-                        updateClassSampleOption(
-                          "nullableSampleValue",
-                          event.target
-                            .value as typeof classSampleOptions.nullableSampleValue,
-                        )
-                      }
-                    >
-                      <option value="example">Generate Example Value</option>
-                      <option value="null">Generate null</option>
-                    </Select>
-                  </div>
-
-                  <div className="min-w-0">
-                    <label
-                      htmlFor="data-model-generator-collection-sample"
-                      className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200"
-                    >
-                      Collection Sample
-                    </label>
-                    <Select
-                      id="data-model-generator-collection-sample"
-                      value={classSampleOptions.collectionSampleValue}
-                      onChange={(event) =>
-                        updateClassSampleOption(
-                          "collectionSampleValue",
-                          event.target
-                            .value as typeof classSampleOptions.collectionSampleValue,
-                        )
-                      }
-                    >
-                      <option value="one">One Item</option>
-                      <option value="empty">Empty Array</option>
-                    </Select>
-                  </div>
-                </div>
-              </div>
-            )}
-          </fieldset>
+              </fieldset>
+            ) : null}
+          </section>
 
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-            <Button type="button" color="blue" onClick={handleGenerate}>
-              {mode === "data" ? "Generate Model" : "Generate JSON Sample"}
+            <Button
+              type="button"
+              color="blue"
+              onClick={handleGenerate}
+              className="w-full sm:w-auto"
+            >
+              {primaryActionLabel}
             </Button>
           </div>
 
           {generationState === "valid" ? (
-            <p
-              role="status"
-              aria-live="polite"
-              className="text-sm font-semibold text-emerald-700 dark:text-emerald-300"
-            >
+            <p role="status" aria-live="polite" className="sr-only">
               {mode === "data"
-                ? `Generated a current ${languageLabel} model.`
-                : "Generated a current JSON sample."}
+                ? `${languageLabel} model generated.`
+                : "JSON sample generated."}
             </p>
           ) : null}
 
@@ -899,34 +965,7 @@ export function DataModelGeneratorPage() {
             </p>
           ) : null}
 
-          {warnings.length > 0 ? (
-            <Alert color="warning" role="status" aria-live="polite">
-              <span className="font-semibold">Generated with limitations.</span>
-              <ul className="mt-2 list-disc space-y-1 pl-5">
-                {warnings.map((warning) => (
-                  <li key={warning}>{warning}</li>
-                ))}
-              </ul>
-            </Alert>
-          ) : null}
-
-          {(generationState === "empty" || generationState === "invalid") &&
-          errorMessage ? (
-            <Alert
-              id="data-model-generator-validation-error"
-              color={generationState === "empty" ? "warning" : "failure"}
-              role="alert"
-            >
-              <span className="font-semibold">
-                {generationState === "empty"
-                  ? "Input required."
-                  : "Unable to generate."}
-              </span>{" "}
-              {errorMessage}
-            </Alert>
-          ) : null}
-
-          <div className="grid min-w-0 gap-5 lg:grid-cols-2">
+          <div className="grid min-w-0 gap-5 xl:grid-cols-2">
             <div className="min-w-0">
               <label
                 htmlFor="data-model-generator-source-input"
@@ -934,6 +973,23 @@ export function DataModelGeneratorPage() {
               >
                 {inputLabel}
               </label>
+              {(generationState === "empty" || generationState === "invalid") &&
+              errorField === "source" &&
+              errorMessage ? (
+                <Alert
+                  id="data-model-generator-source-error"
+                  color="failure"
+                  role="alert"
+                  className="mb-3"
+                >
+                  <span className="font-semibold">
+                    {generationState === "empty"
+                      ? "Input required."
+                      : "Unable to generate."}
+                  </span>{" "}
+                  {errorMessage}
+                </Alert>
+              ) : null}
               <Textarea
                 id="data-model-generator-source-input"
                 rows={22}
@@ -946,13 +1002,13 @@ export function DataModelGeneratorPage() {
                     ? `Paste ${inputFormatLabel} here...`
                     : `Paste ${languageLabel} class definitions here...`
                 }
-                className="max-w-full font-mono"
+                className="w-full max-w-full resize-y font-mono text-sm leading-6"
                 spellCheck={false}
                 wrap="off"
                 aria-invalid={errorField === "source"}
                 aria-describedby={
                   errorField === "source"
-                    ? "data-model-generator-validation-error"
+                    ? "data-model-generator-source-error"
                     : undefined
                 }
               />
@@ -960,40 +1016,68 @@ export function DataModelGeneratorPage() {
 
             <div className="min-w-0">
               <div className="mb-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <label
-                  htmlFor="data-model-generator-output"
-                  className="text-sm font-semibold text-gray-900 dark:text-white"
-                >
-                  {mode === "data"
-                    ? "Generated Model"
-                    : "Generated JSON Sample"}
-                </label>
+                <div>
+                  <h2
+                    id="data-model-generator-output-heading"
+                    className="text-sm font-semibold text-gray-900 dark:text-white"
+                  >
+                    {outputLabel}
+                  </h2>
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    Read-only generated output
+                  </p>
+                </div>
                 <Button
                   type="button"
                   color="light"
-                  size="xs"
+                  size="sm"
                   onClick={handleCopyCode}
                   disabled={!hasCurrentOutput}
                   aria-describedby="data-model-generator-output-note"
+                  className="shrink-0"
                 >
                   {mode === "data" ? "Copy Code" : "Copy JSON"}
                 </Button>
               </div>
-              <Textarea
+
+              {warnings.length > 0 ? (
+                <Alert
+                  color="warning"
+                  role="status"
+                  aria-live="polite"
+                  className="mb-3"
+                >
+                  <span className="font-semibold">
+                    Generated with limitations.
+                  </span>
+                  <ul className="mt-2 list-disc space-y-1 pl-5">
+                    {warnings.map((warning) => (
+                      <li key={warning}>{warning}</li>
+                    ))}
+                  </ul>
+                </Alert>
+              ) : null}
+
+              <pre
                 id="data-model-generator-output"
-                rows={22}
-                value={generatedCode}
-                readOnly
-                placeholder={
-                  mode === "data"
-                    ? `Generated ${languageLabel} model will appear here...`
-                    : "Generated JSON sample will appear here..."
-                }
-                className="max-w-full font-mono"
-                spellCheck={false}
-                wrap="off"
+                role="region"
+                aria-labelledby="data-model-generator-output-heading"
                 aria-describedby="data-model-generator-output-note"
-              />
+                tabIndex={0}
+                className={`w-full max-w-full overflow-auto overscroll-contain rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm leading-6 text-gray-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-600 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 ${
+                  hasCurrentOutput
+                    ? "max-h-[42rem] min-h-[34rem] whitespace-pre"
+                    : "min-h-32 whitespace-pre-wrap"
+                }`}
+              >
+                {hasCurrentOutput ? (
+                  generatedCode
+                ) : (
+                  <span className="font-sans text-gray-500 dark:text-gray-400">
+                    {outputEmptyMessage}
+                  </span>
+                )}
+              </pre>
               <p
                 id="data-model-generator-output-note"
                 className="mt-2 text-xs text-gray-500 dark:text-gray-400"

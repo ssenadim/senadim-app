@@ -451,6 +451,40 @@ test("tool page exposes context-aware generator options with safe resets", () =>
   assert.doesNotMatch(pageSource, /localStorage|sessionStorage/);
 });
 
+test("tool page polish keeps workflows contextual, compact, and readable", () => {
+  const pageSource = readFileSync(
+    new URL(
+      "../src/pages/DeveloperTools/DataModelGenerator/DataModelGeneratorPage.tsx",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+
+  assert.match(pageSource, /<option value="data">Data → Model<\/option>/);
+  assert.match(
+    pageSource,
+    /<option value="class">Class → Sample Data<\/option>/,
+  );
+  assert.match(pageSource, /What is Data Model Generator\?/);
+  assert.match(pageSource, /Generated \$\{languageLabel\} Model/);
+  assert.match(pageSource, /Generate \$\{languageLabel\} Model/);
+  assert.match(pageSource, /areOptionsVisible/);
+  assert.match(pageSource, /aria-expanded=\{areOptionsVisible\}/);
+  assert.match(pageSource, /aria-controls=\{optionsPanelId\}/);
+  assert.match(pageSource, /Show Options/);
+  assert.match(pageSource, /Hide Options/);
+  assert.doesNotMatch(pageSource, /data-model-generator-output-format/);
+  assert.match(pageSource, /xl:grid-cols-2/);
+  assert.match(pageSource, /role="region"/);
+  assert.match(pageSource, /overflow-auto/);
+  assert.match(pageSource, /whitespace-pre/);
+  assert.match(pageSource, /Read-only generated output/);
+  assert.match(pageSource, /data-model-generator-root-class-error/);
+  assert.match(pageSource, /data-model-generator-source-error/);
+  assert.match(pageSource, /color="warning"/);
+  assert.match(pageSource, /color="failure"/);
+});
+
 test("tool metadata registers the shared discovery route and keywords", () => {
   const routesSource = readFileSync(
     new URL("../src/utils/routes.ts", import.meta.url),
