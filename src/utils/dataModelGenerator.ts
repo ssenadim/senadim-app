@@ -7,15 +7,62 @@ import type {
 
 export type DataModelLanguage = "csharp" | "java";
 export type DataModelInputFormat = "json" | "xml";
+export type DataPropertyNaming = "default" | "preserve";
+export type DataClassNaming = "pascal" | "preserve";
+export type CsharpModelStyle = "class" | "record";
+export type CsharpPropertySetter = "set" | "init";
+export type CsharpSerialization = "none" | "system-text-json";
+export type CsharpCollectionType = "list" | "array";
+export type JavaModelStyle = "accessors" | "fields";
+export type JavaSerialization = "none" | "jackson";
+
+export interface DataModelGenerationOptions {
+  propertyNaming?: DataPropertyNaming;
+  classNaming?: DataClassNaming;
+  csharpNullableTypes?: boolean;
+  csharpModelStyle?: CsharpModelStyle;
+  csharpPropertySetter?: CsharpPropertySetter;
+  csharpSerialization?: CsharpSerialization;
+  csharpCollectionType?: CsharpCollectionType;
+  javaModelStyle?: JavaModelStyle;
+  javaSerialization?: JavaSerialization;
+}
+
+export interface ResolvedDataModelGenerationOptions {
+  propertyNaming: DataPropertyNaming;
+  classNaming: DataClassNaming;
+  csharpNullableTypes: boolean;
+  csharpModelStyle: CsharpModelStyle;
+  csharpPropertySetter: CsharpPropertySetter;
+  csharpSerialization: CsharpSerialization;
+  csharpCollectionType: CsharpCollectionType;
+  javaModelStyle: JavaModelStyle;
+  javaSerialization: JavaSerialization;
+}
+
+export function createDefaultDataModelGenerationOptions(): ResolvedDataModelGenerationOptions {
+  return {
+    propertyNaming: "default",
+    classNaming: "pascal",
+    csharpNullableTypes: false,
+    csharpModelStyle: "class",
+    csharpPropertySetter: "set",
+    csharpSerialization: "none",
+    csharpCollectionType: "list",
+    javaModelStyle: "accessors",
+    javaSerialization: "none",
+  };
+}
 
 type PrimitiveType = "string" | "integer" | "decimal" | "boolean" | "any";
 
 type ModelType =
-  | { kind: "primitive"; value: PrimitiveType }
-  | { kind: "model"; className: string }
-  | { kind: "list"; itemType: ModelType };
+  | { kind: "primitive"; value: PrimitiveType; nullable?: boolean }
+  | { kind: "model"; className: string; nullable?: boolean }
+  | { kind: "list"; itemType: ModelType; nullable?: boolean };
 
 interface ModelProperty {
+  sourceName: string;
   csharpName: string;
   javaName: string;
   type: ModelType;
@@ -30,6 +77,8 @@ interface ModelContext {
   classes: ModelClass[];
   classNames: Set<string>;
   nestedShapeNames: Map<string, string>;
+  language: DataModelLanguage;
+  options: ResolvedDataModelGenerationOptions;
 }
 
 type GenerationSuccess = {
@@ -143,6 +192,7 @@ export function generateDataModel(
   language: DataModelLanguage,
   rootClassName: string,
   inputFormat: DataModelInputFormat = "json",
+  options: DataModelGenerationOptions = {},
 ): DataModelGenerationResult {
   if (!source.trim()) {
     return {
@@ -164,10 +214,16 @@ export function generateDataModel(
     return parsed;
   }
 
+  const resolvedOptions = {
+    ...createDefaultDataModelGenerationOptions(),
+    ...options,
+  };
   const context: ModelContext = {
     classes: [],
     classNames: new Set(),
     nestedShapeNames: new Map(),
+    language,
+    options: resolvedOptions,
   };
 
   createClass(context, rootClassName, parsed.value, false);
@@ -176,8 +232,8 @@ export function generateDataModel(
     ok: true,
     code:
       language === "csharp"
-        ? renderCsharp(context.classes)
-        : renderJava(context.classes),
+        ? renderCsharp(context.classes, resolvedOptions)
+        : renderJava(context.classes, resolvedOptions),
   };
 }
 
@@ -218,7 +274,10 @@ function createClass(
     }
   }
 
-  const name = getUniqueClassName(context, toClassName(preferredName));
+  const name = getUniqueClassName(
+    context,
+    getGeneratedClassName(preferredName, context.options.classNaming),
+  );
   const modelClass: ModelClass = { name, properties: [] };
   context.classes.push(modelClass);
   context.classNames.add(name);
@@ -230,19 +289,28 @@ function createClass(
   const usedCsharpNames = new Set<string>();
   const usedJavaNames = new Set<string>();
 
-  modelClass.properties = Object.entries(value).map(([propertyName, item]) => ({
-    csharpName: getUniqueMemberName(
-      getCsharpPropertyName(propertyName),
-      usedCsharpNames,
-      name,
-    ),
-    javaName: getUniqueMemberName(
-      getJavaFieldName(propertyName),
-      usedJavaNames,
-      name,
-    ),
-    type: inferType(context, propertyName, item),
-  }));
+  modelClass.properties = Object.entries(value).map(([propertyName, item]) => {
+    const preserveSourceName = context.options.propertyNaming === "preserve";
+
+    return {
+      sourceName: propertyName,
+      csharpName: getUniqueMemberName(
+        preserveSourceName && isValidIdentifier(propertyName)
+          ? propertyName
+          : getCsharpPropertyName(propertyName),
+        usedCsharpNames,
+        name,
+      ),
+      javaName: getUniqueMemberName(
+        preserveSourceName && isValidIdentifier(propertyName)
+          ? propertyName
+          : getJavaFieldName(propertyName),
+        usedJavaNames,
+        name,
+      ),
+      type: inferType(context, propertyName, item),
+    };
+  });
 
   return name;
 }
@@ -618,10 +686,42 @@ function inferArrayItemType(
   propertyName: string,
   items: unknown[],
 ): ModelType {
-  if (items.length === 0 || items.some((item) => item === null)) {
+  if (items.length === 0) {
     return primitive("any");
   }
 
+  const hasNull = items.some((item) => item === null);
+
+  if (hasNull) {
+    if (context.language !== "csharp" || !context.options.csharpNullableTypes) {
+      return primitive("any");
+    }
+
+    const nonNullItems = items.filter((item) => item !== null);
+
+    if (nonNullItems.length === 0) {
+      return primitive("any");
+    }
+
+    const inferredType = inferNonNullArrayItemType(
+      context,
+      propertyName,
+      nonNullItems,
+    );
+
+    return inferredType.kind === "primitive" && inferredType.value === "any"
+      ? inferredType
+      : { ...inferredType, nullable: true };
+  }
+
+  return inferNonNullArrayItemType(context, propertyName, items);
+}
+
+function inferNonNullArrayItemType(
+  context: ModelContext,
+  propertyName: string,
+  items: unknown[],
+): ModelType {
   if (items.every((item) => typeof item === "string")) {
     return primitive("string");
   }
@@ -661,74 +761,148 @@ function primitive(value: PrimitiveType): ModelType {
   return { kind: "primitive", value };
 }
 
-function renderCsharp(classes: ModelClass[]) {
-  const imports = classes.some((modelClass) =>
+function renderCsharp(
+  classes: ModelClass[],
+  options: ResolvedDataModelGenerationOptions,
+) {
+  const imports: string[] = [];
+  const hasCollections = classes.some((modelClass) =>
     modelClass.properties.some((property) => containsList(property.type)),
-  )
-    ? "using System.Collections.Generic;\n\n"
-    : "";
+  );
+  const hasJsonAnnotations =
+    options.csharpSerialization === "system-text-json" &&
+    classes.some((modelClass) =>
+      modelClass.properties.some(
+        (property) => property.csharpName !== property.sourceName,
+      ),
+    );
 
-  return `${imports}${classes.map(renderCsharpClass).join("\n\n")}`;
-}
-
-function renderCsharpClass(modelClass: ModelClass) {
-  const properties = modelClass.properties
-    .map(
-      (property) =>
-        `    public ${renderCsharpType(property.type)} ${property.csharpName} { get; set; }`,
-    )
-    .join("\n");
-
-  return `public class ${modelClass.name}\n{${properties ? `\n${properties}\n` : "\n"}}`;
-}
-
-function renderCsharpType(type: ModelType): string {
-  if (type.kind === "model") {
-    return type.className;
+  if (hasCollections && options.csharpCollectionType === "list") {
+    imports.push("using System.Collections.Generic;");
   }
 
-  if (type.kind === "list") {
-    return `List<${renderCsharpType(type.itemType)}>`;
+  if (hasJsonAnnotations) {
+    imports.push("using System.Text.Json.Serialization;");
   }
 
-  const typeNames: Record<PrimitiveType, string> = {
-    string: "string",
-    integer: "int",
-    decimal: "double",
-    boolean: "bool",
-    any: "object",
-  };
-
-  return typeNames[type.value];
-}
-
-function renderJava(classes: ModelClass[]) {
-  const imports = classes.some((modelClass) =>
-    modelClass.properties.some((property) => containsList(property.type)),
-  )
-    ? "import java.util.List;\n\n"
-    : "";
-
-  return `${imports}${classes
-    .map((modelClass, index) => renderJavaClass(modelClass, index === 0))
+  const importBlock = imports.length > 0 ? `${imports.join("\n")}\n\n` : "";
+  return `${importBlock}${classes
+    .map((modelClass) => renderCsharpClass(modelClass, options))
     .join("\n\n")}`;
 }
 
-function renderJavaClass(modelClass: ModelClass, isRoot: boolean) {
-  const fields = modelClass.properties
-    .map(
-      (property) =>
-        `    private ${renderJavaType(property.type)} ${property.javaName};`,
-    )
-    .join("\n");
-  const accessors = modelClass.properties
+function renderCsharpClass(
+  modelClass: ModelClass,
+  options: ResolvedDataModelGenerationOptions,
+) {
+  const setter =
+    options.csharpModelStyle === "record"
+      ? "init"
+      : options.csharpPropertySetter;
+  const properties = modelClass.properties
     .map((property) => {
-      const type = renderJavaType(property.type);
-      const accessorName = toPascalCase(property.javaName);
+      const annotation =
+        options.csharpSerialization === "system-text-json" &&
+        property.csharpName !== property.sourceName
+          ? `    [JsonPropertyName(${JSON.stringify(property.sourceName)})]\n`
+          : "";
 
-      return `    public ${type} get${accessorName}() {\n        return ${property.javaName};\n    }\n\n    public void set${accessorName}(${type} ${property.javaName}) {\n        this.${property.javaName} = ${property.javaName};\n    }`;
+      return `${annotation}    public ${renderCsharpType(property.type, options)} ${property.csharpName} { get; ${setter}; }`;
     })
-    .join("\n\n");
+    .join("\n");
+
+  return `public ${options.csharpModelStyle} ${modelClass.name}\n{${properties ? `\n${properties}\n` : "\n"}}`;
+}
+
+function renderCsharpType(
+  type: ModelType,
+  options: ResolvedDataModelGenerationOptions,
+): string {
+  let renderedType: string;
+
+  if (type.kind === "model") {
+    renderedType = type.className;
+  } else if (type.kind === "list") {
+    const itemType = renderCsharpType(type.itemType, options);
+    renderedType =
+      options.csharpCollectionType === "array"
+        ? `${itemType}[]`
+        : `List<${itemType}>`;
+  } else {
+    const typeNames: Record<PrimitiveType, string> = {
+      string: "string",
+      integer: "int",
+      decimal: "double",
+      boolean: "bool",
+      any: "object",
+    };
+    renderedType = typeNames[type.value];
+  }
+
+  return type.nullable && options.csharpNullableTypes
+    ? `${renderedType}?`
+    : renderedType;
+}
+
+function renderJava(
+  classes: ModelClass[],
+  options: ResolvedDataModelGenerationOptions,
+) {
+  const imports: string[] = [];
+  const hasCollections = classes.some((modelClass) =>
+    modelClass.properties.some((property) => containsList(property.type)),
+  );
+  const hasJsonAnnotations =
+    options.javaSerialization === "jackson" &&
+    classes.some((modelClass) =>
+      modelClass.properties.some(
+        (property) => property.javaName !== property.sourceName,
+      ),
+    );
+
+  if (hasCollections) {
+    imports.push("import java.util.List;");
+  }
+
+  if (hasJsonAnnotations) {
+    imports.push("import com.fasterxml.jackson.annotation.JsonProperty;");
+  }
+
+  const importBlock = imports.length > 0 ? `${imports.join("\n")}\n\n` : "";
+
+  return `${importBlock}${classes
+    .map((modelClass, index) =>
+      renderJavaClass(modelClass, index === 0, options),
+    )
+    .join("\n\n")}`;
+}
+
+function renderJavaClass(
+  modelClass: ModelClass,
+  isRoot: boolean,
+  options: ResolvedDataModelGenerationOptions,
+) {
+  const fields = modelClass.properties
+    .map((property) => {
+      const annotation =
+        options.javaSerialization === "jackson" &&
+        property.javaName !== property.sourceName
+          ? `    @JsonProperty(${JSON.stringify(property.sourceName)})\n`
+          : "";
+      return `${annotation}    private ${renderJavaType(property.type)} ${property.javaName};`;
+    })
+    .join("\n");
+  const accessors =
+    options.javaModelStyle === "accessors"
+      ? modelClass.properties
+          .map((property) => {
+            const type = renderJavaType(property.type);
+            const accessorName = toPascalCase(property.javaName);
+
+            return `    public ${type} get${accessorName}() {\n        return ${property.javaName};\n    }\n\n    public void set${accessorName}(${type} ${property.javaName}) {\n        this.${property.javaName} = ${property.javaName};\n    }`;
+          })
+          .join("\n\n")
+      : "";
   const body = [fields, accessors].filter(Boolean).join("\n\n");
 
   return `${isRoot ? "public " : ""}class ${modelClass.name} {${body ? `\n${body}\n` : "\n"}}`;
@@ -788,6 +962,16 @@ function getJavaFieldName(source: string) {
   }
 
   return reservedIdentifiers.has(name) ? `${name}Value` : name;
+}
+
+function getGeneratedClassName(source: string, naming: DataClassNaming) {
+  return naming === "preserve" && isValidIdentifier(source)
+    ? source
+    : toClassName(source);
+}
+
+function isValidIdentifier(value: string) {
+  return identifierPattern.test(value) && !reservedIdentifiers.has(value);
 }
 
 function toClassName(source: string) {

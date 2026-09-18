@@ -5,15 +5,19 @@ import { ToolPageLayout } from "../../../components/layout/ToolPageLayout";
 import { usePageTitle } from "../../../hooks/usePageTitle";
 import type { ToastMessage, ToastTone } from "../../../types/toast";
 import {
+  createDefaultClassSampleGenerationOptions,
   generateJsonSampleFromClass,
   getFirstParsedClassName,
+  type ResolvedClassSampleGenerationOptions,
 } from "../../../utils/classSampleGenerator";
 import {
+  createDefaultDataModelGenerationOptions,
   generateDataModel,
   getRootClassNameError,
   getXmlRootClassName,
   type DataModelInputFormat,
   type DataModelLanguage,
+  type ResolvedDataModelGenerationOptions,
 } from "../../../utils/dataModelGenerator";
 import { routePaths } from "../../../utils/routes";
 
@@ -94,6 +98,14 @@ export function DataModelGeneratorPage() {
   const [warnings, setWarnings] = useState<string[]>([]);
   const [generationState, setGenerationState] =
     useState<GenerationState>("idle");
+  const [dataOptions, setDataOptions] =
+    useState<ResolvedDataModelGenerationOptions>(
+      createDefaultDataModelGenerationOptions,
+    );
+  const [classSampleOptions, setClassSampleOptions] =
+    useState<ResolvedClassSampleGenerationOptions>(
+      createDefaultClassSampleGenerationOptions,
+    );
   const [toast, setToast] = useState<ToastMessage | null>(null);
 
   const hasCurrentOutput =
@@ -225,6 +237,30 @@ export function DataModelGeneratorPage() {
     invalidateGeneratedCode();
   }
 
+  function updateDataOption<
+    Key extends keyof ResolvedDataModelGenerationOptions,
+  >(key: Key, value: ResolvedDataModelGenerationOptions[Key]) {
+    setDataOptions((current) => ({ ...current, [key]: value }));
+    invalidateGeneratedCode();
+  }
+
+  function updateClassSampleOption<
+    Key extends keyof ResolvedClassSampleGenerationOptions,
+  >(key: Key, value: ResolvedClassSampleGenerationOptions[Key]) {
+    setClassSampleOptions((current) => ({ ...current, [key]: value }));
+    invalidateGeneratedCode();
+  }
+
+  function handleResetOptions() {
+    if (mode === "data") {
+      setDataOptions(createDefaultDataModelGenerationOptions());
+    } else {
+      setClassSampleOptions(createDefaultClassSampleGenerationOptions());
+    }
+
+    invalidateGeneratedCode();
+  }
+
   function handleClassGeneration() {
     const classNameError = rootClassName.trim()
       ? getRootClassNameError(rootClassName)
@@ -243,6 +279,7 @@ export function DataModelGeneratorPage() {
       rootClassName,
       requireRootClass:
         isRootClassNameCustomized && Boolean(rootClassName.trim()),
+      ...classSampleOptions,
     });
 
     if (!result.ok) {
@@ -273,6 +310,7 @@ export function DataModelGeneratorPage() {
       language,
       rootClassName,
       inputFormat,
+      dataOptions,
     );
 
     if (!result.ok) {
@@ -487,6 +525,351 @@ export function DataModelGeneratorPage() {
             </div>
           </div>
 
+          <fieldset className="min-w-0 rounded-xl border border-gray-200 bg-gray-50/70 p-4 dark:border-gray-700 dark:bg-gray-800/40">
+            <legend className="px-1 text-sm font-semibold text-gray-900 dark:text-white">
+              Generator Options
+            </legend>
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                {mode === "data"
+                  ? `Options shown for ${languageLabel} model generation.`
+                  : "Options shown for JSON sample generation."}
+              </p>
+              <Button
+                type="button"
+                color="light"
+                size="xs"
+                onClick={handleResetOptions}
+              >
+                Reset Options
+              </Button>
+            </div>
+
+            {mode === "data" ? (
+              <div className="space-y-5">
+                <div>
+                  <h3 className="mb-3 text-xs font-semibold tracking-wide text-gray-700 uppercase dark:text-gray-300">
+                    Naming
+                  </h3>
+                  <div className="grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                    <div className="min-w-0">
+                      <label
+                        htmlFor="data-model-generator-property-naming"
+                        className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200"
+                      >
+                        Property Naming
+                      </label>
+                      <Select
+                        id="data-model-generator-property-naming"
+                        value={dataOptions.propertyNaming}
+                        onChange={(event) =>
+                          updateDataOption(
+                            "propertyNaming",
+                            event.target
+                              .value as typeof dataOptions.propertyNaming,
+                          )
+                        }
+                      >
+                        <option value="default">
+                          Default (
+                          {language === "csharp" ? "PascalCase" : "camelCase"})
+                        </option>
+                        <option value="preserve">Preserve Source Name</option>
+                      </Select>
+                    </div>
+
+                    <div className="min-w-0">
+                      <label
+                        htmlFor="data-model-generator-class-naming"
+                        className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200"
+                      >
+                        Class Naming
+                      </label>
+                      <Select
+                        id="data-model-generator-class-naming"
+                        value={dataOptions.classNaming}
+                        onChange={(event) =>
+                          updateDataOption(
+                            "classNaming",
+                            event.target
+                              .value as typeof dataOptions.classNaming,
+                          )
+                        }
+                      >
+                        <option value="pascal">PascalCase</option>
+                        <option value="preserve">Preserve Source Name</option>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+
+                {language === "csharp" ? (
+                  <div>
+                    <h3 className="mb-3 text-xs font-semibold tracking-wide text-gray-700 uppercase dark:text-gray-300">
+                      C# Output
+                    </h3>
+                    <div className="grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                      <div className="min-w-0">
+                        <label
+                          htmlFor="data-model-generator-csharp-nullable"
+                          className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200"
+                        >
+                          Nullable Reference Types
+                        </label>
+                        <Select
+                          id="data-model-generator-csharp-nullable"
+                          value={
+                            dataOptions.csharpNullableTypes
+                              ? "enabled"
+                              : "disabled"
+                          }
+                          onChange={(event) =>
+                            updateDataOption(
+                              "csharpNullableTypes",
+                              event.target.value === "enabled",
+                            )
+                          }
+                        >
+                          <option value="disabled">Disabled</option>
+                          <option value="enabled">Enabled</option>
+                        </Select>
+                      </div>
+
+                      <div className="min-w-0">
+                        <label
+                          htmlFor="data-model-generator-csharp-style"
+                          className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200"
+                        >
+                          C# Model Style
+                        </label>
+                        <Select
+                          id="data-model-generator-csharp-style"
+                          value={dataOptions.csharpModelStyle}
+                          onChange={(event) =>
+                            updateDataOption(
+                              "csharpModelStyle",
+                              event.target
+                                .value as typeof dataOptions.csharpModelStyle,
+                            )
+                          }
+                        >
+                          <option value="class">Class</option>
+                          <option value="record">Record</option>
+                        </Select>
+                      </div>
+
+                      {dataOptions.csharpModelStyle === "class" ? (
+                        <div className="min-w-0">
+                          <label
+                            htmlFor="data-model-generator-csharp-setter"
+                            className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200"
+                          >
+                            Property Setter
+                          </label>
+                          <Select
+                            id="data-model-generator-csharp-setter"
+                            value={dataOptions.csharpPropertySetter}
+                            onChange={(event) =>
+                              updateDataOption(
+                                "csharpPropertySetter",
+                                event.target
+                                  .value as typeof dataOptions.csharpPropertySetter,
+                              )
+                            }
+                          >
+                            <option value="set">set</option>
+                            <option value="init">init</option>
+                          </Select>
+                        </div>
+                      ) : null}
+
+                      <div className="min-w-0">
+                        <label
+                          htmlFor="data-model-generator-csharp-serialization"
+                          className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200"
+                        >
+                          Serialization Attributes
+                        </label>
+                        <Select
+                          id="data-model-generator-csharp-serialization"
+                          value={dataOptions.csharpSerialization}
+                          onChange={(event) =>
+                            updateDataOption(
+                              "csharpSerialization",
+                              event.target
+                                .value as typeof dataOptions.csharpSerialization,
+                            )
+                          }
+                        >
+                          <option value="none">None</option>
+                          <option value="system-text-json">
+                            System.Text.Json
+                          </option>
+                        </Select>
+                      </div>
+
+                      <div className="min-w-0">
+                        <label
+                          htmlFor="data-model-generator-csharp-collection"
+                          className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200"
+                        >
+                          Collection Type
+                        </label>
+                        <Select
+                          id="data-model-generator-csharp-collection"
+                          value={dataOptions.csharpCollectionType}
+                          onChange={(event) =>
+                            updateDataOption(
+                              "csharpCollectionType",
+                              event.target
+                                .value as typeof dataOptions.csharpCollectionType,
+                            )
+                          }
+                        >
+                          <option value="list">List&lt;T&gt;</option>
+                          <option value="array">Array</option>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <h3 className="mb-3 text-xs font-semibold tracking-wide text-gray-700 uppercase dark:text-gray-300">
+                      Java Output
+                    </h3>
+                    <div className="grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                      <div className="min-w-0">
+                        <label
+                          htmlFor="data-model-generator-java-style"
+                          className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200"
+                        >
+                          Java Model Style
+                        </label>
+                        <Select
+                          id="data-model-generator-java-style"
+                          value={dataOptions.javaModelStyle}
+                          onChange={(event) =>
+                            updateDataOption(
+                              "javaModelStyle",
+                              event.target
+                                .value as typeof dataOptions.javaModelStyle,
+                            )
+                          }
+                        >
+                          <option value="accessors">
+                            Fields + Getters/Setters
+                          </option>
+                          <option value="fields">Fields Only</option>
+                        </Select>
+                      </div>
+
+                      <div className="min-w-0">
+                        <label
+                          htmlFor="data-model-generator-java-serialization"
+                          className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200"
+                        >
+                          Serialization Attributes
+                        </label>
+                        <Select
+                          id="data-model-generator-java-serialization"
+                          value={dataOptions.javaSerialization}
+                          onChange={(event) =>
+                            updateDataOption(
+                              "javaSerialization",
+                              event.target
+                                .value as typeof dataOptions.javaSerialization,
+                            )
+                          }
+                        >
+                          <option value="none">None</option>
+                          <option value="jackson">Jackson</option>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div>
+                <h3 className="mb-3 text-xs font-semibold tracking-wide text-gray-700 uppercase dark:text-gray-300">
+                  JSON Sample
+                </h3>
+                <div className="grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                  <div className="min-w-0">
+                    <label
+                      htmlFor="data-model-generator-json-property-naming"
+                      className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200"
+                    >
+                      JSON Property Naming
+                    </label>
+                    <Select
+                      id="data-model-generator-json-property-naming"
+                      value={classSampleOptions.jsonPropertyNaming}
+                      onChange={(event) =>
+                        updateClassSampleOption(
+                          "jsonPropertyNaming",
+                          event.target
+                            .value as typeof classSampleOptions.jsonPropertyNaming,
+                        )
+                      }
+                    >
+                      <option value="camel">camelCase</option>
+                      <option value="preserve">
+                        Preserve Class Member Name
+                      </option>
+                    </Select>
+                  </div>
+
+                  <div className="min-w-0">
+                    <label
+                      htmlFor="data-model-generator-nullable-sample"
+                      className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200"
+                    >
+                      Nullable Sample Values
+                    </label>
+                    <Select
+                      id="data-model-generator-nullable-sample"
+                      value={classSampleOptions.nullableSampleValue}
+                      onChange={(event) =>
+                        updateClassSampleOption(
+                          "nullableSampleValue",
+                          event.target
+                            .value as typeof classSampleOptions.nullableSampleValue,
+                        )
+                      }
+                    >
+                      <option value="example">Generate Example Value</option>
+                      <option value="null">Generate null</option>
+                    </Select>
+                  </div>
+
+                  <div className="min-w-0">
+                    <label
+                      htmlFor="data-model-generator-collection-sample"
+                      className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200"
+                    >
+                      Collection Sample
+                    </label>
+                    <Select
+                      id="data-model-generator-collection-sample"
+                      value={classSampleOptions.collectionSampleValue}
+                      onChange={(event) =>
+                        updateClassSampleOption(
+                          "collectionSampleValue",
+                          event.target
+                            .value as typeof classSampleOptions.collectionSampleValue,
+                        )
+                      }
+                    >
+                      <option value="one">One Item</option>
+                      <option value="empty">Empty Array</option>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+            )}
+          </fieldset>
+
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <Button type="button" color="blue" onClick={handleGenerate}>
               {mode === "data" ? "Generate Model" : "Generate JSON Sample"}
@@ -651,7 +1034,11 @@ export function DataModelGeneratorPage() {
             empty object.
           </li>
           <li>
-            Class-to-XML, serialization annotations, and full inheritance or
+            Generator options apply to this page only and return to defaults
+            after a reload.
+          </li>
+          <li>
+            Class-to-XML, XML serialization annotations, and full inheritance or
             arbitrary generic semantics are not available.
           </li>
         </ul>

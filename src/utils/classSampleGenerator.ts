@@ -30,9 +30,33 @@ type SampleFailure = {
 
 export type ClassSampleResult = SampleSuccess | SampleFailure;
 
-export interface ClassSampleOptions {
+export type JsonPropertyNaming = "camel" | "preserve";
+export type NullableSampleValue = "example" | "null";
+export type CollectionSampleValue = "one" | "empty";
+
+export interface ClassSampleGenerationOptions {
+  jsonPropertyNaming?: JsonPropertyNaming;
+  nullableSampleValue?: NullableSampleValue;
+  collectionSampleValue?: CollectionSampleValue;
+}
+
+export interface ResolvedClassSampleGenerationOptions {
+  jsonPropertyNaming: JsonPropertyNaming;
+  nullableSampleValue: NullableSampleValue;
+  collectionSampleValue: CollectionSampleValue;
+}
+
+export interface ClassSampleOptions extends ClassSampleGenerationOptions {
   requireRootClass?: boolean;
   rootClassName?: string;
+}
+
+export function createDefaultClassSampleGenerationOptions(): ResolvedClassSampleGenerationOptions {
+  return {
+    jsonPropertyNaming: "camel",
+    nullableSampleValue: "example",
+    collectionSampleValue: "one",
+  };
 }
 
 export function generateJsonSampleFromClass(
@@ -69,6 +93,10 @@ export function generateJsonSampleFromClass(
   const classesByName = new Map(
     parsed.classes.map((modelClass) => [modelClass.name, modelClass]),
   );
+  const generationOptions = {
+    ...createDefaultClassSampleGenerationOptions(),
+    ...options,
+  };
   const warnings = new Set<string>();
   const sample = buildClassSample(
     selectedRoot.name,
@@ -76,6 +104,7 @@ export function generateJsonSampleFromClass(
     classesByName,
     new Set(),
     warnings,
+    generationOptions,
   );
 
   return {
@@ -192,6 +221,7 @@ function buildClassSample(
   classesByName: Map<string, ClassDefinition>,
   classPath: Set<string>,
   warnings: Set<string>,
+  options: ResolvedClassSampleGenerationOptions,
 ): unknown {
   if (classPath.has(className)) {
     warnings.add(`Recursive reference to ${className} was replaced with null.`);
@@ -226,7 +256,9 @@ function buildClassSample(
 
   modelClass.properties.forEach((property) => {
     const preferredName =
-      language === "csharp" ? toCamelCase(property.name) : property.name;
+      options.jsonPropertyNaming === "camel"
+        ? toCamelCase(property.name)
+        : property.name;
     const propertyName = getUniqueJsonPropertyName(output, preferredName);
     output[propertyName] = getTypeSample(
       property.type,
@@ -234,6 +266,7 @@ function buildClassSample(
       classesByName,
       nextPath,
       warnings,
+      options,
     );
   });
 
@@ -246,14 +279,28 @@ function getTypeSample(
   classesByName: Map<string, ClassDefinition>,
   classPath: Set<string>,
   warnings: Set<string>,
+  options: ResolvedClassSampleGenerationOptions,
 ): unknown {
   let type = normalizeType(sourceType);
 
-  if (language === "csharp" && type.endsWith("?")) {
+  const nullableType =
+    language === "csharp" ? getCsharpNullableInnerType(type) : null;
+
+  if (nullableType && options.nullableSampleValue === "null") {
+    return null;
+  }
+
+  if (nullableType) {
+    type = nullableType;
+  } else if (language === "csharp" && type.endsWith("?")) {
     type = type.slice(0, -1);
   }
 
   if (type.endsWith("[]")) {
+    if (options.collectionSampleValue === "empty") {
+      return [];
+    }
+
     return [
       getTypeSample(
         type.slice(0, -2),
@@ -261,6 +308,7 @@ function getTypeSample(
         classesByName,
         classPath,
         warnings,
+        options,
       ),
     ];
   }
@@ -268,8 +316,19 @@ function getTypeSample(
   const listItemType = getListItemType(type, language);
 
   if (listItemType) {
+    if (options.collectionSampleValue === "empty") {
+      return [];
+    }
+
     return [
-      getTypeSample(listItemType, language, classesByName, classPath, warnings),
+      getTypeSample(
+        listItemType,
+        language,
+        classesByName,
+        classPath,
+        warnings,
+        options,
+      ),
     ];
   }
 
@@ -291,6 +350,17 @@ function getTypeSample(
     classesByName,
     classPath,
     warnings,
+    options,
+  );
+}
+
+function getCsharpNullableInnerType(type: string) {
+  if (type.endsWith("?")) {
+    return type.slice(0, -1);
+  }
+
+  return (
+    type.match(/^(?:System\.)?Nullable\s*<\s*(.+)\s*>$/)?.[1]?.trim() ?? null
   );
 }
 

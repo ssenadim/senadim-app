@@ -2,8 +2,10 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import {
+  createDefaultClassSampleGenerationOptions,
   generateJsonSampleFromClass,
   getFirstParsedClassName,
+  type ClassSampleGenerationOptions,
 } from "../src/utils/classSampleGenerator.ts";
 
 function expectSample(
@@ -11,10 +13,12 @@ function expectSample(
   language: "csharp" | "java",
   rootClassName?: string,
   requireRootClass = false,
+  generationOptions: ClassSampleGenerationOptions = {},
 ) {
   const result = generateJsonSampleFromClass(source, language, {
     rootClassName,
     requireRootClass,
+    ...generationOptions,
   });
   assert.equal(result.ok, true);
 
@@ -95,6 +99,68 @@ test("C# nullable and common structural types keep useful samples", () => {
     id: "00000000-0000-0000-0000-000000000000",
     metadata: {},
   });
+});
+
+test("class sample option defaults preserve the existing output", () => {
+  const source =
+    "public class Customer { public int Id { get; set; } public List<string> Roles { get; set; } }";
+  const implicit = generateJsonSampleFromClass(source, "csharp");
+  const explicit = generateJsonSampleFromClass(source, "csharp", {
+    ...createDefaultClassSampleGenerationOptions(),
+  });
+
+  assert.deepEqual(explicit, implicit);
+});
+
+test("JSON property naming can preserve class member names", () => {
+  const csharp = expectSample(
+    "public class Customer { public int CustomerId { get; set; } }",
+    "csharp",
+    undefined,
+    false,
+    { jsonPropertyNaming: "preserve" },
+  );
+  const java = expectSample(
+    "public class Customer { private String DisplayName; }",
+    "java",
+    undefined,
+    false,
+    { jsonPropertyNaming: "preserve" },
+  );
+
+  assert.deepEqual(csharp.value, { CustomerId: 0 });
+  assert.deepEqual(java.value, { DisplayName: "" });
+});
+
+test("nullable sample option uses null only for reliably nullable C# members", () => {
+  const result = expectSample(
+    `public class Record {
+      public int? Count { get; set; }
+      public Nullable<bool> Active { get; set; }
+      public string Name { get; set; }
+    }`,
+    "csharp",
+    undefined,
+    false,
+    { nullableSampleValue: "null" },
+  );
+
+  assert.deepEqual(result.value, { count: null, active: null, name: "" });
+});
+
+test("collection sample option emits empty arrays for lists and arrays", () => {
+  const result = expectSample(
+    `public class Customer {
+      public List<string> Roles { get; set; }
+      public int[] Scores { get; set; }
+    }`,
+    "csharp",
+    undefined,
+    false,
+    { collectionSampleValue: "empty" },
+  );
+
+  assert.deepEqual(result.value, { roles: [], scores: [] });
 });
 
 test("C# unknown custom types warn without blocking output", () => {

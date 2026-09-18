@@ -2,9 +2,11 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import {
+  createDefaultDataModelGenerationOptions,
   generateDataModel,
   getRootClassNameError,
   getXmlRootClassName,
+  type DataModelGenerationOptions,
 } from "../src/utils/dataModelGenerator.ts";
 
 function expectCode(
@@ -12,12 +14,14 @@ function expectCode(
   language: "csharp" | "java" = "csharp",
   rootClassName = "Root",
   inputFormat: "json" | "xml" = "json",
+  options: DataModelGenerationOptions = {},
 ) {
   const result = generateDataModel(
     source,
     language,
     rootClassName,
     inputFormat,
+    options,
   );
   assert.equal(result.ok, true);
 
@@ -113,6 +117,101 @@ test("Java generation creates private fields with public getters and setters", (
   assert.match(code, /public void setId\(int id\)/);
   assert.match(code, /private boolean active;/);
   assert.doesNotMatch(code, /Lombok|Builder|constructor/i);
+});
+
+test("generator option defaults preserve the existing output", () => {
+  const source = '{"id":1,"roles":["admin"]}';
+  const implicit = generateDataModel(source, "csharp", "Customer");
+  const explicit = generateDataModel(
+    source,
+    "csharp",
+    "Customer",
+    "json",
+    createDefaultDataModelGenerationOptions(),
+  );
+
+  assert.deepEqual(explicit, implicit);
+});
+
+test("C# style options generate classes with init setters or records", () => {
+  const classCode = expectCode('{"id":1}', "csharp", "Customer", "json", {
+    csharpPropertySetter: "init",
+  });
+  const recordCode = expectCode('{"id":1}', "csharp", "Customer", "json", {
+    csharpModelStyle: "record",
+  });
+
+  assert.match(classCode, /public class Customer/);
+  assert.match(classCode, /public int Id \{ get; init; \}/);
+  assert.match(recordCode, /public record Customer/);
+  assert.match(recordCode, /public int Id \{ get; init; \}/);
+  assert.doesNotMatch(recordCode, /get; set;/);
+});
+
+test("C# nullable option infers nulls in otherwise homogeneous arrays", () => {
+  const code = expectCode(
+    '{"counts":[1,null],"labels":["A",null],"description":null}',
+    "csharp",
+    "Root",
+    "json",
+    { csharpNullableTypes: true },
+  );
+
+  assert.match(code, /public List<int\?> Counts/);
+  assert.match(code, /public List<string\?> Labels/);
+  assert.match(code, /public object Description/);
+});
+
+test("C# serialization and collection options emit only required code", () => {
+  const code = expectCode(
+    '{"customer_id":1,"roles":["admin"]}',
+    "csharp",
+    "Customer",
+    "json",
+    {
+      csharpSerialization: "system-text-json",
+      csharpCollectionType: "array",
+    },
+  );
+
+  assert.match(code, /using System\.Text\.Json\.Serialization;/);
+  assert.doesNotMatch(code, /System\.Collections\.Generic/);
+  assert.match(code, /\[JsonPropertyName\("customer_id"\)\]/);
+  assert.match(code, /public string\[\] Roles/);
+});
+
+test("preserve naming keeps valid source identifiers and sanitizes invalid ones", () => {
+  const code = expectCode(
+    '{"snake_case":1,"postal-code":"34000","child_model":{"id":1}}',
+    "csharp",
+    "api_response",
+    "json",
+    { propertyNaming: "preserve", classNaming: "preserve" },
+  );
+
+  assert.match(code, /public class api_response/);
+  assert.match(code, /public int snake_case/);
+  assert.match(code, /public string PostalCode/);
+  assert.match(code, /public class child_model/);
+});
+
+test("Java options support fields-only output and Jackson annotations", () => {
+  const code = expectCode(
+    '{"customer_id":1,"name":"Customer"}',
+    "java",
+    "Customer",
+    "json",
+    { javaModelStyle: "fields", javaSerialization: "jackson" },
+  );
+
+  assert.match(
+    code,
+    /import com\.fasterxml\.jackson\.annotation\.JsonProperty;/,
+  );
+  assert.match(code, /@JsonProperty\("customer_id"\)/);
+  assert.match(code, /private int customerId;/);
+  assert.doesNotMatch(code, /@JsonProperty\("name"\)/);
+  assert.doesNotMatch(code, /getCustomerId|setCustomerId/);
 });
 
 test("matching nested shapes reuse one generated class", () => {
@@ -320,6 +419,36 @@ test("tool page switches formats, clears changed output, and disables stale copy
     (match) => match[1],
   );
   assert.equal(new Set(ids).size, ids.length, "Static ids should be unique.");
+});
+
+test("tool page exposes context-aware generator options with safe resets", () => {
+  const pageSource = readFileSync(
+    new URL(
+      "../src/pages/DeveloperTools/DataModelGenerator/DataModelGeneratorPage.tsx",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+
+  assert.match(pageSource, /Generator Options/);
+  assert.match(pageSource, /Reset Options/);
+  assert.match(pageSource, /mode === "data"/);
+  assert.match(pageSource, /language === "csharp"/);
+  assert.match(pageSource, /csharpModelStyle === "class"/);
+  assert.match(pageSource, /function updateDataOption/);
+  assert.match(pageSource, /function updateClassSampleOption/);
+  assert.match(pageSource, /function handleResetOptions/);
+  assert.match(
+    pageSource,
+    /setDataOptions\(createDefaultDataModelGenerationOptions\(\)\)/,
+  );
+  assert.match(
+    pageSource,
+    /setClassSampleOptions\(createDefaultClassSampleGenerationOptions\(\)\)/,
+  );
+  assert.match(pageSource, /dataOptions,\s*\);/);
+  assert.match(pageSource, /\.\.\.classSampleOptions/);
+  assert.doesNotMatch(pageSource, /localStorage|sessionStorage/);
 });
 
 test("tool metadata registers the shared discovery route and keywords", () => {
