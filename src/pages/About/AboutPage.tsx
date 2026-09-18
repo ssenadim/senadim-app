@@ -78,8 +78,8 @@ const capabilityAreas: CapabilityArea[] = [
         description: `${getToolTitle("jwt-decoder")}, ${getToolTitle("hash-generator")}, ${getToolTitle("regex-tester")}, and ${getToolTitle("pkce-generator")} provide focused inspection and generation workflows.`,
       },
       {
-        title: "Configuration and APIs",
-        description: `${getToolTitle("configuration-converter")} supports JSON to YAML, YAML to JSON, and Properties to JSON or YAML. ${getToolTitle("openapi-viewer")} explores OpenAPI 3.x overviews, endpoints, parameters, bodies, responses, schemas, and local references without executing APIs.`,
+        title: "Configuration, APIs, and models",
+        description: `${getToolTitle("configuration-converter")} supports JSON to YAML, YAML to JSON, and Properties to JSON or YAML. ${getToolTitle("openapi-viewer")} explores OpenAPI 3.x documents without executing APIs. ${getToolTitle("data-model-generator")} creates C# or Java models from JSON/XML and representative JSON samples from supported class definitions.`,
       },
     ],
     icon: "target",
@@ -195,9 +195,9 @@ const evolutionSteps: Array<{
     icon: "users",
   },
   {
-    title: "API & Workflow Expansion",
+    title: "API & Model Workflow Expansion",
     description:
-      "Configuration conversion, OpenAPI inspection, and richer editor diagnostics deepened developer workflows.",
+      "Configuration conversion, OpenAPI inspection, data model generation, and richer editor diagnostics deepened developer workflows.",
     icon: "target",
   },
 ];
@@ -237,7 +237,7 @@ const technologies = [
   "Flowbite React",
 ];
 
-const currentVersion = "v1.1 (In Development)";
+const currentVersion = "v1.2";
 
 const productDirection = [
   "More practical engineering tools",
@@ -492,8 +492,8 @@ export function AboutPage() {
               </p>
               <p className="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">
                 The current milestone brings the four product areas together
-                with stronger discovery, API inspection, configuration, and
-                validation workflows.
+                with stronger discovery, API inspection, configuration, data
+                model generation, and validation workflows.
               </p>
             </article>
           </div>

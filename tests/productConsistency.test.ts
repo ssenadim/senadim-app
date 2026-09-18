@@ -97,6 +97,7 @@ test("Data Model Generator participates in shared discovery and personalization 
     )?.[0] ?? "";
 
   assert.match(dataModelMetadata, /path: routePaths\.dataModelGenerator/);
+  assert.match(dataModelMetadata, /title: "Data Model Generator"/);
   assert.match(dataModelMetadata, /Generate C# or Java models from JSON\/XML/);
   [
     "data model",
@@ -106,6 +107,7 @@ test("Data Model Generator participates in shared discovery and personalization 
     "java",
     "dto",
     "pojo",
+    "class to json",
   ].forEach((keyword) =>
     assert.match(
       dataModelMetadata,

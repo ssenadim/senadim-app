@@ -259,6 +259,21 @@ test("Java lists and arrays contain one representative item", () => {
   });
 });
 
+test("Java collection samples support the empty-array option", () => {
+  const result = expectSample(
+    `public class Customer {
+      private List<String> roles;
+      private long[] identifiers;
+    }`,
+    "java",
+    undefined,
+    false,
+    { collectionSampleValue: "empty" },
+  );
+
+  assert.deepEqual(result.value, { roles: [], identifiers: [] });
+});
+
 test("Java unknown types and unsupported generics use safe warnings", () => {
   const result = expectSample(
     `public class Response {

@@ -11,7 +11,7 @@ export function Sidebar() {
         </div>
         <div className="mt-auto rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-950">
           <p className="text-sm font-semibold text-gray-950 dark:text-white">
-            Freeshot v1.1 Development
+            Freeshot v1.2
           </p>
           <p className="mt-2 text-xs leading-5 text-gray-600 dark:text-gray-400">
             Developer productivity, platform engineering and architecture tools

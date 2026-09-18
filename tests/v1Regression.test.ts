@@ -116,6 +116,46 @@ test("configuration conversion preserves nested Properties values", () => {
   assert.equal(convertConfiguration("{", "json", "yaml").ok, false);
 });
 
+test("configuration conversion keeps the supported v1.2 matrix", () => {
+  const jsonToYaml = convertConfiguration(
+    '{"server":{"port":8080}}',
+    "json",
+    "yaml",
+  );
+  const yamlToJson = convertConfiguration(
+    "server:\n  port: 8080",
+    "yaml",
+    "json",
+  );
+  const propertiesToYaml = convertConfiguration(
+    "server.port=8080",
+    "properties",
+    "yaml",
+  );
+  const propertiesToJson = convertConfiguration(
+    "server.port=8080",
+    "properties",
+    "json",
+  );
+
+  assert.equal(jsonToYaml.ok, true);
+  assert.equal(yamlToJson.ok, true);
+  assert.equal(propertiesToYaml.ok, true);
+  assert.equal(propertiesToJson.ok, true);
+  if (jsonToYaml.ok) assert.match(jsonToYaml.value, /server:[\s\S]*port: 8080/);
+  if (yamlToJson.ok) {
+    assert.deepEqual(JSON.parse(yamlToJson.value), { server: { port: 8080 } });
+  }
+  if (propertiesToYaml.ok) {
+    assert.match(propertiesToYaml.value, /server:[\s\S]*port: 8080/);
+  }
+  if (propertiesToJson.ok) {
+    assert.deepEqual(JSON.parse(propertiesToJson.value), {
+      server: { port: 8080 },
+    });
+  }
+});
+
 test("PlantUML validation requires a complete diagram envelope", () => {
   assert.equal(
     validatePlantUmlSource("@startuml\nAlice -> Bob : Hello\n@enduml"),
@@ -194,9 +234,33 @@ test("public routes, catalog registrations, and sitemap remain aligned", () => {
       `Unregistered catalog route: ${key}`,
     ),
   );
-  ["openapi-viewer", "configuration-converter", "mermaid-viewer"].forEach(
-    (toolId) => assert.equal(catalogIds.includes(toolId), true),
+  [
+    "openapi-viewer",
+    "configuration-converter",
+    "data-model-generator",
+    "mermaid-viewer",
+  ].forEach((toolId) => assert.equal(catalogIds.includes(toolId), true));
+});
+
+test("diagramming release controls preserve current-source export safety", () => {
+  const plantUmlSource = readProjectFile(
+    "src/pages/ArchitectureDesign/PlantUmlViewer/PlantUmlViewerPage.tsx",
   );
+  const mermaidSource = readProjectFile(
+    "src/pages/ArchitectureDesign/MermaidViewer/MermaidViewerPage.tsx",
+  );
+
+  [
+    [plantUmlSource, "Copy PlantUML Source"],
+    [mermaidSource, "Copy Mermaid Source"],
+  ].forEach(([source, label]) => assert.match(source, new RegExp(label)));
+  [plantUmlSource, mermaidSource].forEach((source) => {
+    assert.match(source, /Download SVG/);
+    assert.match(source, /Download PNG/);
+    assert.match(source, /disabled=\{!canExportDiagram/);
+  });
+  assert.match(plantUmlSource, /setRenderedDiagram\(null\)/);
+  assert.match(mermaidSource, /setRenderedSvg\(""\)/);
 });
 
 test("release metadata, public assets, and OpenShift tab contract are present", () => {

@@ -30,11 +30,12 @@ test("About tells the current product story through four balanced areas", () => 
   );
 });
 
-test("About represents implemented v1.1 workflows without unsupported claims", () => {
+test("About represents implemented v1.2 workflows without unsupported claims", () => {
   [
     "data-formatter",
     "configuration-converter",
     "openapi-viewer",
+    "data-model-generator",
     "plantuml-viewer",
     "mermaid-viewer",
     "architecture-notes",
@@ -44,6 +45,8 @@ test("About represents implemented v1.1 workflows without unsupported claims", (
 
   assert.match(aboutSource, /JSON to YAML, YAML to JSON/);
   assert.match(aboutSource, /without executing APIs/);
+  assert.match(aboutSource, /creates C# or Java models from JSON\/XML/);
+  assert.match(aboutSource, /const currentVersion = "v1\.2"/);
   assert.match(aboutSource, /do not replace formal design or security review/);
   assert.match(aboutSource, /Personalization is stored locally in the browser/);
   assert.doesNotMatch(aboutSource, /Event Bus Calculator/);
@@ -63,5 +66,15 @@ test("About keeps its route and current SEO description", () => {
   assert.match(
     metadataSource,
     /Discover how Freeshot supports developer productivity, platform engineering, architecture workflows, and browser-local tool discovery\./,
+  );
+});
+
+test("public milestone labels consistently identify v1.2", () => {
+  const sidebarSource = readProjectFile("src/components/layout/Sidebar.tsx");
+
+  assert.match(sidebarSource, /Freeshot v1\.2/);
+  assert.doesNotMatch(
+    `${aboutSource}\n${sidebarSource}`,
+    /v1\.1|In Development/,
   );
 });

@@ -214,6 +214,51 @@ test("Java options support fields-only output and Jackson annotations", () => {
   assert.doesNotMatch(code, /getCustomerId|setCustomerId/);
 });
 
+test("v1.2 C# option combination stays coherent and deterministic", () => {
+  const source =
+    '{"customer_id":1,"labels":["primary",null],"items":[{"id":1}]}';
+  const options = {
+    csharpModelStyle: "record" as const,
+    csharpNullableTypes: true,
+    csharpSerialization: "system-text-json" as const,
+    csharpCollectionType: "array" as const,
+  };
+  const first = expectCode(source, "csharp", "AuditRoot", "json", options);
+  const second = expectCode(source, "csharp", "AuditRoot", "json", options);
+
+  assert.equal(second, first);
+  assert.match(first, /using System\.Text\.Json\.Serialization;/);
+  assert.doesNotMatch(first, /System\.Collections\.Generic/);
+  assert.match(first, /public record AuditRoot/);
+  assert.match(first, /\[JsonPropertyName\("customer_id"\)\]/);
+  assert.match(first, /public string\?\[\] Labels \{ get; init; \}/);
+  assert.match(first, /public Item\[\] Items \{ get; init; \}/);
+  assert.match(first, /public record Item/);
+});
+
+test("v1.2 Java option combination preserves safe names and annotates fallbacks", () => {
+  const code = expectCode(
+    '{"customer_id":1,"postal-code":"34000","items":[{"display_name":"A"}]}',
+    "java",
+    "api_response",
+    "json",
+    {
+      propertyNaming: "preserve",
+      classNaming: "preserve",
+      javaModelStyle: "fields",
+      javaSerialization: "jackson",
+    },
+  );
+
+  assert.match(code, /public class api_response/);
+  assert.match(code, /private int customer_id;/);
+  assert.doesNotMatch(code, /@JsonProperty\("customer_id"\)/);
+  assert.match(code, /@JsonProperty\("postal-code"\)/);
+  assert.match(code, /private String postalCode;/);
+  assert.match(code, /private String display_name;/);
+  assert.doesNotMatch(code, /getCustomer_id|setCustomer_id/);
+});
+
 test("matching nested shapes reuse one generated class", () => {
   const code = expectCode(
     '{"shipping":{"city":"Istanbul"},"billing":{"city":"Ankara"}}',
@@ -273,6 +318,17 @@ test("XML attributes become properties and element conflicts use an Element suff
   assert.match(code, /public int Id \{ get; set; \}/);
   assert.match(code, /public bool Active \{ get; set; \}/);
   assert.match(code, /public int IdElement \{ get; set; \}/);
+});
+
+test("Java XML attribute and element conflicts remain deterministic", () => {
+  const code = expectXmlCode(
+    '<customer id="15"><id>20</id></customer>',
+    "java",
+  );
+
+  assert.match(code, /private int id;/);
+  assert.match(code, /private int idElement;/);
+  assert.equal((code.match(/private int id;/g) ?? []).length, 1);
 });
 
 test("nested XML elements generate nested model classes", () => {
@@ -483,6 +539,34 @@ test("tool page polish keeps workflows contextual, compact, and readable", () =>
   assert.match(pageSource, /data-model-generator-source-error/);
   assert.match(pageSource, /color="warning"/);
   assert.match(pageSource, /color="failure"/);
+});
+
+test("Data Model Generator remains browser-local and copies generated output only", () => {
+  const pageSource = readFileSync(
+    new URL(
+      "../src/pages/DeveloperTools/DataModelGenerator/DataModelGeneratorPage.tsx",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  const generatorSources = [
+    pageSource,
+    readFileSync(
+      new URL("../src/utils/dataModelGenerator.ts", import.meta.url),
+      "utf8",
+    ),
+    readFileSync(
+      new URL("../src/utils/classSampleGenerator.ts", import.meta.url),
+      "utf8",
+    ),
+  ].join("\n");
+
+  assert.doesNotMatch(
+    generatorSources,
+    /fetch\(|XMLHttpRequest|sendBeacon|axios|localStorage|sessionStorage|console\.log/,
+  );
+  assert.match(pageSource, /navigator\.clipboard\.writeText\(generatedCode\)/);
+  assert.match(pageSource, /if \(!hasCurrentOutput\)/);
 });
 
 test("tool metadata registers the shared discovery route and keywords", () => {
